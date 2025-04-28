@@ -1,0 +1,11 @@
+pandas
+numpy
+matplotlib
+seaborn
+tqdm
+scikit-learn
+scipy
+datasets
+jupyter
+notebook
+text2digits
