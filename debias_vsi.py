@@ -9,6 +9,7 @@ import seaborn as sns
 import re
 from tqdm import tqdm
 from datasets import load_dataset
+from sklearn.preprocessing import minmax_scale
 
 from functools import lru_cache
 
@@ -181,6 +182,129 @@ def get_vsi_with_scores(json_paths=REF_JSONLS):
     df = vsibench["test"].to_pandas()
     df = df.merge(merged, on="id", how="inner")
     return df
+
+### --- Eval/Visualization Functions --- ###
+
+# Function to evaluate models on filtered dataset
+def evaluate_models(df, model_columns=None, sort=False):
+    """
+    Compute scores for each model on the dataset.
+
+    Args:
+        df: DataFrame with model scores
+        model_columns: List of column names containing model scores
+
+    Returns:
+        DataFrame with model scores by question type
+    """
+    if model_columns is None or len(model_columns) == 0:
+        # If no model columns are provided, check if ref eval models are present
+        model_columns = get_model_columns(df)
+
+    # Overall scores
+    overall_scores = {model: df[model].mean() for model in model_columns}
+
+    # Scores by question type
+    type_scores = df.groupby('question_type').apply(
+        lambda x: pd.Series({model: x[model].mean() for model in model_columns})
+    )
+
+    # Add overall score as a row
+    type_scores.loc['overall'] = pd.Series(overall_scores)
+
+    # Sort columns based on overall scores
+    if sort:
+        type_scores = type_scores[sorted(type_scores.columns, key=lambda col: type_scores.loc['overall', col], reverse=False)]
+
+    if len(df['question_type'].unique()) == 1:
+        # If only one question type, remove overall row
+        type_scores = type_scores.drop('overall')
+
+    return type_scores * 100  # Convert to percentage
+
+def visualize_model_scores(df, model_columns=None):
+    """
+    Visualize model scores using a heatmap.
+
+    Args:
+        df: DataFrame with model scores
+        model_columns: List of column names containing model scores
+
+    Returns:
+        matplotlib figure
+    """
+    scores = evaluate_models(df, model_columns)
+
+    ranks = scores.rank(axis=1, method='min')
+
+    # Plot heatmap
+    plt.figure(figsize=(15, 4))
+    # use `ranks` for the heatmap colors, but annotate with `scores`
+    sns.heatmap(ranks, annot=scores, fmt=".2f", cmap="coolwarm", cbar=True, linewidths=0.125)
+    plt.xlabel("Model")
+    plt.ylabel("Question Type")
+    plt.xticks(rotation=25, ha='right')
+    plt.tight_layout()
+
+    return plt.gcf()
+
+# Function to visualize the impact of debiasing
+def visualize_debiasing_impact(original_df, debiased_df, model_columns=None, title=""):
+    """
+    Visualize the impact of debiasing on model performance.
+
+    Args:
+        original_df: Original dataset with model scores
+        debiased_df: Debiased dataset with model scores
+        model_columns: List of column names containing model scores
+        title: Title for the plot
+    """
+    # Compute scores before and after debiasing
+    original_scores = evaluate_models(original_df, model_columns, sort=True)
+    debiased_scores = evaluate_models(debiased_df, model_columns, sort=False)
+
+    # sort debiased by the original scores sort order
+    #         type_scores = type_scores[sorted(type_scores.columns, key=lambda col: type_scores.loc['overall', col], reverse=False)]
+
+    debiased_scores = debiased_scores[original_scores.columns]
+
+    n_rows = len(original_scores)
+    assert n_rows == len(debiased_scores), f"Number of rows in original and debiased scores do not match: {n_rows} != {len(debiased_scores)}"
+
+    # Compute difference
+    diff_scores = debiased_scores - original_scores
+    # # Sort by the last column (overall score)
+    # diff_scores = diff_scores.T.sort_values(by=diff_scores.index[-1], ascending=False).T
+
+    # Plot results
+    # fig, axes = plt.subplots(1, 3, figsize=(25, 2.75*n_rows))
+    fig, axes = plt.subplots(1, 3, figsize=(30, 2 + 0.5*n_rows))
+
+    text_rot = 40
+
+    # Original scores
+    sns.heatmap(original_scores, annot=True, fmt=".1f", cmap="YlGnBu", ax=axes[0])
+    axes[0].set_title("Original Scores")
+    axes[0].set_xticklabels(axes[0].get_xticklabels(), rotation=text_rot, ha='right')
+
+    # Debiased scores
+    sns.heatmap(debiased_scores, annot=True, fmt=".1f", cmap="YlGnBu", ax=axes[1])
+    axes[1].set_title("Debiased Scores")
+    axes[1].set_xticklabels(axes[1].get_xticklabels(), rotation=text_rot, ha='right')
+
+    # Difference
+    sns.heatmap(diff_scores, annot=True, fmt=".1f", cmap="RdBu_r", center=0, ax=axes[2])
+    axes[2].set_title("Difference (Debiased - Original)")
+    axes[2].set_xticklabels(axes[2].get_xticklabels(), rotation=text_rot, ha='right')
+
+    # add title
+    fig.suptitle(title, fontsize=12)
+    fig.subplots_adjust(top=0.95)  # Adjust top to make space for title
+
+    plt.tight_layout()
+    return fig
+
+### --- Per-Question Debiasing Functions --- ###
 
 # Functions to identify questions to eliminate for each question type
 def filter_object_size_estimation_v1(df, budget):
@@ -361,7 +485,6 @@ def filter_object_size_estimation_hybrid(
 
     return remove_ids[:budget] # Ensure we strictly adhere to the overall budget
 
-from sklearn.preprocessing import minmax_scale
 
 def filter_object_size_estimation_scored(
     df: pd.DataFrame,
@@ -4158,6 +4281,9 @@ def filter_route_planning_v2(
     return list(final_remove_ids)
 
 
+### ---Overall Debiasing Functions --- ###
+
+
 # aliases for various versions of the same function
 filter_object_size_estimation = filter_object_size_estimation_scored_v2
 filter_object_counting = filter_object_counting_dynamic_pct
@@ -4168,372 +4294,115 @@ filter_object_rel_direction = filter_object_rel_direction_v2
 filter_room_size_estimation = filter_room_size_estimation_sampled_pdf
 filter_route_planning = filter_route_planning_v2
 
-# Main filtering function
-def filter_dataset_by_type(df, removal_budget=None, removal_fraction=0.2):
-    """
-    Filter dataset by removing biased questions for each question type.
+filter_functions = {
+    'object_size_estimation': filter_object_size_estimation,
+    'object_counting': filter_object_counting,
+    'object_abs_distance': filter_object_abs_distance,
+    'room_size_estimation': filter_room_size_estimation,
+    'object_rel_distance': filter_object_rel_distance,
+    'object_rel_direction_easy': filter_object_rel_direction,
+    'object_rel_direction_medium': filter_object_rel_direction,
+    'object_rel_direction_hard': filter_object_rel_direction,
+    'obj_appearance_order': filter_obj_appearance_order,
+    'route_planning': filter_route_planning
+}
+
+budgets = {
+    "object_size_estimation": 600,
+    "object_abs_distance": 400,
+    "object_rel_distance": 400,
+    "obj_appearance_order": 300,
+    "object_counting": 314,
+    # "object_rel_direction_medium": 324,
+    # "object_rel_direction_hard": 257,
+    # "object_rel_direction_easy": 5,
+    "object_rel_direction": 324 + 257 + 5,
+    "room_size_estimation": 88,
+    "route_planning": 80,
+}
+
+def debias_vsibench(save_path: str = "data/removed_ids.txt"):
+    print("Debiasing VSIBench...")
+
+    sep = "=" * 100
+
+    # Load the data with scores
+    print("Loading data and evaluating reference models...")
+    print(sep)
 
-    Args:
-        df: DataFrame with benchmark questions
-        removal_budget: Dict mapping question_type to number of questions to remove
-                    (if None, calculated based on removal_fraction)
-        removal_fraction: Fraction of questions to remove if budget not specified
-
-    Returns:
-        Filtered DataFrame
-    """
-    # Make a copy of the dataframe
-    result_df = df.copy()
-
-    # Ensure ground_truth_num exists for numerical types
-    if 'ground_truth_num' not in result_df.columns:
-        result_df['ground_truth_num'] = pd.to_numeric(result_df['ground_truth'], errors='coerce')
-
-    # Calculate default budget if not specified
-    if removal_budget is None:
-        removal_budget = {}
-        for q_type in df['question_type'].unique():
-            type_count = len(df[df['question_type'] == q_type])
-            removal_budget[q_type] = int(type_count * removal_fraction)
-
-    # Define filtering functions for each question type
-    filter_functions = {
-        'object_size_estimation': filter_object_size_estimation,
-        'object_counting': filter_object_counting,
-        'object_abs_distance': filter_object_abs_distance,
-        'room_size_estimation': filter_room_size_estimation,
-        'object_rel_distance': filter_object_rel_distance,
-        'object_rel_direction_easy': filter_object_rel_direction,
-        'object_rel_direction_medium': filter_object_rel_direction,
-        'object_rel_direction_hard': filter_object_rel_direction,
-        'obj_appearance_order': filter_obj_appearance_order,
-        'route_planning': filter_route_planning
-    }
-
-    # Track all IDs to remove
-    all_remove_ids = []
-
-    # Process each question type
-    for q_type in tqdm(df['question_type'].unique(), desc="Filtering by question type"):
-        # Get questions of this type
-        type_df = df[df['question_type'] == q_type]
-
-        # Skip if no questions of this type
-        if len(type_df) == 0:
-            continue
-
-        # Get budget for this type
-        budget = removal_budget.get(q_type, int(len(type_df) * removal_fraction))
-
-        # Skip if budget is 0
-        if budget <= 0:
-            continue
-
-        # Apply the appropriate filter function if available
-        if q_type in filter_functions:
-            filter_fn = filter_functions[q_type]
-            try:
-                remove_ids = filter_fn(type_df, budget)
-                all_remove_ids.extend(remove_ids)
-                print(f"Removing {len(remove_ids)} {q_type} questions")
-            except Exception as e:
-                print(f"Error filtering {q_type}: {str(e)}")
-        else:
-            print(f"Warning: No filter function defined for question type '{q_type}'")
-
-    # Remove identified questions
-    result_df = result_df[~result_df['id'].isin(all_remove_ids)]
-
-    return result_df
-
-# Function to evaluate models on filtered dataset
-def evaluate_models(df, model_columns=None, sort=False):
-    """
-    Compute scores for each model on the dataset.
-
-    Args:
-        df: DataFrame with model scores
-        model_columns: List of column names containing model scores
-
-    Returns:
-        DataFrame with model scores by question type
-    """
-    if model_columns is None or len(model_columns) == 0:
-        # If no model columns are provided, check if ref eval models are present
-        model_columns = get_model_columns(df)
-
-    # Overall scores
-    overall_scores = {model: df[model].mean() for model in model_columns}
-
-    # Scores by question type
-    type_scores = df.groupby('question_type').apply(
-        lambda x: pd.Series({model: x[model].mean() for model in model_columns})
-    )
-
-    # Add overall score as a row
-    type_scores.loc['overall'] = pd.Series(overall_scores)
-
-    # Sort columns based on overall scores
-    if sort:
-        type_scores = type_scores[sorted(type_scores.columns, key=lambda col: type_scores.loc['overall', col], reverse=False)]
-
-    if len(df['question_type'].unique()) == 1:
-        # If only one question type, remove overall row
-        type_scores = type_scores.drop('overall')
-
-    return type_scores * 100  # Convert to percentage
-
-
-def visualize_model_scores(df, model_columns=None):
-    """
-    Visualize model scores using a heatmap.
-
-    Args:
-        df: DataFrame with model scores
-        model_columns: List of column names containing model scores
-
-    Returns:
-        matplotlib figure
-    """
-    scores = evaluate_models(df, model_columns)
-
-    ranks = scores.rank(axis=1, method='min')
-
-    # Plot heatmap
-    plt.figure(figsize=(15, 4))
-    # use `ranks` for the heatmap colors, but annotate with `scores`
-    sns.heatmap(ranks, annot=scores, fmt=".2f", cmap="coolwarm", cbar=True, linewidths=0.125)
-    plt.xlabel("Model")
-    plt.ylabel("Question Type")
-    plt.xticks(rotation=25, ha='right')
-    plt.tight_layout()
-
-    return plt.gcf()
-
-
-# Function to visualize the impact of debiasing
-def visualize_debiasing_impact(original_df, debiased_df, model_columns=None, title=""):
-    """
-    Visualize the impact of debiasing on model performance.
-
-    Args:
-        original_df: Original dataset with model scores
-        debiased_df: Debiased dataset with model scores
-        model_columns: List of column names containing model scores
-        title: Title for the plot
-    """
-    # Compute scores before and after debiasing
-    original_scores = evaluate_models(original_df, model_columns, sort=True)
-    debiased_scores = evaluate_models(debiased_df, model_columns, sort=False)
-
-    # sort debiased by the original scores sort order
-    #         type_scores = type_scores[sorted(type_scores.columns, key=lambda col: type_scores.loc['overall', col], reverse=False)]
-
-    debiased_scores = debiased_scores[original_scores.columns]
-
-    n_rows = len(original_scores)
-    assert n_rows == len(debiased_scores), f"Number of rows in original and debiased scores do not match: {n_rows} != {len(debiased_scores)}"
-
-    # Compute difference
-    diff_scores = debiased_scores - original_scores
-    # # Sort by the last column (overall score)
-    # diff_scores = diff_scores.T.sort_values(by=diff_scores.index[-1], ascending=False).T
-
-    # Plot results
-    # fig, axes = plt.subplots(1, 3, figsize=(25, 2.75*n_rows))
-    fig, axes = plt.subplots(1, 3, figsize=(30, 2 + 0.5*n_rows))
-
-    text_rot = 40
-
-    # Original scores
-    sns.heatmap(original_scores, annot=True, fmt=".1f", cmap="YlGnBu", ax=axes[0])
-    axes[0].set_title("Original Scores")
-    axes[0].set_xticklabels(axes[0].get_xticklabels(), rotation=text_rot, ha='right')
-
-    # Debiased scores
-    sns.heatmap(debiased_scores, annot=True, fmt=".1f", cmap="YlGnBu", ax=axes[1])
-    axes[1].set_title("Debiased Scores")
-    axes[1].set_xticklabels(axes[1].get_xticklabels(), rotation=text_rot, ha='right')
-
-    # Difference
-    sns.heatmap(diff_scores, annot=True, fmt=".1f", cmap="RdBu_r", center=0, ax=axes[2])
-    axes[2].set_title("Difference (Debiased - Original)")
-    axes[2].set_xticklabels(axes[2].get_xticklabels(), rotation=text_rot, ha='right')
-
-    # add title
-    fig.suptitle(title, fontsize=12)
-    fig.subplots_adjust(top=0.95)  # Adjust top to make space for title
-
-    plt.tight_layout()
-    return fig
-
-
-# Main debiasing function
-def debias_benchmark(df, model_columns=None, removal_budget=None, removal_fraction=0.2):
-    """
-    End-to-end debiasing of the benchmark.
-
-    Args:
-        df: DataFrame with the benchmark data and model scores
-        model_columns: List of column names containing model scores
-        removal_budget: Dict mapping question_type to number of questions to remove
-                    (if None, calculated based on removal_fraction)
-        removal_fraction: Fraction of questions to remove if budget not specified
-
-    Returns:
-        Tuple of (original_df, debiased_df, scores_before, scores_after, figures)
-    """
-    # Filter the dataset
-    print("Filtering dataset...")
-    debiased_df = filter_dataset_by_type(df, removal_budget, removal_fraction)
-
-    # Calculate statistics
-    print("\nDataset statistics:")
-    print(f"Original: {len(df)} questions")
-    print(f"Debiased: {len(debiased_df)} questions")
-    print(f"Removed: {len(df) - len(debiased_df)} questions")
-
-    # Show distribution of questions by type
-    print("\nQuestion type distribution:")
-    orig_counts = df['question_type'].value_counts().sort_index()
-    new_counts = debiased_df['question_type'].value_counts().sort_index()
-
-    # Create comparison DataFrame
-    dist_df = pd.DataFrame({
-        'Original': orig_counts,
-        'Debiased': new_counts
-    })
-    dist_df['Removed'] = dist_df['Original'] - dist_df['Debiased']
-    dist_df['Removal %'] = (dist_df['Removed'] / dist_df['Original'] * 100).round(1)
-
-    print(dist_df)
-
-    # Evaluate impact if model scores are available
-    original_scores = None
-    debiased_scores = None
-    impact_fig = None
-
-    print("\nEvaluating impact on model performance...")
-    original_scores = evaluate_models(df, model_columns)
-    debiased_scores = evaluate_models(debiased_df, model_columns)
-
-    # Visualize impact
-    print("Visualizing impact...")
-    impact_fig = visualize_debiasing_impact(df, debiased_df, model_columns)
-
-    # Visualize question distribution
-    dist_fig = plt.figure(figsize=(12, 6))
-    dist_df[['Original', 'Debiased']].plot(kind='bar', figsize=(12, 6))
-    plt.title('Question Distribution by Type')
-    plt.ylabel('Count')
-    plt.xticks(rotation=45, ha='right')
-    plt.tight_layout()
-
-    figures = {
-        'distribution': dist_fig,
-        'impact': impact_fig
-    }
-
-    return df, debiased_df, original_scores, debiased_scores, figures
-
-# Debug function for a specific filter
-def debug_filter(df, q_type, filter_fn=None, budget=10):
-    """
-    Debug a specific filtering function.
-
-    Args:
-        df: DataFrame with benchmark questions
-        q_type: Question type to filter
-        filter_fn: Specific filter function (optional)
-        budget: Number of questions to remove
-
-    Returns:
-        List of question IDs to remove
-    """
-    print(f"Debugging filter for question type: {q_type}")
-
-    # Filter for the specified question type
-    type_df = df[df['question_type'] == q_type].copy()
-
-    if len(type_df) == 0:
-        print(f"No questions found with type '{q_type}'")
-        return []
-
-    print(f"Found {len(type_df)} questions of type '{q_type}'")
-
-    # Use the provided filter function or look up the appropriate one
-    if filter_fn is None:
-        # Define mapping
-        filter_functions = {
-            'object_size_estimation': filter_object_size_estimation,
-            'object_counting': filter_object_counting,
-            'object_abs_distance': filter_object_abs_distance,
-            'room_size_estimation': filter_room_size_estimation,
-            'object_rel_distance': filter_object_rel_distance,
-            'object_rel_direction_easy': filter_object_rel_direction,
-            'object_rel_direction_medium': filter_object_rel_direction,
-            'object_rel_direction_hard': filter_object_rel_direction,
-            'obj_appearance_order': filter_obj_appearance_order,
-            'route_planning': filter_route_planning
-        }
-
-        if q_type not in filter_functions:
-            print(f"No filter function defined for question type '{q_type}'")
-            return []
-
-        filter_fn = filter_functions[q_type]
-
-    # Apply the filter function
-    try:
-        # Ensure ground_truth_num exists
-        if 'ground_truth_num' not in type_df.columns:
-            type_df['ground_truth_num'] = pd.to_numeric(type_df['ground_truth'], errors='coerce')
-
-        # Run the filter
-        remove_ids = filter_fn(type_df, budget)
-
-        # Print removed questions
-        print(f"\nSelected {len(remove_ids)} questions to remove:")
-        removed_df = type_df[type_df['id'].isin(remove_ids)]
-
-        for i, (_, row) in enumerate(removed_df.iterrows(), 1):
-            print(f"{i}. ID {row['id']}: {row['question']} (GT: {row['ground_truth']})")
-
-        return remove_ids
-
-    except Exception as e:
-        print(f"Error applying filter function: {str(e)}")
-        import traceback
-        traceback.print_exc()
-        return []
-
-# Example usage
-def run_debiasing_experiment():
-    """
-    Example function showing how to run a debiasing experiment.
-    """
-    # Load data
     df = get_vsi_with_scores()
 
-    # Default: remove 20% of questions for each type
-    _, debiased_df, orig_scores, debiased_scores, figures = debias_benchmark(
-        df, removal_fraction=0.2)
+    # Filter the data based on the budgets
+    print(sep)
+    print("Filtering data based on budgets...")
+    print(f"Budgets: {json.dumps(budgets, indent=4)}")
+    ids_obj_size = filter_object_size_estimation(df, budget=budgets["object_size_estimation"])
+    ids_abs_distance = filter_object_abs_distance(df, budget=budgets["object_abs_distance"])
+    ids_rel_distance = filter_object_rel_distance(df, budget=budgets["object_rel_distance"])
+    ids_obj_app_order = filter_obj_appearance_order(df, budget=budgets["obj_appearance_order"])
+    ids_obj_count = filter_object_counting(df, budget=budgets["object_counting"])
+    ids_rel_dir = filter_object_rel_direction(df, budget=budgets["object_rel_direction"])
+    ids_room_size = filter_room_size_estimation(df, budget=budgets["room_size_estimation"])
+    ids_route_planning = filter_route_planning(df, budget=budgets["route_planning"])
 
-    # Custom budget: specify exact number to remove for certain types
-    custom_budget = {
-        'object_size_estimation': 400,
-        'object_abs_distance': 80,
-        'object_counting': 60,
-        'object_rel_distance': 70
+    ids_map = {
+        "object_size_estimation": ids_obj_size,
+        "object_abs_distance": ids_abs_distance,
+        "object_rel_distance": ids_rel_distance,
+        "obj_appearance_order": ids_obj_app_order,
+        "object_counting": ids_obj_count,
+        "object_rel_direction": ids_rel_dir,
+        "room_size_estimation": ids_room_size,
+        "route_planning": ids_route_planning,
     }
 
-    _, custom_debiased_df, _, _, _ = debias_benchmark(
-        df, removal_budget=custom_budget)
+    all_ids = set()
+    print(sep)
+    for k, v in ids_map.items():
+        all_ids = all_ids.union(set(v))
+        n_removed = len(v)
+        n_orig = len(df[df["question_type"].str.startswith(k)])
+        n_remaining = n_orig - len(v)
+        print(f"{n_removed} / {n_orig} ({n_removed/n_orig * 100:.2f}%) \t of {k} removed{' ' * (25 - len(k))}\t => {n_remaining} / {n_orig} ({n_remaining/n_orig * 100:.2f}%) remaining")
 
-    # Save datasets
-    debiased_df.to_csv('debiased_vsibench_default.csv', index=False)
-    custom_debiased_df.to_csv('debiased_vsibench_custom.csv', index=False)
+    print(sep)
+    print(f"Number of ids removed: {len(all_ids)} / {len(df)} ({len(all_ids)/len(df) * 100:.2f}%)")
+    print(f"Number of ids remaining: {len(df) - len(all_ids)} / {len(df)} ({(len(df) - len(all_ids))/len(df) * 100:.2f}%)")
+    print(sep)
 
-    print("\nSaved debiased datasets")
+    df["removed"] = df["id"].isin(all_ids)
+    deb_df = df.loc[~df["removed"]]
+    removed_df = df.loc[df["removed"]]
 
-    return debiased_df, custom_debiased_df
+    # Calculate scores for each model
+    rem_scores = evaluate_models(removed_df).T["overall"]
+    deb_scores = evaluate_models(deb_df).T["overall"]
+    orig_scores = evaluate_models(df).T["overall"]
+    diff_scores = deb_scores - orig_scores
+
+    # combine the series into a dataframe
+    scores_df = pd.DataFrame({
+        "Removed": rem_scores,
+        "Original": orig_scores,
+        "Debiased": deb_scores,
+        "Difference": diff_scores
+    })
+    scores_df = scores_df.reset_index().sort_values(by="Difference", ascending=True)
+    scores_df = scores_df.rename(columns={"index": "Model"})
+
+    print("Overall scores for each model:")
+    print(scores_df)
+    print(sep)
+
+    # save the removed ids to a txt file
+    print(f"Saving removed ids to {save_path}")
+    os.makedirs(os.path.dirname(save_path), exist_ok=True)
+    with open(save_path, "w") as f:
+        for id in all_ids:
+            f.write(f"{id}\n")
+    print(f"Finished saving removed ids to {save_path}")
+    return df, removed_df, deb_df, scores_df
+
+
+if __name__ == "__main__":
+    debias_vsibench()
