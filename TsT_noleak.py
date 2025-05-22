@@ -146,10 +146,11 @@ for i in range(4):
 order_feature_cols = [
     *[f'opt_seq_{i}' for i in range(1, 5)],
     *[f'seq_{i}_{comp}score' for i in range(4) for comp in ['pos_', 'pair_', 'comb_pair_', '']],
-    'gt_pos_score', 'gt_pair_score', 'gt_comb_pair_score', 'gt_obj_score',
-    'max_distractor_pos_score', 'max_distractor_pair_score', 'max_distractor_comb_pair_score',
-    'max_distractor_score', 'relative_bias_pos_score', 'relative_bias_pair_score',
-    'relative_bias_comb_pair_score', 'relative_bias_score'
+    # # TODO: everything below leverages privileged info. Remove?
+    # 'gt_pos_score', 'gt_pair_score', 'gt_comb_pair_score', 'gt_obj_score',
+    # 'max_distractor_pos_score', 'max_distractor_pair_score', 'max_distractor_comb_pair_score',
+    # 'max_distractor_score',
+    # 'relative_bias_pos_score', 'relative_bias_pair_score', 'relative_bias_comb_pair_score', 'relative_bias_score'
 ]
 
 
