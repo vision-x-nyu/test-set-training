@@ -100,7 +100,8 @@ class ObjCountModel(QType):
     feature_cols = [
         "object",
         "obj_count",
-        "combo_count",
+        # # NOTE: the below features leverage privileged gt info. Remove?
+        # "combo_count",
     ]
 
     def __init__(self):
@@ -149,8 +150,9 @@ class ObjAbsDistModel(QType):
         "object_pair",
         "pair_freq_score",
         "pair_inv_var_score",
-        "pair_mean_dist_score",
-        "global_mean_dist_score",
+        # # NOTE: the below features leverage privileged gt info. Remove?
+        # "pair_mean_dist_score",
+        # "global_mean_dist_score",
     ]
 
     def __init__(self):
@@ -235,6 +237,7 @@ class ObjSizeEstModel(QType):
 
     # TODO:
 
+
 # ROOM SIZE ESTIMATION
 class RoomSizeEstModel(QType):
     name = "room_size_estimation"
@@ -244,6 +247,7 @@ class RoomSizeEstModel(QType):
 
 
 """MC QUESTIONS"""
+
 
 # OBJECT RELATIVE DISTANCE
 class RelDistanceModel(QType):
@@ -365,19 +369,20 @@ class ObjOrderModel(QType):
     feature_cols = [
         *_opt_seq_cols,
         *_opt_seq_comp_cols,
-        # relative scores
-        "gt_pos_score",
-        "gt_pair_score",
-        "gt_comb_pair_score",
-        "gt_obj_score",
-        "max_distractor_pos_score",
-        "max_distractor_pair_score",
-        "max_distractor_comb_pair_score",
-        "max_distractor_score",
-        "relative_bias_pos_score",
-        "relative_bias_pair_score",
-        "relative_bias_comb_pair_score",
-        "relative_bias_score",
+        # # NOTE: the below features leverage privileged gt info. Remove?
+        # # relative scores
+        # "gt_pos_score",
+        # "gt_pair_score",
+        # "gt_comb_pair_score",
+        # "gt_obj_score",
+        # "max_distractor_pos_score",
+        # "max_distractor_pair_score",
+        # "max_distractor_comb_pair_score",
+        # "max_distractor_score",
+        # "relative_bias_pos_score",
+        # "relative_bias_pair_score",
+        # "relative_bias_comb_pair_score",
+        # "relative_bias_score",
     ]
 
     def __init__(self):
