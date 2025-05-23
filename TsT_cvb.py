@@ -30,6 +30,7 @@ df_full["gt_option"] = df_full.apply(
 df_full["n_options"] = df_full["choices"].apply(len)
 
 GT_COL = "gt_idx"
+GT_COL = "gt_option"
 
 
 # =============================================================================
