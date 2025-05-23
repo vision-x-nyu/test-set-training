@@ -299,8 +299,19 @@ def evaluate_obj_order_cv(n_splits: int = 5, random_state: int = 42, verbose: bo
 
 
 if __name__ == "__main__":
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--n_splits', '-k', type=int, default=5, help='Number of CV splits')
+    parser.add_argument('--random_state', '-s', type=int, default=42, help='Random seed')
+    parser.add_argument('--verbose', '-v', action='store_true', help='Print detailed output')
+    args = parser.parse_args()
+
+    n_splits = args.n_splits
+    random_state = args.random_state 
+    verbose = args.verbose
+
     print("================  OBJECT REL DISTANCE  ================")
-    evaluate_rel_distance_cv()
+    evaluate_rel_distance_cv(n_splits=n_splits, random_state=random_state, verbose=verbose)
 
     print("\n================  OBJ APPEARANCE ORDER  ================")
-    evaluate_obj_order_cv()
+    evaluate_obj_order_cv(n_splits=n_splits, random_state=random_state, verbose=verbose)
