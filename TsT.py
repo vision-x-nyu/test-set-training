@@ -100,13 +100,15 @@ class ObjCountModel(QType):
     format = "num"
 
     feature_cols = [
+        "global_mean_log",
+        "global_std_log",
         "object",
         "obj_count",
         "obj_val_mean",
         "obj_val_std",
         "obj_val_log_mean",
         "obj_val_log_std",
-        # # NOTE: the below features leverage privileged gt info. Remove?
+        # NOTE: the below features leverage privileged gt info. Remove?
         # "combo_count",
     ]
 
@@ -146,12 +148,17 @@ class ObjCountModel(QType):
         # Calculate combo counts
         self.combo_counts = train_df.groupby(["object", "ground_truth"]).size()
 
+        # Calculate global statistics
+        self.global_mean_log = train_df["log_ground_truth"].mean()
+        self.global_std_log = train_df["log_ground_truth"].std()
+
     def add_features(self, df: pd.DataFrame) -> pd.DataFrame:
         """Add frequency-based features to the dataframe."""
         if self.obj_stats is None or self.combo_counts is None:
             raise RuntimeError("fit_feature_maps must be called first")
 
         df = df.copy()
+        epsilon = 1e-6
 
         # Add object statistics
         df = pd.merge(df, self.obj_stats, on="object", how="left")
@@ -161,6 +168,13 @@ class ObjCountModel(QType):
             lambda row: self.combo_counts.get((row["object"], row["ground_truth"]), 0),
             axis=1
         )
+
+        # Calculate global distance score
+        global_dist = abs(df["log_ground_truth"] - self.global_mean_log) / (self.global_std_log + epsilon)
+        df["global_mean_dist_score"] = 1.0 - minmax_scale(global_dist + epsilon)
+
+        df["global_mean_log"] = self.global_mean_log
+        df["global_std_log"] = self.global_std_log
 
         return df
 
@@ -948,13 +962,13 @@ def evaluate_bias_model(
 ):
     qdf = model.select_rows(df)
     all_scores = []
-    
+
     # Show progress bar over repeats
     repeat_pbar = tqdm(range(repeats), desc=f"[{model.name.upper()}] Repeats", disable=repeats == 1)
-    
+
     for repeat in repeat_pbar:
         current_seed = random_state + repeat
-        
+
         # Use appropriate splitter based on task type
         if model.task == "reg":
             splitter = KFold(n_splits=n_splits, shuffle=True, random_state=current_seed)
@@ -962,10 +976,11 @@ def evaluate_bias_model(
         else:  # classification task
             splitter = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=current_seed)
             split_args = (qdf, qdf["ground_truth"])
-        
+
         scores: List[float] = []
 
-        for fold, (tr_idx, te_idx) in enumerate(splitter.split(*split_args), 1):
+        fold_pbar = tqdm(enumerate(splitter.split(*split_args), 1), desc=f"[{model.name.upper()}] Folds", total=n_splits, disable=repeats > 1)
+        for fold, (tr_idx, te_idx) in fold_pbar:
             tr, te = qdf.iloc[tr_idx].copy(), qdf.iloc[te_idx].copy()
 
             model.fit_feature_maps(tr)
@@ -979,7 +994,8 @@ def evaluate_bias_model(
             est = _make_estimator(model.task, current_seed)
             est.fit(X_tr, y_tr)
             scores.append(_score(est, X_te, y_te, model.metric))
-            
+            fold_pbar.set_postfix({f"fold_{model.metric}": f"{np.mean(scores):.2%}"})
+
         all_scores.append(scores)
         if repeats > 1:
             current_avg = np.mean(scores)
@@ -989,7 +1005,7 @@ def evaluate_bias_model(
     mean_scores = [np.mean(scores) for scores in all_scores]
     mean_acc = float(np.mean(mean_scores))
     std_acc = float(np.std(mean_scores))
-    
+
     if verbose:
         print(f"\n[{model.name.upper()}] Overall {model.metric.upper()}: {mean_acc:.2%} ± {std_acc:.2%} (n_splits={n_splits}, repeats={repeats})")
         if repeats == 1:
