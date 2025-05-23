@@ -330,10 +330,13 @@ class RoomSizeEstModel(QType):
     format = "num"
 
     feature_cols = [
-        "log_size",
-        "pdf_score",
-        "global_mean_dist_score",
-        "global_std_dist_score",
+        "global_mean_log",
+        "global_std_log",
+        # # NOTE: the below features leverage privileged gt info. Remove?
+        # "log_size",
+        # "pdf_score",
+        # "global_mean_dist_score",
+        # "global_std_dist_score",
     ]
 
     def __init__(self):
@@ -374,6 +377,11 @@ class RoomSizeEstModel(QType):
 
         df = df.copy()
         epsilon = 1e-6
+
+        df["global_mean_log"] = self.global_mean_log
+        df["global_std_log"] = self.global_std_log
+
+        ## Privileged gt info:
 
         # Calculate PDF score (higher for more typical sizes)
         pdf = lognorm.pdf(df["ground_truth"], self.shape, self.loc, self.scale)
