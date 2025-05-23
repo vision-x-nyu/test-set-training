@@ -511,20 +511,21 @@ def evaluate_bias_model(
 # 6.  MAIN --------------------------------------------------------------------
 # =============================================================================
 
-if __name__ == "__main__":
-    import argparse
+def run_evaluation(n_splits: int = 5, random_state: int = 42, verbose: bool = False) -> pd.DataFrame:
+    """
+    Run evaluation for all models and return a summary table of results.
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--n_splits", "-k", type=int, default=5, help="Number of CV splits")
-    parser.add_argument("--random_state", "-s", type=int, default=42, help="Random seed")
-    parser.add_argument(
-        "--verbose", "-v", action="store_true", help="Print detailed output"
-    )
-    args = parser.parse_args()
+    Args:
+        n_splits: Number of cross-validation splits
+        random_state: Random seed for reproducibility
+        verbose: Whether to print detailed output during evaluation
 
+    Returns:
+        DataFrame with model results including mean score and standard deviation
+    """
     models = [
         ## NUM
-        # ObjCountModel(),  # TODO:
+        ObjCountModel(),
         # ObjAbsDistModel(),  # TODO:
         # ObjSizeEstModel(),  # TODO:
         # RoomSizeEstModel(),  # TODO:
@@ -536,12 +537,56 @@ if __name__ == "__main__":
         ObjOrderModel()
     ]
 
+    results = []
     for m in models:
         print(f"\n================  {m.name.upper()}  ================")
-        evaluate_bias_model(
+        mean_score, std_score, fi = evaluate_bias_model(
             m,
             df_full,
-            n_splits=args.n_splits,
-            random_state=args.random_state,
-            verbose=args.verbose,
+            n_splits=n_splits,
+            random_state=random_state,
+            verbose=verbose,
         )
+        results.append({
+            "Model": m.name,
+            "Format": m.format.upper(),
+            "Metric": m.metric.upper(),
+            "Score": mean_score,
+            "± Std": std_score,
+            "Feature Importances": fi
+        })
+
+    # Create summary table
+    summary = pd.DataFrame(results)
+    summary = summary.sort_values("Score", ascending=False)
+
+    # Format the scores as percentages
+    summary["Score"] = summary["Score"].map("{:.1%}".format)
+    summary["± Std"] = summary["± Std"].map("{:.1%}".format)
+
+    # Print pretty table
+    print("\n"*3 + "="*80)
+    print("EVALUATION SUMMARY")
+    print("="*80)
+    print(summary[["Model", "Format", "Metric", "Score", "± Std"]].to_string(index=False))
+    print("="*80)
+
+    return summary
+
+
+if __name__ == "__main__":
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--n_splits", "-k", type=int, default=5, help="Number of CV splits")
+    parser.add_argument("--random_state", "-s", type=int, default=42, help="Random seed")
+    parser.add_argument(
+        "--verbose", "-v", action="store_true", help="Print detailed output"
+    )
+    args = parser.parse_args()
+
+    run_evaluation(
+        n_splits=args.n_splits,
+        random_state=args.random_state,
+        verbose=args.verbose
+    )
