@@ -12,6 +12,7 @@ from tqdm import tqdm
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.model_selection import StratifiedKFold, KFold
 from sklearn.preprocessing import LabelEncoder, minmax_scale
+from scipy.stats import lognorm
 
 
 # =============================================================================
@@ -328,7 +329,65 @@ class RoomSizeEstModel(QType):
     name = "room_size_estimation"
     format = "num"
 
-    # TODO:
+    feature_cols = [
+        "log_size",
+        "pdf_score",
+        "global_mean_dist_score",
+        "global_std_dist_score",
+    ]
+
+    def __init__(self):
+        # Statistics learned from training data
+        self.shape: float | None = None
+        self.loc: float | None = None
+        self.scale: float | None = None
+        self.global_mean_log: float | None = None
+        self.global_std_log: float | None = None
+
+    def select_rows(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Select and preprocess room size estimation questions."""
+        qdf = df[df["question_type"] == self.name].copy()
+
+        # Convert ground truth to numeric
+        qdf["ground_truth"] = pd.to_numeric(qdf["ground_truth"], errors="coerce")
+        qdf.dropna(subset=["ground_truth"], inplace=True)
+
+        # Add log-transformed ground truth
+        qdf["log_size"] = np.log10(qdf["ground_truth"] + 1.0)
+
+        return qdf
+
+    def fit_feature_maps(self, train_df: pd.DataFrame) -> None:
+        """Fit lognormal distribution and collect global statistics from training data."""
+        # Fit lognormal distribution
+        x = train_df["ground_truth"].values
+        self.shape, self.loc, self.scale = lognorm.fit(x, floc=0)  # Fix location to 0
+
+        # Calculate global statistics in log space
+        self.global_mean_log = train_df["log_size"].mean()
+        self.global_std_log = train_df["log_size"].std()
+
+    def add_features(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Add features based on lognormal distribution and global statistics."""
+        if self.shape is None or self.global_mean_log is None:
+            raise RuntimeError("fit_feature_maps must be called first")
+
+        df = df.copy()
+        epsilon = 1e-6
+
+        # Calculate PDF score (higher for more typical sizes)
+        pdf = lognorm.pdf(df["ground_truth"], self.shape, self.loc, self.scale)
+        df["pdf_score"] = minmax_scale(pdf + epsilon)
+
+        # Calculate distance from global mean in log space
+        norm_dist = abs(df["log_size"] - self.global_mean_log) / (self.global_std_log + epsilon)
+        df["global_mean_dist_score"] = 1.0 - minmax_scale(norm_dist + epsilon)
+
+        # Calculate distance from global std in log space
+        std_dist = abs(df["log_size"] - self.global_mean_log) / (self.global_std_log + epsilon)
+        df["global_std_dist_score"] = 1.0 - minmax_scale(std_dist + epsilon)
+
+        return df
 
 
 """MC QUESTIONS"""
@@ -708,7 +767,7 @@ def run_evaluation(n_splits: int = 5, random_state: int = 42, verbose: bool = Fa
         ObjCountModel(),
         ObjAbsDistModel(),
         ObjSizeEstModel(),
-        # RoomSizeEstModel(),  # TODO:
+        RoomSizeEstModel(),
 
         ## MC
         RelDistanceModel(),
