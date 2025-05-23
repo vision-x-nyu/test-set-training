@@ -567,46 +567,52 @@ class RelDirModel(QType):
     format = "mc"
 
     feature_cols = [
+        "difficulty",
         "positioning_object",
-        "orienting_object", 
+        "orienting_object",
         "querying_object",
         "obj_freq_score",
-        "answer_freq_score",
-        "obj_pair_freq_score",
+        # "pos_ori_obj_pair_freq_score",
+        # # "pos_ori_obj_ord_pair_freq_score",
+        # "poq_obj_pair_freq_score",
+        # # "poq_obj_ord_pair_freq_score",
+        # # NOTE: the below features leverage privileged gt info. Remove?
+        # "gt_opt_freq_score",
     ]
 
     def __init__(self):
         # frequency maps learned on the training split
         self.obj_freq_map: pd.Series | None = None
-        self.answer_freq_map: pd.Series | None = None
-        self.obj_pair_freq_map: pd.Series | None = None
+        self.gt_opt_freq_map: pd.Series | None = None
+        self.pos_ori_obj_pair_freq_map: pd.Series | None = None
 
     def select_rows(self, df: pd.DataFrame) -> pd.DataFrame:
         """Select and preprocess relative direction questions."""
         # Handle all three subtypes
         qdf = df[df["question_type"].str.startswith("object_rel_direction")].copy()
-        
+        qdf["difficulty"] = qdf["question_type"].str.split("_").str[-1]
+
         # Extract objects from question
         qdf[["positioning_object", "orienting_object", "querying_object"]] = \
             qdf["question"].str.extract(r'standing by the (.*?) and facing the (.*?), is the (.*?) to')
-        
+
         # Clean object names
         for col in ["positioning_object", "orienting_object", "querying_object"]:
             qdf[col] = qdf[col].str.strip()
-        
+
         # Extract ground truth answer
         qdf["gt_idx"] = qdf["ground_truth"].apply(lambda x: "ABCD".index(x))
         qdf["gt_option"] = qdf.apply(
             lambda row: row["options"][row["gt_idx"]].split(". ")[-1], 
             axis=1
         )
-        
+
         # Drop rows where extraction failed
         qdf.dropna(
             subset=["positioning_object", "orienting_object", "querying_object", "gt_option"],
             inplace=True
         )
-        
+
         return qdf
 
     def fit_feature_maps(self, train_df: pd.DataFrame) -> None:
@@ -618,27 +624,39 @@ class RelDirModel(QType):
             train_df["querying_object"]
         ]).dropna()
         self.obj_freq_map = all_objects.value_counts(normalize=True)
-        
+
         # Calculate answer frequencies
-        self.answer_freq_map = train_df["gt_option"].value_counts(normalize=True)
-        
+        self.gt_opt_freq_map = train_df["gt_option"].value_counts(normalize=True)
+        self.pos_obj_freq_map = train_df["positioning_object"].value_counts(normalize=True)
+        self.orient_obj_freq_map = train_df["orienting_object"].value_counts(normalize=True)
+        self.query_obj_freq_map = train_df["querying_object"].value_counts(normalize=True)
+
         # Calculate object pair frequencies (positioning-orienting pairs)
-        pairs = train_df.apply(
+        pos_ori_pairs = train_df.apply(
             lambda row: "-".join(sorted([
                 row["positioning_object"],
                 row["orienting_object"]
-            ])),
-            axis=1
+            ])), axis=1
         )
-        self.obj_pair_freq_map = pairs.value_counts(normalize=True)
+        self.pos_ori_obj_pair_freq_map = pos_ori_pairs.value_counts(normalize=True)
+
+        poq_pairs = train_df.apply(
+            lambda row: "-".join(sorted([
+                row["positioning_object"],
+                row["orienting_object"],
+                row["querying_object"],
+            ])), axis=1
+        )
+        self.poq_obj_pair_freq_map = poq_pairs.value_counts(normalize=True)
+
 
     def add_features(self, df: pd.DataFrame) -> pd.DataFrame:
         """Add frequency-based features to the dataframe."""
         if self.obj_freq_map is None:
             raise RuntimeError("fit_feature_maps must be called first")
-            
+
         df = df.copy()
-        
+
         # Calculate object frequency score (sum of normalized frequencies)
         df["obj_freq_score"] = df.apply(
             lambda row: (
@@ -648,20 +666,22 @@ class RelDirModel(QType):
             ),
             axis=1
         )
-        
+
         # Calculate answer frequency score
-        df["answer_freq_score"] = df["gt_option"].map(self.answer_freq_map).fillna(0)
-        
+        df["gt_opt_freq_score"] = df["gt_option"].map(self.gt_opt_freq_map).fillna(0)
+
         # Calculate object pair frequency score
-        df["obj_pair"] = df.apply(
-            lambda row: "-".join(sorted([
-                row["positioning_object"],
-                row["orienting_object"]
-            ])),
-            axis=1
-        )
-        df["obj_pair_freq_score"] = df["obj_pair"].map(self.obj_pair_freq_map).fillna(0)
-        
+        # positioning-orienting pairs
+        df["pos_ori_obj_pair"] = df.apply(lambda row: "-".join(sorted([row["positioning_object"], row["orienting_object"]])), axis=1)
+        df["pos_ori_obj_ord_pair"] = df.apply(lambda row: "-".join([row["positioning_object"], row["orienting_object"]]), axis=1)
+
+        # positioning-orienting-querying pairs
+        df["poq_obj_pair"] = df.apply(lambda row: "-".join(sorted([row["positioning_object"], row["orienting_object"], row["querying_object"]])), axis=1)
+
+        df["pos_ori_obj_pair_freq_score"] = df["pos_ori_obj_pair"].map(self.pos_ori_obj_pair_freq_map).fillna(0)
+
+        df["poq_obj_pair_freq_score"] = df["poq_obj_pair"].map(self.poq_obj_pair_freq_map).fillna(0)
+
         return df
 
 
