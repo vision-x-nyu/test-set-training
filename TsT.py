@@ -1000,6 +1000,10 @@ def run_evaluation(n_splits: int = 5, random_state: int = 42, verbose: bool = Fa
     summary = pd.DataFrame(results)
     summary = summary.sort_values("Score", ascending=False)
 
+    # Calculate overall average score
+    overall_avg = summary["Score"].mean()
+    overall_std = summary["Score"].std()
+
     # Format the scores as percentages
     summary["Score"] = summary["Score"].map("{:.1%}".format)
     summary["± Std"] = summary["± Std"].map("{:.1%}".format)
@@ -1009,6 +1013,8 @@ def run_evaluation(n_splits: int = 5, random_state: int = 42, verbose: bool = Fa
     print("EVALUATION SUMMARY")
     print("="*80)
     print(summary[["Model", "Format", "Metric", "Score", "± Std"]].to_string(index=False))
+    print("="*80)
+    print(f"OVERALL AVERAGE SCORE: {overall_avg:.1%} ± {overall_std:.1%}")
     print("="*80)
 
     return summary
