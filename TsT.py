@@ -101,13 +101,17 @@ class ObjCountModel(QType):
     feature_cols = [
         "object",
         "obj_count",
+        "obj_val_mean",
+        "obj_val_std",
+        "obj_val_log_mean",
+        "obj_val_log_std",
         # # NOTE: the below features leverage privileged gt info. Remove?
         # "combo_count",
     ]
 
     def __init__(self):
         # frequency maps learned on the training split
-        self.obj_counts: pd.Series | None = None
+        self.obj_stats: pd.DataFrame | None = None
         self.combo_counts: pd.Series | None = None
 
     def select_rows(self, df: pd.DataFrame) -> pd.DataFrame:
@@ -115,23 +119,41 @@ class ObjCountModel(QType):
         qdf = df[df["question_type"] == self.name].copy()
         qdf["object"] = qdf["question"].str.extract(r"How many (.*?)\(s\) are in this room")[0].str.strip()
         qdf["ground_truth"] = pd.to_numeric(qdf["ground_truth"], errors="coerce")
+
         qdf.dropna(subset=["object", "ground_truth"], inplace=True)
+
+        # Add log-transformed ground truth
+        qdf["log_ground_truth"] = np.log10(qdf["ground_truth"] + 1.0)
+
         return qdf
 
     def fit_feature_maps(self, train_df: pd.DataFrame) -> None:
         """Collect object and object-ground truth pair frequencies from training data."""
-        self.obj_counts = train_df["object"].value_counts()
+        # Calculate object statistics
+        self.obj_stats = train_df.groupby("object").agg(
+            obj_count=("id", "count"),
+            obj_val_mean=("ground_truth", "mean"),
+            obj_val_std=("ground_truth", "std"),
+            obj_val_log_mean=("log_ground_truth", "mean"),
+            obj_val_log_std=("log_ground_truth", "std")
+        ).reset_index()
+
+        # Handle std=0 cases
+        self.obj_stats["obj_val_std"] = self.obj_stats["obj_val_std"].fillna(0)
+        self.obj_stats["obj_val_log_std"] = self.obj_stats["obj_val_log_std"].fillna(0)
+
+        # Calculate combo counts
         self.combo_counts = train_df.groupby(["object", "ground_truth"]).size()
 
     def add_features(self, df: pd.DataFrame) -> pd.DataFrame:
         """Add frequency-based features to the dataframe."""
-        if self.obj_counts is None or self.combo_counts is None:
+        if self.obj_stats is None or self.combo_counts is None:
             raise RuntimeError("fit_feature_maps must be called first")
 
         df = df.copy()
 
-        # Add object frequency
-        df["obj_count"] = df["object"].map(self.obj_counts).fillna(0)
+        # Add object statistics
+        df = pd.merge(df, self.obj_stats, on="object", how="left")
 
         # Add object-ground truth pair frequency
         df["combo_count"] = df.apply(
