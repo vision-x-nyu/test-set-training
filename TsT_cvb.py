@@ -29,8 +29,6 @@ df_full["gt_option"] = df_full.apply(
 )
 df_full["n_options"] = df_full["choices"].apply(len)
 
-GT_COL = "gt_idx"
-GT_COL = "gt_option"
 
 
 # =============================================================================
@@ -212,17 +210,30 @@ class Relation2DModel(QType):
     format = "mc"
 
     feature_cols = [
+        "n_options",
         "object_1",
         "object_2",
         "pair_freq_score",
         "pair_answer_freq_score",
-        "n_options",  # Number of choices available
+        "contains_left",         # NEW: Question contains "left"
+        "contains_right",        # NEW: Question contains "right"
+        "contains_above",        # NEW: Question contains "above"
+        "contains_below",        # NEW: Question contains "below"
+        "contains_front",        # NEW: Question contains "front"
+        "contains_behind",       # NEW: Question contains "behind"
+        "spatial_keyword_count", # NEW: Total spatial keywords
+        "question_length",       # NEW: Question length
+        "is_majority_answer",    # NEW: Is this the most common answer?
+        # "answer_position_bias",  # NEW: How often this position is correct
+        # "answer_entropy",        # NEW: Entropy of answer distribution
     ]
 
     def __init__(self):
-        # frequency maps learned on the training split
         self.pair_freq_map: pd.Series | None = None
         self.pair_answer_freq_map: Dict[Tuple[str, str], Dict[str, float]] | None = None
+        self.answer_position_freq: Dict[int, float] | None = None  # NEW
+        self.majority_answer: str | None = None  # NEW
+        self.answer_distribution: pd.Series | None = None  # NEW
 
     def select_rows(self, df: pd.DataFrame) -> pd.DataFrame:
         """Select and preprocess 2D relation questions."""
@@ -285,8 +296,20 @@ class Relation2DModel(QType):
                 for ans, count in self.pair_answer_freq_map[pair].items()
             }
 
+        # NEW: Calculate answer position frequencies
+        self.answer_position_freq = train_df["gt_idx"].value_counts(normalize=True).to_dict()
+
+        # NEW: Find majority answer
+        self.answer_distribution = train_df["gt_option"].value_counts()
+        self.majority_answer = self.answer_distribution.idxmax()
+
+        # # Print diagnostic info
+        # print(f"\n[DIAGNOSTIC] Answer distribution in training:")
+        # print(self.answer_distribution.sort_index())
+        # print(f"Majority answer: {self.majority_answer} ({self.answer_distribution[self.majority_answer]/len(train_df)*100:.1f}%)")
+
     def add_features(self, df: pd.DataFrame) -> pd.DataFrame:
-        """Add frequency-based features to the dataframe."""
+        """Add frequency-based and spatial features to the dataframe."""
         if self.pair_freq_map is None or self.pair_answer_freq_map is None:
             raise RuntimeError("fit_feature_maps must be called first")
 
@@ -305,6 +328,39 @@ class Relation2DModel(QType):
             ).get(row["gt_option"], 0),
             axis=1
         )
+        
+        # NEW: Answer position bias
+        df["answer_position_bias"] = df["gt_idx"].map(self.answer_position_freq).fillna(0)
+        
+        # NEW: Spatial keyword features
+        spatial_keywords = {
+            "left": ["left", "to the left"],
+            "right": ["right", "to the right"],
+            "above": ["above", "over", "on top"],
+            "below": ["below", "under", "beneath"],
+            "front": ["front", "in front", "foreground"],
+            "behind": ["behind", "back", "background"]
+        }
+        
+        for direction, keywords in spatial_keywords.items():
+            df[f"contains_{direction}"] = df["question"].apply(
+                lambda q: int(any(kw in q.lower() for kw in keywords))
+            )
+        
+        # NEW: Total spatial keywords
+        df["spatial_keyword_count"] = sum(df[f"contains_{direction}"] for direction in spatial_keywords)
+        
+        # NEW: Question length
+        df["question_length"] = df["question"].str.len()
+        
+        # NEW: Is majority answer
+        df["is_majority_answer"] = (df["gt_option"] == self.majority_answer).astype(int)
+        
+        # NEW: Answer entropy (diversity of answers)
+        total_answers = sum(self.answer_distribution.values)
+        probs = [count/total_answers for count in self.answer_distribution.values]
+        entropy = -sum(p * np.log(p + 1e-10) for p in probs)
+        df["answer_entropy"] = entropy
         
         return df
 
@@ -512,6 +568,7 @@ def evaluate_bias_model(
     random_state: int = 42,
     verbose: bool = True,
     repeats: int = 1,
+    target_col: str = "gt_idx",
 ):
     qdf = model.select_rows(df)
     all_scores = []
@@ -528,7 +585,7 @@ def evaluate_bias_model(
             split_args = (qdf,)
         else:  # classification task
             splitter = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=current_seed)
-            split_args = (qdf, qdf[GT_COL])
+            split_args = (qdf, qdf[target_col])
 
         scores: List[float] = []
 
@@ -542,7 +599,7 @@ def evaluate_bias_model(
 
             X_tr, X_te = tr[model.feature_cols].copy(), te[model.feature_cols].copy()
             encode_categoricals(X_tr, X_te)
-            y_tr, y_te = tr[GT_COL], te[GT_COL]
+            y_tr, y_te = tr[target_col], te[target_col]
 
             est = _make_estimator(model.task, current_seed)
             est.fit(X_tr, y_tr)
@@ -571,7 +628,7 @@ def evaluate_bias_model(
     full_df = model.add_features(qdf.copy())
     X_full = full_df[model.feature_cols].copy()
     encode_categoricals(X_full, X_full.copy())
-    y_full = full_df[GT_COL]
+    y_full = full_df[target_col]
 
     est_full = _make_estimator(model.task, random_state)
     est_full.fit(X_full, y_full)
@@ -590,7 +647,7 @@ def evaluate_bias_model(
 # 6.  MAIN --------------------------------------------------------------------
 # =============================================================================
 
-def run_evaluation(n_splits: int = 5, random_state: int = 42, verbose: bool = False, repeats: int = 1, question_types: Union[List[str], None] = None) -> pd.DataFrame:
+def run_evaluation(n_splits: int = 5, random_state: int = 42, verbose: bool = False, repeats: int = 1, question_types: Union[List[str], None] = None, target_col: str = "gt_idx") -> pd.DataFrame:
     """
     Run evaluation for all models and return a summary table of results.
 
@@ -600,6 +657,7 @@ def run_evaluation(n_splits: int = 5, random_state: int = 42, verbose: bool = Fa
         verbose: Whether to print detailed output during evaluation
         repeats: Number of times to repeat evaluation with different random seeds
         question_types: Optional list of question types to evaluate. If None, evaluate all types.
+        target_col: Column to use as target variable (default: "gt_idx")
 
     Returns:
         DataFrame with model results including mean score and standard deviation
@@ -630,6 +688,7 @@ def run_evaluation(n_splits: int = 5, random_state: int = 42, verbose: bool = Fa
             random_state=random_state,
             verbose=verbose,
             repeats=repeats,
+            target_col=target_col,
         )
         all_results.append({
             "Model": m.name,
@@ -681,6 +740,10 @@ if __name__ == "__main__":
         "--question_types", "-q", type=str, default=None,
         help="Comma-separated list of question types to evaluate (e.g. 'Count,Relation')"
     )
+    parser.add_argument(
+        "--target_col", "-t", type=str, default="gt_idx",
+        help="Column to use as target variable (default: gt_idx)"
+    )
     args = parser.parse_args()
 
     # Parse question types if provided
@@ -693,5 +756,6 @@ if __name__ == "__main__":
         random_state=args.random_state,
         verbose=args.verbose,
         repeats=args.repeats,
-        question_types=question_types
+        question_types=question_types,
+        target_col=args.target_col
     )
