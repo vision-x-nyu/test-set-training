@@ -312,8 +312,84 @@ class Relation2DModel(QType):
 class Depth3DModel(QType):
     name = "depth_3d"
     format = "mc"
-    
-    # TODO
+
+    feature_cols = [
+        "object_1",
+        "object_2",
+        "pair_freq_score",
+        "pair_answer_freq_score",
+        "n_options",  # Number of choices available
+    ]
+
+    def __init__(self):
+        # frequency maps learned on the training split
+        self.pair_freq_map: pd.Series | None = None
+        self.pair_answer_freq_map: Dict[Tuple[str, str], Dict[str, float]] | None = None
+
+    def select_rows(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Select and preprocess 3D depth questions."""
+        qdf = df[df["question_type"] == self.name].copy()
+        
+        # For depth questions, the choices themselves are the objects being compared
+        # Sort the choices to ensure consistent pairing
+        qdf[["object_1", "object_2"]] = qdf["choices"].apply(
+            lambda x: pd.Series(sorted(x))
+        )
+        
+        return qdf
+
+    def fit_feature_maps(self, train_df: pd.DataFrame) -> None:
+        """Collect object pair frequencies and answer distributions from training data."""
+        # Calculate pair frequencies
+        pairs = train_df.apply(
+            lambda row: f"{row['object_1']}-{row['object_2']}", 
+            axis=1
+        )
+        self.pair_freq_map = pairs.value_counts(normalize=True)
+        
+        # Calculate answer frequencies for each pair
+        self.pair_answer_freq_map = {}
+        for _, row in train_df.iterrows():
+            pair = (row["object_1"], row["object_2"])
+            answer = row["gt_option"]
+            
+            if pair not in self.pair_answer_freq_map:
+                self.pair_answer_freq_map[pair] = {}
+            
+            if answer not in self.pair_answer_freq_map[pair]:
+                self.pair_answer_freq_map[pair][answer] = 0
+            self.pair_answer_freq_map[pair][answer] += 1
+        
+        # Normalize answer frequencies for each pair
+        for pair in self.pair_answer_freq_map:
+            total = sum(self.pair_answer_freq_map[pair].values())
+            self.pair_answer_freq_map[pair] = {
+                ans: count/total 
+                for ans, count in self.pair_answer_freq_map[pair].items()
+            }
+
+    def add_features(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Add frequency-based features to the dataframe."""
+        if self.pair_freq_map is None or self.pair_answer_freq_map is None:
+            raise RuntimeError("fit_feature_maps must be called first")
+
+        df = df.copy()
+        
+        # Calculate pair frequency score
+        df["pair_freq_score"] = df.apply(
+            lambda row: self.pair_freq_map.get(f"{row['object_1']}-{row['object_2']}", 0),
+            axis=1
+        )
+        
+        # Calculate answer frequency score for the pair
+        df["pair_answer_freq_score"] = df.apply(
+            lambda row: self.pair_answer_freq_map.get(
+                (row["object_1"], row["object_2"]), {}
+            ).get(row["gt_option"], 0),
+            axis=1
+        )
+        
+        return df
 
 
 # 3D Distance
@@ -458,7 +534,7 @@ def run_evaluation(n_splits: int = 5, random_state: int = 42, verbose: bool = Fa
         ## MC
         Count2DModel(),
         Relation2DModel(),
-        # Depth3DModel(),
+        Depth3DModel(),
         # Distance3DModel(),
     ]
 
