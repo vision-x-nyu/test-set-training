@@ -888,44 +888,58 @@ def evaluate_bias_model(
     n_splits: int = 5,
     random_state: int = 42,
     verbose: bool = True,
+    repeats: int = 1,
 ):
     qdf = model.select_rows(df)
-
-    # Use appropriate splitter based on task type
-    if model.task == "reg":
-        splitter = KFold(n_splits=n_splits, shuffle=True, random_state=random_state)
-        split_args = (qdf,)
-    else:  # classification task
-        splitter = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=random_state)
-        split_args = (qdf, qdf["ground_truth"])
+    all_scores = []
     
-    scores: List[float] = []
+    # Show progress bar over repeats
+    repeat_pbar = tqdm(range(repeats), desc=f"[{model.name.upper()}] Repeats", disable=repeats == 1)
+    
+    for repeat in repeat_pbar:
+        current_seed = random_state + repeat
+        
+        # Use appropriate splitter based on task type
+        if model.task == "reg":
+            splitter = KFold(n_splits=n_splits, shuffle=True, random_state=current_seed)
+            split_args = (qdf,)
+        else:  # classification task
+            splitter = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=current_seed)
+            split_args = (qdf, qdf["ground_truth"])
+        
+        scores: List[float] = []
 
-    pbar = tqdm(
-        enumerate(splitter.split(*split_args), 1),
-        total=n_splits,
-        desc=f"[{model.name.upper()}] CV Folds",
-    )
-    for fold, (tr_idx, te_idx) in pbar:
-        tr, te = qdf.iloc[tr_idx].copy(), qdf.iloc[te_idx].copy()
+        for fold, (tr_idx, te_idx) in enumerate(splitter.split(*split_args), 1):
+            tr, te = qdf.iloc[tr_idx].copy(), qdf.iloc[te_idx].copy()
 
-        model.fit_feature_maps(tr)
-        tr = model.add_features(tr)
-        te = model.add_features(te)
+            model.fit_feature_maps(tr)
+            tr = model.add_features(tr)
+            te = model.add_features(te)
 
-        X_tr, X_te = tr[model.feature_cols].copy(), te[model.feature_cols].copy()
-        encode_categoricals(X_tr, X_te)
-        y_tr, y_te = tr["ground_truth"], te["ground_truth"]
+            X_tr, X_te = tr[model.feature_cols].copy(), te[model.feature_cols].copy()
+            encode_categoricals(X_tr, X_te)
+            y_tr, y_te = tr["ground_truth"], te["ground_truth"]
 
-        est = _make_estimator(model.task, random_state)
-        est.fit(X_tr, y_tr)
-        scores.append(_score(est, X_te, y_te, model.metric))
-        pbar.set_postfix({f"avg_{model.metric}": f"{np.mean(scores):.2%}"})
+            est = _make_estimator(model.task, current_seed)
+            est.fit(X_tr, y_tr)
+            scores.append(_score(est, X_te, y_te, model.metric))
+            
+        all_scores.append(scores)
+        if repeats > 1:
+            current_avg = np.mean(scores)
+            repeat_pbar.set_postfix({f"avg_{model.metric}": f"{current_avg:.2%}"})
 
-    mean_acc, std_acc = float(np.mean(scores)), float(np.std(scores))
+    # Calculate mean and std across all repeats
+    mean_scores = [np.mean(scores) for scores in all_scores]
+    mean_acc = float(np.mean(mean_scores))
+    std_acc = float(np.std(mean_scores))
+    
     if verbose:
-        print(f"\n[{model.name.upper()}] Overall {model.metric.upper()}: {mean_acc:.2%} ± {std_acc:.2%} (n_splits={n_splits})")
-        print(f"[{model.name.upper()}] Fold {model.metric.upper()}s: {[f'{s:.2%}' for s in scores]}")
+        print(f"\n[{model.name.upper()}] Overall {model.metric.upper()}: {mean_acc:.2%} ± {std_acc:.2%} (n_splits={n_splits}, repeats={repeats})")
+        if repeats == 1:
+            print(f"[{model.name.upper()}] Fold {model.metric.upper()}s: {[f'{s:.2%}' for s in all_scores[0]]}")
+        else:
+            print(f"[{model.name.upper()}] Repeat {model.metric.upper()}s: {[f'{s:.2%}' for s in mean_scores]}")
 
     # full‑data importances ---------------------------------------------------
     model.fit_feature_maps(qdf)  # all rows
@@ -951,7 +965,7 @@ def evaluate_bias_model(
 # 6.  MAIN --------------------------------------------------------------------
 # =============================================================================
 
-def run_evaluation(n_splits: int = 5, random_state: int = 42, verbose: bool = False) -> pd.DataFrame:
+def run_evaluation(n_splits: int = 5, random_state: int = 42, verbose: bool = False, repeats: int = 1) -> pd.DataFrame:
     """
     Run evaluation for all models and return a summary table of results.
 
@@ -959,10 +973,14 @@ def run_evaluation(n_splits: int = 5, random_state: int = 42, verbose: bool = Fa
         n_splits: Number of cross-validation splits
         random_state: Random seed for reproducibility
         verbose: Whether to print detailed output during evaluation
+        repeats: Number of times to repeat evaluation with different random seeds
 
     Returns:
         DataFrame with model results including mean score and standard deviation
     """
+    all_results = []
+    
+    # Create models list once
     models = [
         ## NUM
         ObjCountModel(),
@@ -976,8 +994,7 @@ def run_evaluation(n_splits: int = 5, random_state: int = 42, verbose: bool = Fa
         RoutePlanningModel(),
         ObjOrderModel()
     ]
-
-    results = []
+    
     for m in models:
         print(f"\n================  {m.name.upper()}  ================")
         mean_score, std_score, fi = evaluate_bias_model(
@@ -986,18 +1003,19 @@ def run_evaluation(n_splits: int = 5, random_state: int = 42, verbose: bool = Fa
             n_splits=n_splits,
             random_state=random_state,
             verbose=verbose,
+            repeats=repeats,
         )
-        results.append({
+        all_results.append({
             "Model": m.name,
             "Format": m.format.upper(),
             "Metric": m.metric.upper(),
             "Score": mean_score,
             "± Std": std_score,
-            "Feature Importances": fi
+            "Feature Importances": fi,
         })
 
     # Create summary table
-    summary = pd.DataFrame(results)
+    summary = pd.DataFrame(all_results)
     summary = summary.sort_values("Score", ascending=False)
 
     # Calculate overall average score
@@ -1029,10 +1047,15 @@ if __name__ == "__main__":
     parser.add_argument(
         "--verbose", "-v", action="store_true", help="Print detailed output"
     )
+    parser.add_argument(
+        "--repeats", "-r", type=int, default=1, 
+        help="Number of times to repeat evaluation with different random seeds"
+    )
     args = parser.parse_args()
 
     run_evaluation(
         n_splits=args.n_splits,
         random_state=args.random_state,
-        verbose=args.verbose
+        verbose=args.verbose,
+        repeats=args.repeats
     )
