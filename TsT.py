@@ -88,6 +88,40 @@ class QType(Protocol):
 # 3.  QUESTION TYPE IMPLEMENTATIONS -------------------------------------------
 # =============================================================================
 
+"""NUM QUESTIONS"""
+
+
+# OBJECT COUNTING
+class ObjCountModel(QType):
+    name = "object_counting"
+    format = "num"
+
+    # TODO:
+
+# OBJECT ABS DISTANCE
+class ObjAbsDistModel(QType):
+    name = "object_abs_distance"
+    format = "num"
+
+    # TODO:
+
+# OBJECT SIZE ESTIMATION
+class ObjSizeEstModel(QType):
+    name = "object_size_estimation"
+    format = "num"
+
+    # TODO:
+
+# ROOM SIZE ESTIMATION
+class RoomSizeEstModel(QType):
+    name = "room_size_estimation"
+    format = "num"
+
+    # TODO:
+
+
+"""MC QUESTIONS"""
+
 # OBJECT RELATIVE DISTANCE
 class RelDistanceModel(QType):
     name = "object_rel_distance"
@@ -176,6 +210,22 @@ class RelDistanceModel(QType):
         if self.gt_counts is None:
             raise RuntimeError("fit_feature_maps must be called first")
         return self._add_rel_feats(df)
+
+
+
+# RELATIVE DIRECTION
+class RelDirModel(QType):
+    name = "object_rel_direction"
+    format = "mc"
+
+    # TODO:
+
+# ROUTE PLANNING
+class RoutePlanningModel(QType):
+    name = "route_planning"
+    format = "mc"
+
+    # TODO:
 
 
 # OBJECT APPEARANCE ORDER
@@ -431,7 +481,19 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    models = [RelDistanceModel(), ObjOrderModel()]
+    models = [
+        ## NUM
+        # ObjCountModel(),  # TODO:
+        # ObjAbsDistModel(),  # TODO:
+        # ObjSizeEstModel(),  # TODO:
+        # RoomSizeEstModel(),  # TODO:
+
+        ## MC
+        RelDistanceModel(),
+        # RelDirModel(),  # TODO:
+        # RoutePlanningModel(),  # TODO:
+        ObjOrderModel()
+    ]
 
     for m in models:
         print(f"\n================  {m.name.upper()}  ================")
