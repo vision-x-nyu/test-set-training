@@ -1,6 +1,7 @@
 import os
 import json
 from typing import Protocol, List, Tuple, Dict, Literal
+import re
 
 import numpy as np
 import pandas as pd
@@ -9,7 +10,7 @@ from datasets import load_dataset
 from tqdm import tqdm
 
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
-from sklearn.model_selection import StratifiedKFold
+from sklearn.model_selection import StratifiedKFold, KFold
 from sklearn.preprocessing import LabelEncoder, minmax_scale
 
 
@@ -126,10 +127,10 @@ class ObjCountModel(QType):
             raise RuntimeError("fit_feature_maps must be called first")
 
         df = df.copy()
-        
+
         # Add object frequency
         df["obj_count"] = df["object"].map(self.obj_counts).fillna(0)
-        
+
         # Add object-ground truth pair frequency
         df["combo_count"] = df.apply(
             lambda row: self.combo_counts.get((row["object"], row["ground_truth"]), 0),
@@ -144,7 +145,88 @@ class ObjAbsDistModel(QType):
     name = "object_abs_distance"
     format = "num"
 
-    # TODO:
+    feature_cols = [
+        "object_pair",
+        "pair_freq_score",
+        "pair_inv_var_score",
+        "pair_mean_dist_score",
+        "global_mean_dist_score",
+    ]
+
+    def __init__(self):
+        # frequency maps learned on the training split
+        self.pair_stats: pd.DataFrame | None = None
+        self.global_mean_log: float | None = None
+        self.global_std_log: float | None = None
+
+    def select_rows(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Select and preprocess object absolute distance questions."""
+        qdf = df[df["question_type"] == self.name].copy()
+
+        # Extract object pairs from questions
+        def extract_objects(question):
+            match = re.search(r'between the (.*?) and the (.*?)(?: \(in meters\))?\?$', question)
+            if match:
+                objs = sorted([match.group(1).strip(), match.group(2).strip()])
+                return '_'.join(objs)
+            return None
+
+        qdf["object_pair"] = qdf["question"].apply(extract_objects)
+        qdf.dropna(subset=["object_pair"], inplace=True)
+
+        # Convert ground truth to numeric
+        qdf["ground_truth"] = pd.to_numeric(qdf["ground_truth"], errors="coerce")
+        qdf.dropna(subset=["ground_truth"], inplace=True)
+
+        # Add log-transformed ground truth
+        qdf["log_ground_truth"] = np.log10(qdf["ground_truth"] + 1.0)
+
+        return qdf
+
+    def fit_feature_maps(self, train_df: pd.DataFrame) -> None:
+        """Collect pair statistics and global stats from training data."""
+        # Calculate pair statistics
+        self.pair_stats = train_df.groupby("object_pair").agg(
+            count=("id", "count"),
+            mean_log=("log_ground_truth", "mean"),
+            std_log=("log_ground_truth", "std")
+        ).reset_index()
+
+        # Fill NA std values with 0
+        self.pair_stats["std_log"] = self.pair_stats["std_log"].fillna(0)
+
+        # Calculate global statistics
+        self.global_mean_log = train_df["log_ground_truth"].mean()
+        self.global_std_log = train_df["log_ground_truth"].std()
+
+    def add_features(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Add frequency-based and statistical features to the dataframe."""
+        if self.pair_stats is None or self.global_mean_log is None:
+            raise RuntimeError("fit_feature_maps must be called first")
+
+        df = df.copy()
+        epsilon = 1e-6
+
+        # Merge with pair statistics
+        df = pd.merge(df, self.pair_stats, on="object_pair", how="left")
+
+        # Calculate pair frequency score
+        df["pair_freq_score"] = minmax_scale(df["count"])
+
+        # Calculate inverse variance score
+        ratio_log = (df["std_log"] / (df["mean_log"] + epsilon)).fillna(0)
+        df["pair_inv_var_score"] = 1.0 - minmax_scale(ratio_log + epsilon)
+
+        # Calculate distance from pair mean score
+        norm_dist = abs(df["log_ground_truth"] - df["mean_log"]) / (df["std_log"] + epsilon)
+        df["pair_mean_dist_score"] = 1.0 - minmax_scale(norm_dist + epsilon)
+
+        # Calculate global distance score
+        global_dist = abs(df["log_ground_truth"] - self.global_mean_log) / (self.global_std_log + epsilon)
+        df["global_mean_dist_score"] = 1.0 - minmax_scale(global_dist + epsilon)
+
+        return df
+
 
 # OBJECT SIZE ESTIMATION
 class ObjSizeEstModel(QType):
@@ -458,11 +540,19 @@ def evaluate_bias_model(
     verbose: bool = True,
 ):
     qdf = model.select_rows(df)
-    skf = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=random_state)
+
+    # Use appropriate splitter based on task type
+    if model.task == "reg":
+        splitter = KFold(n_splits=n_splits, shuffle=True, random_state=random_state)
+        split_args = (qdf,)
+    else:  # classification task
+        splitter = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=random_state)
+        split_args = (qdf, qdf["ground_truth"])
+    
     scores: List[float] = []
 
     pbar = tqdm(
-        enumerate(skf.split(qdf, qdf["ground_truth"]), 1),
+        enumerate(splitter.split(*split_args), 1),
         total=n_splits,
         desc=f"[{model.name.upper()}] CV Folds",
     )
@@ -494,10 +584,10 @@ def evaluate_bias_model(
     encode_categoricals(X_full, X_full.copy())
     y_full = full_df["ground_truth"]
 
-    clf_full = RandomForestClassifier(n_estimators=100, random_state=random_state, n_jobs=-1)
-    clf_full.fit(X_full, y_full)
+    est_full = _make_estimator(model.task, random_state)
+    est_full.fit(X_full, y_full)
     fi = (
-        pd.DataFrame({"feature": model.feature_cols, "importance": clf_full.feature_importances_})
+        pd.DataFrame({"feature": model.feature_cols, "importance": est_full.feature_importances_})
         .sort_values("importance", ascending=False)
         .reset_index(drop=True)
     )
@@ -526,7 +616,7 @@ def run_evaluation(n_splits: int = 5, random_state: int = 42, verbose: bool = Fa
     models = [
         ## NUM
         ObjCountModel(),
-        # ObjAbsDistModel(),  # TODO:
+        ObjAbsDistModel(),
         # ObjSizeEstModel(),  # TODO:
         # RoomSizeEstModel(),  # TODO:
 
