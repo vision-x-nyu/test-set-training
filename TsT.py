@@ -96,7 +96,48 @@ class ObjCountModel(QType):
     name = "object_counting"
     format = "num"
 
-    # TODO:
+    feature_cols = [
+        "object",
+        "obj_count",
+        "combo_count",
+    ]
+
+    def __init__(self):
+        # frequency maps learned on the training split
+        self.obj_counts: pd.Series | None = None
+        self.combo_counts: pd.Series | None = None
+
+    def select_rows(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Select and preprocess object counting questions."""
+        qdf = df[df["question_type"] == self.name].copy()
+        qdf["object"] = qdf["question"].str.extract(r"How many (.*?)\(s\) are in this room")[0].str.strip()
+        qdf["ground_truth"] = pd.to_numeric(qdf["ground_truth"], errors="coerce")
+        qdf.dropna(subset=["object", "ground_truth"], inplace=True)
+        return qdf
+
+    def fit_feature_maps(self, train_df: pd.DataFrame) -> None:
+        """Collect object and object-ground truth pair frequencies from training data."""
+        self.obj_counts = train_df["object"].value_counts()
+        self.combo_counts = train_df.groupby(["object", "ground_truth"]).size()
+
+    def add_features(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Add frequency-based features to the dataframe."""
+        if self.obj_counts is None or self.combo_counts is None:
+            raise RuntimeError("fit_feature_maps must be called first")
+
+        df = df.copy()
+        
+        # Add object frequency
+        df["obj_count"] = df["object"].map(self.obj_counts).fillna(0)
+        
+        # Add object-ground truth pair frequency
+        df["combo_count"] = df.apply(
+            lambda row: self.combo_counts.get((row["object"], row["ground_truth"]), 0),
+            axis=1
+        )
+
+        return df
+
 
 # OBJECT ABS DISTANCE
 class ObjAbsDistModel(QType):
