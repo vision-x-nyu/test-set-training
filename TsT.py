@@ -1,7 +1,7 @@
 import os
 import json
 from functools import partial
-from typing import Protocol, List, Tuple, Dict, Literal
+from typing import Protocol, List, Tuple, Dict, Literal, Union
 import re
 
 import numpy as np
@@ -177,11 +177,12 @@ class ObjAbsDistModel(QType):
         "pair_count",
         "pair_val_mean_log",
         "pair_val_std_log",
-        "ord_pair_freq_score",
-        "ord_pair_inv_var_score",
-        "ord_pair_count",
-        "ord_pair_val_mean_log",
-        "ord_pair_val_std_log",
+        # "ord_pair_freq_score",
+        # "ord_pair_inv_var_score",
+        # "ord_pair_count",
+        # "ord_pair_val_mean_log",
+        # "ord_pair_val_std_log",
+
         # # NOTE: the below features leverage privileged gt info. Remove?
         # "pair_mean_dist_score",
         # "global_mean_dist_score",
@@ -1020,7 +1021,7 @@ def evaluate_bias_model(
 # 6.  MAIN --------------------------------------------------------------------
 # =============================================================================
 
-def run_evaluation(n_splits: int = 5, random_state: int = 42, verbose: bool = False, repeats: int = 1) -> pd.DataFrame:
+def run_evaluation(n_splits: int = 5, random_state: int = 42, verbose: bool = False, repeats: int = 1, question_types: Union[List[str], None] = None) -> pd.DataFrame:
     """
     Run evaluation for all models and return a summary table of results.
 
@@ -1029,6 +1030,7 @@ def run_evaluation(n_splits: int = 5, random_state: int = 42, verbose: bool = Fa
         random_state: Random seed for reproducibility
         verbose: Whether to print detailed output during evaluation
         repeats: Number of times to repeat evaluation with different random seeds
+        question_types: Optional list of question types to evaluate. If None, evaluate all types.
 
     Returns:
         DataFrame with model results including mean score and standard deviation
@@ -1049,6 +1051,12 @@ def run_evaluation(n_splits: int = 5, random_state: int = 42, verbose: bool = Fa
         RoutePlanningModel(),
         ObjOrderModel()
     ]
+    
+    # Filter models if question_types is specified
+    if question_types is not None:
+        models = [m for m in models if m.name in question_types]
+        if not models:
+            raise ValueError(f"Unknown question types: {question_types}")
     
     for m in models:
         print(f"\n================  {m.name.upper()}  ================")
@@ -1106,11 +1114,21 @@ if __name__ == "__main__":
         "--repeats", "-r", type=int, default=1, 
         help="Number of times to repeat evaluation with different random seeds"
     )
+    parser.add_argument(
+        "--question_types", "-q", type=str, default=None,
+        help="Comma-separated list of question types to evaluate (e.g. 'object_counting,object_abs_distance')"
+    )
     args = parser.parse_args()
+
+    # Parse question types if provided
+    question_types = None
+    if args.question_types is not None:
+        question_types = [q.strip() for q in args.question_types.split(",")]
 
     run_evaluation(
         n_splits=args.n_splits,
         random_state=args.random_state,
         verbose=args.verbose,
-        repeats=args.repeats
+        repeats=args.repeats,
+        question_types=question_types
     )
