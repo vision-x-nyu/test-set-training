@@ -150,6 +150,8 @@ class ObjAbsDistModel(QType):
         "object_pair",
         "pair_freq_score",
         "pair_inv_var_score",
+        "mean_log",
+        "std_log",
         # # NOTE: the below features leverage privileged gt info. Remove?
         # "pair_mean_dist_score",
         # "global_mean_dist_score",
@@ -235,7 +237,90 @@ class ObjSizeEstModel(QType):
     name = "object_size_estimation"
     format = "num"
 
-    # TODO:
+    feature_cols = [
+        "object",
+        "count",
+        "obj_freq_score",
+        "log_inv_var_score",
+        "log_obj_mean_dist_score",
+        "log_global_mean_dist_score",
+    ]
+
+    def __init__(self):
+        # frequency maps learned on the training split
+        self.obj_stats: pd.DataFrame | None = None
+        self.global_mean_log: float | None = None
+        self.global_std_log: float | None = None
+
+    def select_rows(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Select and preprocess object size estimation questions."""
+        qdf = df[df["question_type"] == self.name].copy()
+
+        # Extract object name from question
+        qdf["object"] = qdf["question"].str.extract(
+            r'height\) of the (.*?), measured')[0]
+        qdf.dropna(subset=["object"], inplace=True)
+
+        # Convert ground truth to numeric
+        qdf["ground_truth"] = pd.to_numeric(qdf["ground_truth"], errors="coerce")
+        qdf.dropna(subset=["ground_truth"], inplace=True)
+
+        # Add log-transformed ground truth
+        qdf["log_ground_truth"] = np.log10(qdf["ground_truth"] + 1.0)
+
+        return qdf
+
+    def fit_feature_maps(self, train_df: pd.DataFrame) -> None:
+        """Collect object statistics and global stats from training data."""
+        # Calculate object statistics
+        self.obj_stats = train_df.groupby("object").agg(
+            count=("id", "count"),
+            mean=("ground_truth", "mean"),
+            std=("ground_truth", "std"),
+            log_mean=("log_ground_truth", "mean"),
+            log_std=("log_ground_truth", "std")
+        ).reset_index()
+
+        # Handle std=0 cases
+        epsilon = 1e-6
+        self.obj_stats["std"] = self.obj_stats["std"].fillna(0)
+        self.obj_stats["log_std"] = self.obj_stats["log_std"].fillna(0)
+
+        # Calculate ratios
+        self.obj_stats["log_ratio"] = (
+            self.obj_stats["log_std"] / (self.obj_stats["log_mean"] + epsilon)
+        ).fillna(0)
+
+        # Calculate global statistics
+        self.global_mean_log = train_df["log_ground_truth"].mean()
+        self.global_std_log = train_df["log_ground_truth"].std()
+
+    def add_features(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Add frequency-based and statistical features to the dataframe."""
+        if self.obj_stats is None or self.global_mean_log is None:
+            raise RuntimeError("fit_feature_maps must be called first")
+
+        df = df.copy()
+        epsilon = 1e-6
+
+        # Merge with object statistics
+        df = pd.merge(df, self.obj_stats, on="object", how="left")
+
+        # Calculate frequency score
+        df["obj_freq_score"] = minmax_scale(df["count"])
+
+        # Calculate inverse variance score
+        df["log_inv_var_score"] = 1.0 - minmax_scale(df["log_ratio"] + epsilon)
+
+        # Calculate distance from object mean score
+        norm_dist = abs(df["log_ground_truth"] - df["log_mean"]) / (df["log_std"] + epsilon)
+        df["log_obj_mean_dist_score"] = 1.0 - minmax_scale(norm_dist + epsilon)
+
+        # Calculate global distance score
+        global_dist = abs(df["log_ground_truth"] - self.global_mean_log) / (self.global_std_log + epsilon)
+        df["log_global_mean_dist_score"] = 1.0 - minmax_scale(global_dist + epsilon)
+
+        return df
 
 
 # ROOM SIZE ESTIMATION
@@ -622,7 +707,7 @@ def run_evaluation(n_splits: int = 5, random_state: int = 42, verbose: bool = Fa
         ## NUM
         ObjCountModel(),
         ObjAbsDistModel(),
-        # ObjSizeEstModel(),  # TODO:
+        ObjSizeEstModel(),
         # RoomSizeEstModel(),  # TODO:
 
         ## MC
