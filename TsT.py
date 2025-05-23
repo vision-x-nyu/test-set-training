@@ -496,7 +496,103 @@ class RelDirModel(QType):
     name = "object_rel_direction"
     format = "mc"
 
-    # TODO:
+    feature_cols = [
+        "positioning_object",
+        "orienting_object", 
+        "querying_object",
+        "obj_freq_score",
+        "answer_freq_score",
+        "obj_pair_freq_score",
+    ]
+
+    def __init__(self):
+        # frequency maps learned on the training split
+        self.obj_freq_map: pd.Series | None = None
+        self.answer_freq_map: pd.Series | None = None
+        self.obj_pair_freq_map: pd.Series | None = None
+
+    def select_rows(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Select and preprocess relative direction questions."""
+        # Handle all three subtypes
+        qdf = df[df["question_type"].str.startswith("object_rel_direction")].copy()
+        
+        # Extract objects from question
+        qdf[["positioning_object", "orienting_object", "querying_object"]] = \
+            qdf["question"].str.extract(r'standing by the (.*?) and facing the (.*?), is the (.*?) to')
+        
+        # Clean object names
+        for col in ["positioning_object", "orienting_object", "querying_object"]:
+            qdf[col] = qdf[col].str.strip()
+        
+        # Extract ground truth answer
+        qdf["gt_idx"] = qdf["ground_truth"].apply(lambda x: "ABCD".index(x))
+        qdf["gt_option"] = qdf.apply(
+            lambda row: row["options"][row["gt_idx"]].split(". ")[-1], 
+            axis=1
+        )
+        
+        # Drop rows where extraction failed
+        qdf.dropna(
+            subset=["positioning_object", "orienting_object", "querying_object", "gt_option"],
+            inplace=True
+        )
+        
+        return qdf
+
+    def fit_feature_maps(self, train_df: pd.DataFrame) -> None:
+        """Collect object frequencies, answer frequencies, and object pair frequencies."""
+        # Calculate object frequencies
+        all_objects = pd.concat([
+            train_df["positioning_object"],
+            train_df["orienting_object"],
+            train_df["querying_object"]
+        ]).dropna()
+        self.obj_freq_map = all_objects.value_counts(normalize=True)
+        
+        # Calculate answer frequencies
+        self.answer_freq_map = train_df["gt_option"].value_counts(normalize=True)
+        
+        # Calculate object pair frequencies (positioning-orienting pairs)
+        pairs = train_df.apply(
+            lambda row: "-".join(sorted([
+                row["positioning_object"],
+                row["orienting_object"]
+            ])),
+            axis=1
+        )
+        self.obj_pair_freq_map = pairs.value_counts(normalize=True)
+
+    def add_features(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Add frequency-based features to the dataframe."""
+        if self.obj_freq_map is None:
+            raise RuntimeError("fit_feature_maps must be called first")
+            
+        df = df.copy()
+        
+        # Calculate object frequency score (sum of normalized frequencies)
+        df["obj_freq_score"] = df.apply(
+            lambda row: (
+                self.obj_freq_map.get(row["positioning_object"], 0) +
+                self.obj_freq_map.get(row["orienting_object"], 0) +
+                self.obj_freq_map.get(row["querying_object"], 0)
+            ),
+            axis=1
+        )
+        
+        # Calculate answer frequency score
+        df["answer_freq_score"] = df["gt_option"].map(self.answer_freq_map).fillna(0)
+        
+        # Calculate object pair frequency score
+        df["obj_pair"] = df.apply(
+            lambda row: "-".join(sorted([
+                row["positioning_object"],
+                row["orienting_object"]
+            ])),
+            axis=1
+        )
+        df["obj_pair_freq_score"] = df["obj_pair"].map(self.obj_pair_freq_map).fillna(0)
+        
+        return df
 
 
 # ROUTE PLANNING
@@ -876,7 +972,7 @@ def run_evaluation(n_splits: int = 5, random_state: int = 42, verbose: bool = Fa
 
         ## MC
         RelDistanceModel(),
-        # RelDirModel(),  # TODO:
+        RelDirModel(),
         RoutePlanningModel(),
         ObjOrderModel()
     ]
