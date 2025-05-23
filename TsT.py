@@ -1,5 +1,6 @@
 import os
 import json
+from functools import partial
 from typing import Protocol, List, Tuple, Dict, Literal
 import re
 
@@ -173,11 +174,19 @@ class ObjAbsDistModel(QType):
         "object_pair",
         "pair_freq_score",
         "pair_inv_var_score",
-        "mean_log",
-        "std_log",
+        "pair_count",
+        "pair_val_mean_log",
+        "pair_val_std_log",
+        "ord_pair_freq_score",
+        "ord_pair_inv_var_score",
+        "ord_pair_count",
+        "ord_pair_val_mean_log",
+        "ord_pair_val_std_log",
         # # NOTE: the below features leverage privileged gt info. Remove?
         # "pair_mean_dist_score",
         # "global_mean_dist_score",
+        # "ord_pair_mean_dist_score",
+        # "ord_global_mean_dist_score",
     ]
 
     def __init__(self):
@@ -191,14 +200,18 @@ class ObjAbsDistModel(QType):
         qdf = df[df["question_type"] == self.name].copy()
 
         # Extract object pairs from questions
-        def extract_objects(question):
+        def extract_objects(question, sort=True):
             match = re.search(r'between the (.*?) and the (.*?)(?: \(in meters\))?\?$', question)
             if match:
-                objs = sorted([match.group(1).strip(), match.group(2).strip()])
+                objs = [match.group(1).strip(), match.group(2).strip()]
+                if sort:
+                    objs = sorted(objs)
+                # else, in the given order
                 return '_'.join(objs)
             return None
 
         qdf["object_pair"] = qdf["question"].apply(extract_objects)
+        qdf["object_pair_ordered"] = qdf["question"].apply(partial(extract_objects, sort=False))  # in the given order
         qdf.dropna(subset=["object_pair"], inplace=True)
 
         # Convert ground truth to numeric
@@ -214,13 +227,21 @@ class ObjAbsDistModel(QType):
         """Collect pair statistics and global stats from training data."""
         # Calculate pair statistics
         self.pair_stats = train_df.groupby("object_pair").agg(
-            count=("id", "count"),
-            mean_log=("log_ground_truth", "mean"),
-            std_log=("log_ground_truth", "std")
+            pair_count=("id", "count"),
+            pair_val_mean_log=("log_ground_truth", "mean"),
+            pair_val_std_log=("log_ground_truth", "std")
+        ).reset_index()
+
+        # Calculate pair statistics for the given order
+        self.pair_stats_ordered = train_df.groupby("object_pair_ordered").agg(
+            ord_pair_count=("id", "count"),
+            ord_pair_val_mean_log=("log_ground_truth", "mean"),
+            ord_pair_val_std_log=("log_ground_truth", "std")
         ).reset_index()
 
         # Fill NA std values with 0
-        self.pair_stats["std_log"] = self.pair_stats["std_log"].fillna(0)
+        self.pair_stats["pair_val_std_log"] = self.pair_stats["pair_val_std_log"].fillna(0)
+        self.pair_stats_ordered["ord_pair_val_std_log"] = self.pair_stats_ordered["ord_pair_val_std_log"].fillna(0)
 
         # Calculate global statistics
         self.global_mean_log = train_df["log_ground_truth"].mean()
@@ -236,21 +257,29 @@ class ObjAbsDistModel(QType):
 
         # Merge with pair statistics
         df = pd.merge(df, self.pair_stats, on="object_pair", how="left")
+        df = pd.merge(df, self.pair_stats_ordered, on="object_pair_ordered", how="left")
 
         # Calculate pair frequency score
-        df["pair_freq_score"] = minmax_scale(df["count"])
+        df["pair_freq_score"] = minmax_scale(df["pair_count"])
+        df["ord_pair_freq_score"] = minmax_scale(df["ord_pair_count"])
 
         # Calculate inverse variance score
-        ratio_log = (df["std_log"] / (df["mean_log"] + epsilon)).fillna(0)
+        ratio_log = (df["pair_val_std_log"] / (df["pair_val_mean_log"] + epsilon)).fillna(0)
         df["pair_inv_var_score"] = 1.0 - minmax_scale(ratio_log + epsilon)
+        ord_ratio_log = (df["ord_pair_val_std_log"] / (df["ord_pair_val_mean_log"] + epsilon)).fillna(0)
+        df["ord_pair_inv_var_score"] = 1.0 - minmax_scale(ord_ratio_log + epsilon)
 
         # Calculate distance from pair mean score
-        norm_dist = abs(df["log_ground_truth"] - df["mean_log"]) / (df["std_log"] + epsilon)
+        norm_dist = abs(df["log_ground_truth"] - df["pair_val_mean_log"]) / (df["pair_val_std_log"] + epsilon)
         df["pair_mean_dist_score"] = 1.0 - minmax_scale(norm_dist + epsilon)
+        ord_norm_dist = abs(df["log_ground_truth"] - df["ord_pair_val_mean_log"]) / (df["ord_pair_val_std_log"] + epsilon)
+        df["ord_pair_mean_dist_score"] = 1.0 - minmax_scale(ord_norm_dist + epsilon)
 
         # Calculate global distance score
         global_dist = abs(df["log_ground_truth"] - self.global_mean_log) / (self.global_std_log + epsilon)
         df["global_mean_dist_score"] = 1.0 - minmax_scale(global_dist + epsilon)
+        ord_global_dist = abs(df["log_ground_truth"] - self.global_mean_log) / (self.global_std_log + epsilon)
+        df["ord_global_mean_dist_score"] = 1.0 - minmax_scale(ord_global_dist + epsilon)
 
         return df
 
