@@ -240,11 +240,15 @@ class ObjSizeEstModel(QType):
 
     feature_cols = [
         "object",
-        "count",
+        "obj_count",
         "obj_freq_score",
-        "log_inv_var_score",
-        "log_obj_mean_dist_score",
-        "log_global_mean_dist_score",
+        "obj_val_log_ratio",
+        "obj_val_log_mean",
+        "obj_val_log_std",
+        "obj_val_log_ratio",
+        # # NOTE: the below features leverage privileged gt info. Remove?
+        # "log_obj_mean_dist_score",
+        # "log_global_mean_dist_score",
     ]
 
     def __init__(self):
@@ -275,21 +279,21 @@ class ObjSizeEstModel(QType):
         """Collect object statistics and global stats from training data."""
         # Calculate object statistics
         self.obj_stats = train_df.groupby("object").agg(
-            count=("id", "count"),
-            mean=("ground_truth", "mean"),
-            std=("ground_truth", "std"),
-            log_mean=("log_ground_truth", "mean"),
-            log_std=("log_ground_truth", "std")
+            obj_count=("id", "count"),
+            obj_val_mean=("ground_truth", "mean"),
+            obj_val_std=("ground_truth", "std"),
+            obj_val_log_mean=("log_ground_truth", "mean"),
+            obj_val_log_std=("log_ground_truth", "std")
         ).reset_index()
 
         # Handle std=0 cases
         epsilon = 1e-6
-        self.obj_stats["std"] = self.obj_stats["std"].fillna(0)
-        self.obj_stats["log_std"] = self.obj_stats["log_std"].fillna(0)
+        self.obj_stats["obj_val_std"] = self.obj_stats["obj_val_std"].fillna(0)
+        self.obj_stats["obj_val_log_std"] = self.obj_stats["obj_val_log_std"].fillna(0)
 
         # Calculate ratios
-        self.obj_stats["log_ratio"] = (
-            self.obj_stats["log_std"] / (self.obj_stats["log_mean"] + epsilon)
+        self.obj_stats["obj_val_log_ratio"] = (
+            self.obj_stats["obj_val_log_std"] / (self.obj_stats["obj_val_log_mean"] + epsilon)
         ).fillna(0)
 
         # Calculate global statistics
@@ -308,13 +312,13 @@ class ObjSizeEstModel(QType):
         df = pd.merge(df, self.obj_stats, on="object", how="left")
 
         # Calculate frequency score
-        df["obj_freq_score"] = minmax_scale(df["count"])
+        df["obj_freq_score"] = minmax_scale(df["obj_count"])
 
         # Calculate inverse variance score
-        df["log_inv_var_score"] = 1.0 - minmax_scale(df["log_ratio"] + epsilon)
+        df["obj_val_log_ratio"] = 1.0 - minmax_scale(df["obj_val_log_ratio"] + epsilon)
 
         # Calculate distance from object mean score
-        norm_dist = abs(df["log_ground_truth"] - df["log_mean"]) / (df["log_std"] + epsilon)
+        norm_dist = abs(df["log_ground_truth"] - df["obj_val_log_mean"]) / (df["obj_val_log_std"] + epsilon)
         df["log_obj_mean_dist_score"] = 1.0 - minmax_scale(norm_dist + epsilon)
 
         # Calculate global distance score
