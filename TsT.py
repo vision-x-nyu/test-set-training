@@ -491,7 +491,6 @@ class RelDistanceModel(QType):
         return self._add_rel_feats(df)
 
 
-
 # RELATIVE DIRECTION
 class RelDirModel(QType):
     name = "object_rel_direction"
@@ -499,12 +498,110 @@ class RelDirModel(QType):
 
     # TODO:
 
+
 # ROUTE PLANNING
 class RoutePlanningModel(QType):
     name = "route_planning"
     format = "mc"
 
-    # TODO:
+    feature_cols = [
+        "beginning_object",
+        "facing_object",
+        "target_object",
+        "num_steps",
+        "obj_freq_score",
+        "route_freq_score",
+        "steps_dist_score",
+    ]
+
+    def __init__(self):
+        # frequency maps learned on the training split
+        self.obj_freq_map: pd.Series | None = None
+        self.route_freq_map: pd.Series | None = None
+        self.mean_steps: float | None = None
+        self.std_steps: float | None = None
+
+    def select_rows(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Select and preprocess route planning questions."""
+        qdf = df[df["question_type"] == self.name].copy()
+
+        # Extract objects from question
+        qdf[["beginning_object", "facing_object", "target_object"]] = \
+            qdf["question"].str.extract(
+                r'You are a robot beginning (?:at|by) the (.*?) '
+                r'(?:facing the|facing to|facing towards the|facing|with your back to the) '
+                r'(.*?)\. You want to navigate to the (.*?)\.'
+            )
+
+        # Clean up object names
+        for col in ["beginning_object", "facing_object", "target_object"]:
+            qdf[col] = qdf[col].str.replace(r" and$", "", regex=True) \
+                              .str.replace(r"^the ", "", regex=True) \
+                              .str.strip()
+
+        # Extract ground truth route
+        qdf["gt_idx"] = qdf["ground_truth"].apply(lambda x: "ABCD".index(x))
+        qdf["gt_route_str"] = qdf.apply(
+            lambda row: row["options"][row["gt_idx"]].strip(), axis=1
+        )
+
+        # Calculate number of steps in route
+        qdf["num_steps"] = qdf["gt_route_str"].apply(
+            lambda x: len(x.split(',')) if pd.notna(x) else 0
+        )
+
+        # Drop rows where extraction failed
+        qdf.dropna(
+            subset=["beginning_object", "facing_object", "target_object", 
+                   "gt_route_str", "ground_truth"],
+            inplace=True
+        )
+
+        return qdf
+
+    def fit_feature_maps(self, train_df: pd.DataFrame) -> None:
+        """Collect object frequencies, route frequencies, and step count statistics."""
+        # Calculate object frequencies
+        all_objects = pd.concat([
+            train_df["beginning_object"],
+            train_df["facing_object"],
+            train_df["target_object"]
+        ]).dropna()
+        self.obj_freq_map = all_objects.value_counts(normalize=True)
+
+        # Calculate route string frequencies
+        self.route_freq_map = train_df["gt_route_str"].value_counts(normalize=True)
+
+        # Calculate step count statistics
+        self.mean_steps = train_df["num_steps"].mean()
+        self.std_steps = train_df["num_steps"].std()
+
+    def add_features(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Add frequency-based and statistical features to the dataframe."""
+        if self.obj_freq_map is None or self.route_freq_map is None:
+            raise RuntimeError("fit_feature_maps must be called first")
+
+        df = df.copy()
+        epsilon = 1e-6
+
+        # Calculate object frequency score
+        df["obj_freq_score"] = df.apply(
+            lambda row: (
+                self.obj_freq_map.get(row["beginning_object"], 0) +
+                self.obj_freq_map.get(row["facing_object"], 0) +
+                self.obj_freq_map.get(row["target_object"], 0)
+            ),
+            axis=1
+        )
+
+        # Calculate route frequency score
+        df["route_freq_score"] = df["gt_route_str"].map(self.route_freq_map).fillna(0)
+
+        # Calculate step count typicality score
+        norm_dist = abs(df["num_steps"] - self.mean_steps) / (self.std_steps + epsilon)
+        df["steps_dist_score"] = 1.0 - minmax_scale(norm_dist + epsilon)
+
+        return df
 
 
 # OBJECT APPEARANCE ORDER
@@ -780,7 +877,7 @@ def run_evaluation(n_splits: int = 5, random_state: int = 42, verbose: bool = Fa
         ## MC
         RelDistanceModel(),
         # RelDirModel(),  # TODO:
-        # RoutePlanningModel(),  # TODO:
+        RoutePlanningModel(),
         ObjOrderModel()
     ]
 
