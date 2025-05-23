@@ -20,8 +20,16 @@ from scipy.stats import lognorm
 # 0.  DATA LOADING -------------------------------------------------------------
 # =============================================================================
 
-vsibench = load_dataset("nyu-visionx/VSI-Bench")
-df_full = vsibench["test"].to_pandas()
+cvbench = load_dataset("nyu-visionx/CV-Bench")
+df_full = cvbench["test"].to_pandas()
+df_full["question_type"] = df_full["task"].str.lower() + "_" + df_full["type"].str.lower()
+df_full["gt_idx"] = df_full["answer"].apply(lambda x: ord(x[1]) - ord('A'))
+df_full["gt_option"] = df_full.apply(
+    lambda row: row["choices"][row["gt_idx"]], axis=1
+)
+df_full["n_options"] = df_full["choices"].apply(len)
+
+GT_COL = "gt_idx"
 
 
 # =============================================================================
@@ -92,17 +100,114 @@ class QType(Protocol):
 
 # 2D Count
 class Count2DModel(QType):
-    name = "Count"
-    dim_type = "2D"
+    name = "count_2d"
     format = "mc"
 
-    # TODO
+    feature_cols = [
+        "object",
+        "obj_count",
+        "obj_freq_score",
+        "obj_val_mean",
+        "obj_val_std",
+        "obj_val_log_mean",
+        "obj_val_log_std",
+        "obj_val_log_ratio",
+        "global_mean_log",
+        "global_std_log",
+        "global_mean_dist_score",
+        "n_options",  # Added: number of choices available
+    ]
+
+    def __init__(self):
+        # frequency maps learned on the training split
+        self.obj_stats: pd.DataFrame | None = None
+        self.global_mean_log: float | None = None
+        self.global_std_log: float | None = None
+
+    def select_rows(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Select and preprocess 2D object counting questions."""
+        qdf = df[df["question_type"] == self.name].copy()
+        
+        # Extract object name from question
+        qdf["object"] = qdf["question"].str.extract(
+            r'How many (.*?) are in the image')[0].str.strip()
+        
+        # Use preprocessed ground truth
+        qdf["ground_truth"] = pd.to_numeric(qdf["gt_option"], errors="coerce")
+        
+        # Add log-transformed ground truth
+        qdf["log_ground_truth"] = np.log10(qdf["ground_truth"] + 1.0)
+        
+        # Drop rows where extraction failed
+        qdf.dropna(subset=["object", "ground_truth"], inplace=True)
+        
+        return qdf
+
+    def fit_feature_maps(self, train_df: pd.DataFrame) -> None:
+        """Collect object statistics and global stats from training data."""
+        # Calculate object statistics
+        self.obj_stats = train_df.groupby("object").agg(
+            obj_count=("idx", "count"),
+            obj_val_mean=("ground_truth", "mean"),
+            obj_val_std=("ground_truth", "std"),
+            obj_val_log_mean=("log_ground_truth", "mean"),
+            obj_val_log_std=("log_ground_truth", "std")
+        ).reset_index()
+
+        # Handle std=0 cases
+        epsilon = 1e-6
+        self.obj_stats["obj_val_std"] = self.obj_stats["obj_val_std"].fillna(0)
+        self.obj_stats["obj_val_log_std"] = self.obj_stats["obj_val_log_std"].fillna(0)
+
+        # Calculate ratios
+        self.obj_stats["obj_val_log_ratio"] = (
+            self.obj_stats["obj_val_log_std"] / 
+            (self.obj_stats["obj_val_log_mean"] + epsilon)
+        ).fillna(0)
+
+        # Calculate global statistics
+        self.global_mean_log = train_df["log_ground_truth"].mean()
+        self.global_std_log = train_df["log_ground_truth"].std()
+
+    def add_features(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Add frequency-based and statistical features to the dataframe."""
+        if self.obj_stats is None or self.global_mean_log is None:
+            raise RuntimeError("fit_feature_maps must be called first")
+
+        df = df.copy()
+        epsilon = 1e-6
+
+        # Merge with object statistics
+        df = pd.merge(df, self.obj_stats, on="object", how="left")
+
+        # Calculate frequency score
+        df["obj_freq_score"] = minmax_scale(df["obj_count"])
+
+        # Calculate inverse variance score
+        df["obj_val_log_ratio"] = 1.0 - minmax_scale(df["obj_val_log_ratio"] + epsilon)
+
+        # Calculate distance from object mean score
+        norm_dist = abs(df["log_ground_truth"] - df["obj_val_log_mean"]) / (
+            df["obj_val_log_std"] + epsilon
+        )
+        df["log_obj_mean_dist_score"] = 1.0 - minmax_scale(norm_dist + epsilon)
+
+        # Calculate global distance score
+        global_dist = abs(df["log_ground_truth"] - self.global_mean_log) / (
+            self.global_std_log + epsilon
+        )
+        df["global_mean_dist_score"] = 1.0 - minmax_scale(global_dist + epsilon)
+
+        # Add global statistics
+        df["global_mean_log"] = self.global_mean_log
+        df["global_std_log"] = self.global_std_log
+
+        return df
 
 
 # 2D Relation
 class Relation2DModel(QType):
-    name = "Relation"
-    dim_type = "2D"
+    name = "relation_2d"
     format = "mc"
     
     # TODO
@@ -110,8 +215,7 @@ class Relation2DModel(QType):
 
 # 3D Depth
 class Depth3DModel(QType):
-    name = "Depth"
-    dim_type = "3D"
+    name = "depth_3d"
     format = "mc"
     
     # TODO
@@ -119,8 +223,7 @@ class Depth3DModel(QType):
 
 # 3D Distance
 class Distance3DModel(QType):
-    name = "Distance"
-    dim_type = "3D"
+    name = "distance_3d"
     format = "mc"
     
     # TODO
@@ -177,7 +280,7 @@ def evaluate_bias_model(
             split_args = (qdf,)
         else:  # classification task
             splitter = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=current_seed)
-            split_args = (qdf, qdf["ground_truth"])
+            split_args = (qdf, qdf[GT_COL])
 
         scores: List[float] = []
 
@@ -191,7 +294,7 @@ def evaluate_bias_model(
 
             X_tr, X_te = tr[model.feature_cols].copy(), te[model.feature_cols].copy()
             encode_categoricals(X_tr, X_te)
-            y_tr, y_te = tr["ground_truth"], te["ground_truth"]
+            y_tr, y_te = tr[GT_COL], te[GT_COL]
 
             est = _make_estimator(model.task, current_seed)
             est.fit(X_tr, y_tr)
@@ -220,7 +323,7 @@ def evaluate_bias_model(
     full_df = model.add_features(qdf.copy())
     X_full = full_df[model.feature_cols].copy()
     encode_categoricals(X_full, X_full.copy())
-    y_full = full_df["ground_truth"]
+    y_full = full_df[GT_COL]
 
     est_full = _make_estimator(model.task, random_state)
     est_full.fit(X_full, y_full)
@@ -259,9 +362,9 @@ def run_evaluation(n_splits: int = 5, random_state: int = 42, verbose: bool = Fa
     models = [
         ## MC
         Count2DModel(),
-        Relation2DModel(),
-        Depth3DModel(),
-        Distance3DModel(),
+        # Relation2DModel(),
+        # Depth3DModel(),
+        # Distance3DModel(),
     ]
 
     # Filter models if question_types is specified
