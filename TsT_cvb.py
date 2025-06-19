@@ -1,4 +1,4 @@
-import os
+rt os
 import json
 from functools import partial
 from typing import Protocol, List, Tuple, Dict, Literal, Union
@@ -102,7 +102,17 @@ class Count2DModel(QType):
     name = "count_2d"
     format = "mc"
 
+    _choice_dist_cols = [
+        f"choice_{i}_dist_from_obj_mean"
+        for i in range(4)
+    ]
+    _choice_dist_from_global_cols = [
+        f"choice_{i}_dist_from_global_mean"
+        for i in range(4)
+    ]
+
     feature_cols = [
+        "n_options",
         "object",
         "obj_count",
         "obj_freq_score",
@@ -113,8 +123,11 @@ class Count2DModel(QType):
         "obj_val_log_ratio",
         "global_mean_log",
         "global_std_log",
-        "global_mean_dist_score",
-        "n_options",  # Added: number of choices available
+        *_choice_dist_cols,
+        *_choice_dist_from_global_cols,
+        # # NOTE: the below features leverage privileged gt info. Remove?
+        # "gt_global_mean_dist_score",
+        # "gt_log_obj_mean_dist_score",
     ]
 
     def __init__(self):
@@ -185,21 +198,37 @@ class Count2DModel(QType):
         # Calculate inverse variance score
         df["obj_val_log_ratio"] = 1.0 - minmax_scale(df["obj_val_log_ratio"] + epsilon)
 
-        # Calculate distance from object mean score
-        norm_dist = abs(df["log_ground_truth"] - df["obj_val_log_mean"]) / (
-            df["obj_val_log_std"] + epsilon
-        )
-        df["log_obj_mean_dist_score"] = 1.0 - minmax_scale(norm_dist + epsilon)
-
-        # Calculate global distance score
-        global_dist = abs(df["log_ground_truth"] - self.global_mean_log) / (
-            self.global_std_log + epsilon
-        )
-        df["global_mean_dist_score"] = 1.0 - minmax_scale(global_dist + epsilon)
-
         # Add global statistics
         df["global_mean_log"] = self.global_mean_log
         df["global_std_log"] = self.global_std_log
+
+        # For each choice, calculate distance from typical
+        for i, choice in enumerate(df["choices"]):
+            choice_val = pd.to_numeric(choice, errors="coerce")
+            choice_log = np.log10(choice_val + 1.0)
+            
+            # Get the object's mean for this row
+            obj_mean = df.loc[df.index[i], "obj_val_log_mean"]
+            obj_std = df.loc[df.index[i], "obj_val_log_std"]
+            
+            # Calculate distances
+            df.loc[df.index[i], f"choice_{i}_dist_from_obj_mean"] = abs(choice_log - obj_mean)
+            df.loc[df.index[i], f"choice_{i}_dist_from_global_mean"] = abs(choice_log - self.global_mean_log)
+
+        #  Privileged features
+        # ---------------------------------------
+        # Calculate distance from object mean score
+        gt_norm_dist = abs(df["log_ground_truth"] - df["obj_val_log_mean"]) / (
+            df["obj_val_log_std"] + epsilon
+        )
+        df["gt_log_obj_mean_dist_score"] = 1.0 - minmax_scale(gt_norm_dist + epsilon)
+
+        # Calculate global distance score
+        gt_global_dist = abs(df["log_ground_truth"] - self.global_mean_log) / (
+            self.global_std_log + epsilon
+        )
+        df["gt_global_mean_dist_score"] = 1.0 - minmax_scale(gt_global_dist + epsilon)
+
 
         return df
 
