@@ -1013,18 +1013,18 @@ def get_object_rel_distance_score_v2(
         option_objects = row[['object_1', 'object_2', 'object_3', 'object_4']].tolist()
         target_obj = row['target_object']
 
-        gt_obj_freqs = []
-        pair_freqs = []
-        ord_pair_freqs = []
+        option_freqs = []
+        tgt_option_pair_freqs = []
+        tgt_option_ord_pair_freqs = []
 
         for opt_obj in option_objects:
             # Form pair and get its global frequency
-            tgt_gt_pair = "-".join(sorted([target_obj, opt_obj]))
-            tgt_gt_ord_pair = "-".join([target_obj, opt_obj])
+            tgt_option_pair = "-".join(sorted([target_obj, opt_obj]))
+            tgt_option_ord_pair = "-".join([target_obj, opt_obj])
 
-            gt_obj_freqs.append(gt_obj_counts.get(opt_obj, 0))
-            pair_freqs.append(global_pair_counts.get(tgt_gt_pair, 0))
-            ord_pair_freqs.append(global_ordered_pair_counts.get(tgt_gt_ord_pair, 0))
+            option_freqs.append(gt_obj_counts.get(opt_obj, 0))
+            tgt_option_pair_freqs.append(global_pair_counts.get(tgt_option_pair, 0))
+            tgt_option_ord_pair_freqs.append(global_ordered_pair_counts.get(tgt_option_ord_pair, 0))
 
         def get_max_prob(freqs):
             if len(freqs) == 0:
@@ -1035,16 +1035,15 @@ def get_object_rel_distance_score_v2(
             probs = [freq / total_freq_sum for freq in freqs]
             return max(probs)
 
-        max_gt_obj_prob = get_max_prob(gt_obj_freqs)
-        max_pair_prob = get_max_prob(pair_freqs)
-        max_ord_pair_prob = get_max_prob(ord_pair_freqs)
-
+        max_option_prob = get_max_prob(option_freqs)
+        max_tgt_option_pair_prob = get_max_prob(tgt_option_pair_freqs)
+        max_tgt_option_ord_pair_prob = get_max_prob(tgt_option_ord_pair_freqs)
 
         bias_info.append({
             'id': row['id'],
-            'gt_obj_prob': max_gt_obj_prob,
-            'pair_prob': max_pair_prob,
-            'ord_pair_prob': max_ord_pair_prob,
+            'option_prob': max_option_prob,
+            'tgt_option_pair_prob': max_tgt_option_pair_prob,
+            'tgt_option_ord_pair_prob': max_tgt_option_ord_pair_prob,
         })
 
     # Create a new DataFrame from the bias_info list
@@ -1053,9 +1052,9 @@ def get_object_rel_distance_score_v2(
     qdf = pd.merge(qdf, bias_df, on='id', how='left')
 
     qdf['bias_score'] = (
-        w_gt_obj * qdf['gt_obj_prob'] +
-        w_pair_freq * qdf['pair_prob'] +
-        w_ord_pair_freq * qdf['ord_pair_prob']
+        w_gt_obj * qdf['option_prob'] +
+        w_pair_freq * qdf['tgt_option_pair_prob'] +
+        w_ord_pair_freq * qdf['tgt_option_ord_pair_prob']
     )
 
     # Select and return relevant columns
@@ -1193,7 +1192,7 @@ def get_app_order_relative_score_v2(
                     pair = (seq[j], seq[k])
                     comb_pair_score += norm_comb_pair_freq_map.get(pair, 0)
 
-            score = w_pos * pos_score + w_pair * pair_score + w_comb_pair * comb_pair_score / 3 # Normalize by 3 components
+            score = (w_pos * pos_score + w_pair * pair_score + w_comb_pair * comb_pair_score) / 3 # Normalize by 3 components
             bias_info[f'seq_{i}_pos_score'] = pos_score
             bias_info[f'seq_{i}_pair_score'] = pair_score
             bias_info[f'seq_{i}_comb_pair_score'] = comb_pair_score
