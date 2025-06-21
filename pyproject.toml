@@ -17,3 +17,8 @@ dependencies = [
     "text2digits>=0.1.0",
     "tqdm>=4.67.1",
 ]
+
+[tool.uv]
+dev-dependencies = [
+    "ruff>=0.12.0",
+]

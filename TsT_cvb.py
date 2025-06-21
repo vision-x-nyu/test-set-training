@@ -22,20 +22,22 @@ from scipy.stats import lognorm
 
 cvbench = load_dataset("nyu-visionx/CV-Bench")
 df_full = cvbench["test"].to_pandas()
-df_full["question_type"] = df_full["task"].str.lower() + "_" + df_full["type"].str.lower()
-df_full["gt_idx"] = df_full["answer"].apply(lambda x: ord(x[1]) - ord('A'))
-df_full["gt_option"] = df_full.apply(
-    lambda row: row["choices"][row["gt_idx"]], axis=1
+df_full["question_type"] = (
+    df_full["task"].str.lower() + "_" + df_full["type"].str.lower()
 )
+df_full["gt_idx"] = df_full["answer"].apply(lambda x: ord(x[1]) - ord("A"))
+df_full["gt_option"] = df_full.apply(lambda row: row["choices"][row["gt_idx"]], axis=1)
 df_full["n_options"] = df_full["choices"].apply(len)
-
 
 
 # =============================================================================
 # 1.  HELPERS ------------------------------------------------------------------
 # =============================================================================
 
-def encode_categoricals(X_train: pd.DataFrame, X_test: pd.DataFrame) -> Dict[str, LabelEncoder]:
+
+def encode_categoricals(
+    X_train: pd.DataFrame, X_test: pd.DataFrame
+) -> Dict[str, LabelEncoder]:
     """Label‑encode *object* columns (fit on **train only** to avoid leak).
     Unseen categories in test are mapped to -1."""
     cat_cols = X_train.select_dtypes(include="object").columns
@@ -44,13 +46,7 @@ def encode_categoricals(X_train: pd.DataFrame, X_test: pd.DataFrame) -> Dict[str
         enc = LabelEncoder().fit(X_train[col].astype(str))
         mapping = {cls: i for i, cls in enumerate(enc.classes_)}
         X_train[col] = X_train[col].astype(str).map(mapping).astype(int)
-        X_test[col] = (
-            X_test[col]
-            .astype(str)
-            .map(mapping)
-            .fillna(-1)
-            .astype(int)
-        )
+        X_test[col] = X_test[col].astype(str).map(mapping).fillna(-1).astype(int)
         encoders[col] = enc
     return encoders
 
@@ -59,13 +55,13 @@ def encode_categoricals(X_train: pd.DataFrame, X_test: pd.DataFrame) -> Dict[str
 # 2.  MICRO‑PROTOCOL FOR QUESTION TYPES ---------------------------------------
 # =============================================================================
 
+
 class QType(Protocol):
     name: str
     feature_cols: List[str]
     format: Literal["mc", "num"]
 
-    def select_rows(self, df: pd.DataFrame) -> pd.DataFrame:
-        ...
+    def select_rows(self, df: pd.DataFrame) -> pd.DataFrame: ...
 
     def fit_feature_maps(self, train_df: pd.DataFrame) -> None:
         """Collect any statistics derived from *train* only (for leakage‑free CV)."""
@@ -139,32 +135,39 @@ class Count2DModel(QType):
     def select_rows(self, df: pd.DataFrame) -> pd.DataFrame:
         """Select and preprocess 2D object counting questions."""
         qdf = df[df["question_type"] == self.name].copy()
-        
+
         # Extract object name from question
-        qdf["object"] = qdf["question"].str.extract(
-            r'How many (.*?) are in the image')[0].str.strip()
-        
+        qdf["object"] = (
+            qdf["question"]
+            .str.extract(r"How many (.*?) are in the image")[0]
+            .str.strip()
+        )
+
         # Use preprocessed ground truth
         qdf["ground_truth"] = pd.to_numeric(qdf["gt_option"], errors="coerce")
-        
+
         # Add log-transformed ground truth
         qdf["log_ground_truth"] = np.log10(qdf["ground_truth"] + 1.0)
-        
+
         # Drop rows where extraction failed
         qdf.dropna(subset=["object", "ground_truth"], inplace=True)
-        
+
         return qdf
 
     def fit_feature_maps(self, train_df: pd.DataFrame) -> None:
         """Collect object statistics and global stats from training data."""
         # Calculate object statistics
-        self.obj_stats = train_df.groupby("object").agg(
-            obj_count=("idx", "count"),
-            obj_val_mean=("ground_truth", "mean"),
-            obj_val_std=("ground_truth", "std"),
-            obj_val_log_mean=("log_ground_truth", "mean"),
-            obj_val_log_std=("log_ground_truth", "std")
-        ).reset_index()
+        self.obj_stats = (
+            train_df.groupby("object")
+            .agg(
+                obj_count=("idx", "count"),
+                obj_val_mean=("ground_truth", "mean"),
+                obj_val_std=("ground_truth", "std"),
+                obj_val_log_mean=("log_ground_truth", "mean"),
+                obj_val_log_std=("log_ground_truth", "std"),
+            )
+            .reset_index()
+        )
 
         # Handle std=0 cases
         epsilon = 1e-6
@@ -173,8 +176,8 @@ class Count2DModel(QType):
 
         # Calculate ratios
         self.obj_stats["obj_val_log_ratio"] = (
-            self.obj_stats["obj_val_log_std"] / 
-            (self.obj_stats["obj_val_log_mean"] + epsilon)
+            self.obj_stats["obj_val_log_std"]
+            / (self.obj_stats["obj_val_log_mean"] + epsilon)
         ).fillna(0)
 
         # Calculate global statistics
@@ -212,19 +215,23 @@ class Count2DModel(QType):
         for row_idx, row in df.iterrows():
             choices = row["choices"]
             n_choices = len(choices)
-            
+
             # Get the object's mean for this row
             obj_mean = row["obj_val_log_mean"]
-            
+
             # Calculate distances for each choice
             for choice_idx in range(n_choices):
                 choice_val = pd.to_numeric(choices[choice_idx], errors="coerce")
                 if pd.notna(choice_val):
                     choice_log = np.log10(choice_val + 1.0)
-                    
+
                     # Calculate distances
-                    df.loc[row_idx, f"choice_{choice_idx}_dist_from_obj_mean"] = abs(choice_log - obj_mean)
-                    df.loc[row_idx, f"choice_{choice_idx}_dist_from_global_mean"] = abs(choice_log - self.global_mean_log)
+                    df.loc[row_idx, f"choice_{choice_idx}_dist_from_obj_mean"] = abs(
+                        choice_log - obj_mean
+                    )
+                    df.loc[row_idx, f"choice_{choice_idx}_dist_from_global_mean"] = abs(
+                        choice_log - self.global_mean_log
+                    )
 
         # Privileged features
         # ---------------------------------------
@@ -254,15 +261,15 @@ class Relation2DModel(QType):
         "object_2",
         "pair_freq_score",
         "pair_answer_freq_score",
-        "contains_left",         # NEW: Question contains "left"
-        "contains_right",        # NEW: Question contains "right"
-        "contains_above",        # NEW: Question contains "above"
-        "contains_below",        # NEW: Question contains "below"
-        "contains_front",        # NEW: Question contains "front"
-        "contains_behind",       # NEW: Question contains "behind"
-        "spatial_keyword_count", # NEW: Total spatial keywords
-        "question_length",       # NEW: Question length
-        "is_majority_answer",    # NEW: Is this the most common answer?
+        "contains_left",  # NEW: Question contains "left"
+        "contains_right",  # NEW: Question contains "right"
+        "contains_above",  # NEW: Question contains "above"
+        "contains_below",  # NEW: Question contains "below"
+        "contains_front",  # NEW: Question contains "front"
+        "contains_behind",  # NEW: Question contains "behind"
+        "spatial_keyword_count",  # NEW: Total spatial keywords
+        "question_length",  # NEW: Question length
+        "is_majority_answer",  # NEW: Is this the most common answer?
         # "answer_position_bias",  # NEW: How often this position is correct
         # "answer_entropy",        # NEW: Entropy of answer distribution
     ]
@@ -277,20 +284,22 @@ class Relation2DModel(QType):
     def select_rows(self, df: pd.DataFrame) -> pd.DataFrame:
         """Select and preprocess 2D relation questions."""
         qdf = df[df["question_type"] == self.name].copy()
-        
+
         # Extract object pairs from question
         def extract_objects(question):
             # Remove annotation markers
-            question = question.replace(' (annotated by the red box)', '')
-            question = question.replace(' (annotated by the blue box)', '')
-            
+            question = question.replace(" (annotated by the red box)", "")
+            question = question.replace(" (annotated by the blue box)", "")
+
             # Try to find patterns like "the X and the Y"
-            match = re.search(r'the relative positions of the ([^,]+?) and the ([^,]+?)[, ]', question)
+            match = re.search(
+                r"the relative positions of the ([^,]+?) and the ([^,]+?)[, ]", question
+            )
             if match:
                 return match.group(1).strip(), match.group(2).strip()
-            
+
             # Fallback: try to find "the X" and "the Y" separately
-            matches = re.findall(r'the ([a-zA-Z0-9_ ]+?)[,?\.]', question)
+            matches = re.findall(r"the ([a-zA-Z0-9_ ]+?)[,?\.]", question)
             if len(matches) >= 2:
                 return matches[0].strip(), matches[1].strip()
             return None, None
@@ -299,44 +308,45 @@ class Relation2DModel(QType):
         qdf[["object_1", "object_2"]] = qdf["question"].apply(
             lambda q: pd.Series(sorted(extract_objects(q)))
         )
-        
+
         # Drop rows where extraction failed
         qdf.dropna(subset=["object_1", "object_2"], inplace=True)
-        
+
         return qdf
 
     def fit_feature_maps(self, train_df: pd.DataFrame) -> None:
         """Collect object pair frequencies and answer distributions from training data."""
         # Calculate pair frequencies
         pairs = train_df.apply(
-            lambda row: f"{row['object_1']}-{row['object_2']}", 
-            axis=1
+            lambda row: f"{row['object_1']}-{row['object_2']}", axis=1
         )
         self.pair_freq_map = pairs.value_counts(normalize=True)
-        
+
         # Calculate answer frequencies for each pair
         self.pair_answer_freq_map = {}
         for _, row in train_df.iterrows():
             pair = (row["object_1"], row["object_2"])
             answer = row["gt_option"]
-            
+
             if pair not in self.pair_answer_freq_map:
                 self.pair_answer_freq_map[pair] = {}
-            
+
             if answer not in self.pair_answer_freq_map[pair]:
                 self.pair_answer_freq_map[pair][answer] = 0
             self.pair_answer_freq_map[pair][answer] += 1
-        
+
         # Normalize answer frequencies for each pair
         for pair in self.pair_answer_freq_map:
             total = sum(self.pair_answer_freq_map[pair].values())
             self.pair_answer_freq_map[pair] = {
-                ans: count/total 
+                ans: count / total
                 for ans, count in self.pair_answer_freq_map[pair].items()
             }
 
         # NEW: Calculate answer position frequencies
-        self.answer_position_freq = train_df["gt_idx"].value_counts(normalize=True).to_dict()
+        self.answer_position_freq = (
+            train_df["gt_idx"].value_counts(normalize=True).to_dict()
+        )
 
         # NEW: Find majority answer
         self.answer_distribution = train_df["gt_option"].value_counts()
@@ -353,24 +363,28 @@ class Relation2DModel(QType):
             raise RuntimeError("fit_feature_maps must be called first")
 
         df = df.copy()
-        
+
         # Calculate pair frequency score
         df["pair_freq_score"] = df.apply(
-            lambda row: self.pair_freq_map.get(f"{row['object_1']}-{row['object_2']}", 0),
-            axis=1
+            lambda row: self.pair_freq_map.get(
+                f"{row['object_1']}-{row['object_2']}", 0
+            ),
+            axis=1,
         )
-        
+
         # Calculate answer frequency score for the pair
         df["pair_answer_freq_score"] = df.apply(
             lambda row: self.pair_answer_freq_map.get(
                 (row["object_1"], row["object_2"]), {}
             ).get(row["gt_option"], 0),
-            axis=1
+            axis=1,
         )
-        
+
         # NEW: Answer position bias
-        df["answer_position_bias"] = df["gt_idx"].map(self.answer_position_freq).fillna(0)
-        
+        df["answer_position_bias"] = (
+            df["gt_idx"].map(self.answer_position_freq).fillna(0)
+        )
+
         # NEW: Spatial keyword features
         spatial_keywords = {
             "left": ["left", "to the left"],
@@ -378,29 +392,31 @@ class Relation2DModel(QType):
             "above": ["above", "over", "on top"],
             "below": ["below", "under", "beneath"],
             "front": ["front", "in front", "foreground"],
-            "behind": ["behind", "back", "background"]
+            "behind": ["behind", "back", "background"],
         }
-        
+
         for direction, keywords in spatial_keywords.items():
             df[f"contains_{direction}"] = df["question"].apply(
                 lambda q: int(any(kw in q.lower() for kw in keywords))
             )
-        
+
         # NEW: Total spatial keywords
-        df["spatial_keyword_count"] = sum(df[f"contains_{direction}"] for direction in spatial_keywords)
-        
+        df["spatial_keyword_count"] = sum(
+            df[f"contains_{direction}"] for direction in spatial_keywords
+        )
+
         # NEW: Question length
         df["question_length"] = df["question"].str.len()
-        
+
         # NEW: Is majority answer
         df["is_majority_answer"] = (df["gt_option"] == self.majority_answer).astype(int)
-        
+
         # NEW: Answer entropy (diversity of answers)
         total_answers = sum(self.answer_distribution.values)
-        probs = [count/total_answers for count in self.answer_distribution.values]
+        probs = [count / total_answers for count in self.answer_distribution.values]
         entropy = -sum(p * np.log(p + 1e-10) for p in probs)
         df["answer_entropy"] = entropy
-        
+
         return df
 
 
@@ -425,42 +441,41 @@ class Depth3DModel(QType):
     def select_rows(self, df: pd.DataFrame) -> pd.DataFrame:
         """Select and preprocess 3D depth questions."""
         qdf = df[df["question_type"] == self.name].copy()
-        
+
         # For depth questions, the choices themselves are the objects being compared
         # Sort the choices to ensure consistent pairing
         qdf[["object_1", "object_2"]] = qdf["choices"].apply(
             lambda x: pd.Series(sorted(x))
         )
-        
+
         return qdf
 
     def fit_feature_maps(self, train_df: pd.DataFrame) -> None:
         """Collect object pair frequencies and answer distributions from training data."""
         # Calculate pair frequencies
         pairs = train_df.apply(
-            lambda row: f"{row['object_1']}-{row['object_2']}", 
-            axis=1
+            lambda row: f"{row['object_1']}-{row['object_2']}", axis=1
         )
         self.pair_freq_map = pairs.value_counts(normalize=True)
-        
+
         # Calculate answer frequencies for each pair
         self.pair_answer_freq_map = {}
         for _, row in train_df.iterrows():
             pair = (row["object_1"], row["object_2"])
             answer = row["gt_option"]
-            
+
             if pair not in self.pair_answer_freq_map:
                 self.pair_answer_freq_map[pair] = {}
-            
+
             if answer not in self.pair_answer_freq_map[pair]:
                 self.pair_answer_freq_map[pair][answer] = 0
             self.pair_answer_freq_map[pair][answer] += 1
-        
+
         # Normalize answer frequencies for each pair
         for pair in self.pair_answer_freq_map:
             total = sum(self.pair_answer_freq_map[pair].values())
             self.pair_answer_freq_map[pair] = {
-                ans: count/total 
+                ans: count / total
                 for ans, count in self.pair_answer_freq_map[pair].items()
             }
 
@@ -470,21 +485,23 @@ class Depth3DModel(QType):
             raise RuntimeError("fit_feature_maps must be called first")
 
         df = df.copy()
-        
+
         # Calculate pair frequency score
         df["pair_freq_score"] = df.apply(
-            lambda row: self.pair_freq_map.get(f"{row['object_1']}-{row['object_2']}", 0),
-            axis=1
+            lambda row: self.pair_freq_map.get(
+                f"{row['object_1']}-{row['object_2']}", 0
+            ),
+            axis=1,
         )
-        
+
         # Calculate answer frequency score for the pair
         df["pair_answer_freq_score"] = df.apply(
             lambda row: self.pair_answer_freq_map.get(
                 (row["object_1"], row["object_2"]), {}
             ).get(row["gt_option"], 0),
-            axis=1
+            axis=1,
         )
-        
+
         return df
 
 
@@ -509,42 +526,41 @@ class Distance3DModel(QType):
     def select_rows(self, df: pd.DataFrame) -> pd.DataFrame:
         """Select and preprocess 3D distance questions."""
         qdf = df[df["question_type"] == self.name].copy()
-        
+
         # For distance questions, the choices themselves are the objects being compared
         # Sort the choices to ensure consistent pairing
         qdf[["object_1", "object_2"]] = qdf["choices"].apply(
             lambda x: pd.Series(sorted(x))
         )
-        
+
         return qdf
 
     def fit_feature_maps(self, train_df: pd.DataFrame) -> None:
         """Collect object pair frequencies and answer distributions from training data."""
         # Calculate pair frequencies
         pairs = train_df.apply(
-            lambda row: f"{row['object_1']}-{row['object_2']}", 
-            axis=1
+            lambda row: f"{row['object_1']}-{row['object_2']}", axis=1
         )
         self.pair_freq_map = pairs.value_counts(normalize=True)
-        
+
         # Calculate answer frequencies for each pair
         self.pair_answer_freq_map = {}
         for _, row in train_df.iterrows():
             pair = (row["object_1"], row["object_2"])
             answer = row["gt_option"]
-            
+
             if pair not in self.pair_answer_freq_map:
                 self.pair_answer_freq_map[pair] = {}
-            
+
             if answer not in self.pair_answer_freq_map[pair]:
                 self.pair_answer_freq_map[pair][answer] = 0
             self.pair_answer_freq_map[pair][answer] += 1
-        
+
         # Normalize answer frequencies for each pair
         for pair in self.pair_answer_freq_map:
             total = sum(self.pair_answer_freq_map[pair].values())
             self.pair_answer_freq_map[pair] = {
-                ans: count/total 
+                ans: count / total
                 for ans, count in self.pair_answer_freq_map[pair].items()
             }
 
@@ -554,27 +570,30 @@ class Distance3DModel(QType):
             raise RuntimeError("fit_feature_maps must be called first")
 
         df = df.copy()
-        
+
         # Calculate pair frequency score
         df["pair_freq_score"] = df.apply(
-            lambda row: self.pair_freq_map.get(f"{row['object_1']}-{row['object_2']}", 0),
-            axis=1
+            lambda row: self.pair_freq_map.get(
+                f"{row['object_1']}-{row['object_2']}", 0
+            ),
+            axis=1,
         )
-        
+
         # Calculate answer frequency score for the pair
         df["pair_answer_freq_score"] = df.apply(
             lambda row: self.pair_answer_freq_map.get(
                 (row["object_1"], row["object_2"]), {}
             ).get(row["gt_option"], 0),
-            axis=1
+            axis=1,
         )
-        
+
         return df
 
 
 # =============================================================================
 # 4.  COMMON EVALUATION LOOP --------------------------------------------------
 # =============================================================================
+
 
 # utils --------------------------------------------------------------------
 def mean_relative_accuracy(pred, true, start=0.5, end=0.95, step=0.05):
@@ -613,7 +632,9 @@ def evaluate_bias_model(
     all_scores = []
 
     # Show progress bar over repeats
-    repeat_pbar = tqdm(range(repeats), desc=f"[{model.name.upper()}] Repeats", disable=repeats == 1)
+    repeat_pbar = tqdm(
+        range(repeats), desc=f"[{model.name.upper()}] Repeats", disable=repeats == 1
+    )
 
     for repeat in repeat_pbar:
         current_seed = random_state + repeat
@@ -623,12 +644,19 @@ def evaluate_bias_model(
             splitter = KFold(n_splits=n_splits, shuffle=True, random_state=current_seed)
             split_args = (qdf,)
         else:  # classification task
-            splitter = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=current_seed)
+            splitter = StratifiedKFold(
+                n_splits=n_splits, shuffle=True, random_state=current_seed
+            )
             split_args = (qdf, qdf[target_col])
 
         scores: List[float] = []
 
-        fold_pbar = tqdm(enumerate(splitter.split(*split_args), 1), desc=f"[{model.name.upper()}] Folds", total=n_splits, disable=repeats > 1)
+        fold_pbar = tqdm(
+            enumerate(splitter.split(*split_args), 1),
+            desc=f"[{model.name.upper()}] Folds",
+            total=n_splits,
+            disable=repeats > 1,
+        )
         for fold, (tr_idx, te_idx) in fold_pbar:
             tr, te = qdf.iloc[tr_idx].copy(), qdf.iloc[te_idx].copy()
 
@@ -656,11 +684,17 @@ def evaluate_bias_model(
     std_acc = float(np.std(mean_scores))
 
     if verbose:
-        print(f"\n[{model.name.upper()}] Overall {model.metric.upper()}: {mean_acc:.2%} ± {std_acc:.2%} (n_splits={n_splits}, repeats={repeats})")
+        print(
+            f"\n[{model.name.upper()}] Overall {model.metric.upper()}: {mean_acc:.2%} ± {std_acc:.2%} (n_splits={n_splits}, repeats={repeats})"
+        )
         if repeats == 1:
-            print(f"[{model.name.upper()}] Fold {model.metric.upper()}s: {[f'{s:.2%}' for s in all_scores[0]]}")
+            print(
+                f"[{model.name.upper()}] Fold {model.metric.upper()}s: {[f'{s:.2%}' for s in all_scores[0]]}"
+            )
         else:
-            print(f"[{model.name.upper()}] Repeat {model.metric.upper()}s: {[f'{s:.2%}' for s in mean_scores]}")
+            print(
+                f"[{model.name.upper()}] Repeat {model.metric.upper()}s: {[f'{s:.2%}' for s in mean_scores]}"
+            )
 
     # full‑data importances ---------------------------------------------------
     model.fit_feature_maps(qdf)  # all rows
@@ -672,7 +706,9 @@ def evaluate_bias_model(
     est_full = _make_estimator(model.task, random_state)
     est_full.fit(X_full, y_full)
     fi = (
-        pd.DataFrame({"feature": model.feature_cols, "importance": est_full.feature_importances_})
+        pd.DataFrame(
+            {"feature": model.feature_cols, "importance": est_full.feature_importances_}
+        )
         .sort_values("importance", ascending=False)
         .reset_index(drop=True)
     )
@@ -686,7 +722,15 @@ def evaluate_bias_model(
 # 6.  MAIN --------------------------------------------------------------------
 # =============================================================================
 
-def run_evaluation(n_splits: int = 5, random_state: int = 42, verbose: bool = False, repeats: int = 1, question_types: Union[List[str], None] = None, target_col: str = "gt_idx") -> pd.DataFrame:
+
+def run_evaluation(
+    n_splits: int = 5,
+    random_state: int = 42,
+    verbose: bool = False,
+    repeats: int = 1,
+    question_types: Union[List[str], None] = None,
+    target_col: str = "gt_idx",
+) -> pd.DataFrame:
     """
     Run evaluation for all models and return a summary table of results.
 
@@ -729,14 +773,16 @@ def run_evaluation(n_splits: int = 5, random_state: int = 42, verbose: bool = Fa
             repeats=repeats,
             target_col=target_col,
         )
-        all_results.append({
-            "Model": m.name,
-            "Format": m.format.upper(),
-            "Metric": m.metric.upper(),
-            "Score": mean_score,
-            "± Std": std_score,
-            "Feature Importances": fi,
-        })
+        all_results.append(
+            {
+                "Model": m.name,
+                "Format": m.format.upper(),
+                "Metric": m.metric.upper(),
+                "Score": mean_score,
+                "± Std": std_score,
+                "Feature Importances": fi,
+            }
+        )
 
     # Create summary table
     summary = pd.DataFrame(all_results)
@@ -751,13 +797,15 @@ def run_evaluation(n_splits: int = 5, random_state: int = 42, verbose: bool = Fa
     summary["± Std"] = summary["± Std"].map("{:.1%}".format)
 
     # Print pretty table
-    print("\n"*3 + "="*80)
+    print("\n" * 3 + "=" * 80)
     print("EVALUATION SUMMARY")
-    print("="*80)
-    print(summary[["Model", "Format", "Metric", "Score", "± Std"]].to_string(index=False))
-    print("="*80)
+    print("=" * 80)
+    print(
+        summary[["Model", "Format", "Metric", "Score", "± Std"]].to_string(index=False)
+    )
+    print("=" * 80)
     print(f"OVERALL AVERAGE SCORE: {overall_avg:.1%} ± {overall_std:.1%}")
-    print("="*80)
+    print("=" * 80)
 
     return summary
 
@@ -766,22 +814,35 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--n_splits", "-k", type=int, default=5, help="Number of CV splits")
-    parser.add_argument("--random_state", "-s", type=int, default=42, help="Random seed")
+    parser.add_argument(
+        "--n_splits", "-k", type=int, default=5, help="Number of CV splits"
+    )
+    parser.add_argument(
+        "--random_state", "-s", type=int, default=42, help="Random seed"
+    )
     parser.add_argument(
         "--verbose", "-v", action="store_true", help="Print detailed output"
     )
     parser.add_argument(
-        "--repeats", "-r", type=int, default=1, 
-        help="Number of times to repeat evaluation with different random seeds"
+        "--repeats",
+        "-r",
+        type=int,
+        default=1,
+        help="Number of times to repeat evaluation with different random seeds",
     )
     parser.add_argument(
-        "--question_types", "-q", type=str, default=None,
-        help="Comma-separated list of question types to evaluate (e.g. 'Count,Relation')"
+        "--question_types",
+        "-q",
+        type=str,
+        default=None,
+        help="Comma-separated list of question types to evaluate (e.g. 'Count,Relation')",
     )
     parser.add_argument(
-        "--target_col", "-t", type=str, default="gt_idx",
-        help="Column to use as target variable (default: gt_idx)"
+        "--target_col",
+        "-t",
+        type=str,
+        default="gt_idx",
+        help="Column to use as target variable (default: gt_idx)",
     )
     args = parser.parse_args()
 
@@ -796,5 +857,5 @@ if __name__ == "__main__":
         verbose=args.verbose,
         repeats=args.repeats,
         question_types=question_types,
-        target_col=args.target_col
+        target_col=args.target_col,
     )
