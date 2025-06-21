@@ -104,11 +104,11 @@ class Count2DModel(QType):
 
     _choice_dist_cols = [
         f"choice_{i}_dist_from_obj_mean"
-        for i in range(4)
+        for i in range(6)  # Support up to 6 choices
     ]
     _choice_dist_from_global_cols = [
         f"choice_{i}_dist_from_global_mean"
-        for i in range(4)
+        for i in range(6)  # Support up to 6 choices
     ]
 
     feature_cols = [
@@ -202,20 +202,31 @@ class Count2DModel(QType):
         df["global_mean_log"] = self.global_mean_log
         df["global_std_log"] = self.global_std_log
 
-        # For each choice, calculate distance from typical
-        for i, choice in enumerate(df["choices"]):
-            choice_val = pd.to_numeric(choice, errors="coerce")
-            choice_log = np.log10(choice_val + 1.0)
+        # Initialize choice distance columns with NaN
+        max_choices = df["n_options"].max()
+        for i in range(max_choices):  # Support up to 6 choices
+            df[f"choice_{i}_dist_from_obj_mean"] = np.nan
+            df[f"choice_{i}_dist_from_global_mean"] = np.nan
+
+        # For each row, calculate distances for each choice
+        for row_idx, row in df.iterrows():
+            choices = row["choices"]
+            n_choices = len(choices)
             
             # Get the object's mean for this row
-            obj_mean = df.loc[df.index[i], "obj_val_log_mean"]
-            obj_std = df.loc[df.index[i], "obj_val_log_std"]
+            obj_mean = row["obj_val_log_mean"]
             
-            # Calculate distances
-            df.loc[df.index[i], f"choice_{i}_dist_from_obj_mean"] = abs(choice_log - obj_mean)
-            df.loc[df.index[i], f"choice_{i}_dist_from_global_mean"] = abs(choice_log - self.global_mean_log)
+            # Calculate distances for each choice
+            for choice_idx in range(n_choices):
+                choice_val = pd.to_numeric(choices[choice_idx], errors="coerce")
+                if pd.notna(choice_val):
+                    choice_log = np.log10(choice_val + 1.0)
+                    
+                    # Calculate distances
+                    df.loc[row_idx, f"choice_{choice_idx}_dist_from_obj_mean"] = abs(choice_log - obj_mean)
+                    df.loc[row_idx, f"choice_{choice_idx}_dist_from_global_mean"] = abs(choice_log - self.global_mean_log)
 
-        #  Privileged features
+        # Privileged features
         # ---------------------------------------
         # Calculate distance from object mean score
         gt_norm_dist = abs(df["log_ground_truth"] - df["obj_val_log_mean"]) / (
@@ -228,7 +239,6 @@ class Count2DModel(QType):
             self.global_std_log + epsilon
         )
         df["gt_global_mean_dist_score"] = 1.0 - minmax_scale(gt_global_dist + epsilon)
-
 
         return df
 
