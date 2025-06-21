@@ -37,12 +37,12 @@ The core approach involves analyzing each question type within VSI-Bench and app
 git clone git@github.com:vision-x-nyu/vsibench_debiased_internal.git
 cd vsibench_debiased_internal
 
-# 2. Create Conda Environment (Recommended):
-conda create -n vsi_debias python=3.9
-conda activate vsi_debias
+# 2. Install dependencies:
+uv sync
 
-# 3. Install Dependencies:
-pip install -r requirements.txt
+# 3. Activate the environment:
+uv venv
+source .venv/bin/activate
 ```
 
 ## Running the Debiasing Script
