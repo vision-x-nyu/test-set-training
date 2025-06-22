@@ -1,7 +1,7 @@
 import os
 import json
 from functools import partial
-from typing import Protocol, List, Tuple, Dict, Literal, Union
+from typing import Optional, Protocol, List, Tuple, Dict, Literal, Union
 import re
 
 import numpy as np
@@ -63,6 +63,7 @@ class QType(Protocol):
     name: str
     feature_cols: List[str]
     format: Literal["mc", "num"]
+    target_col_override: Optional[str] = None
 
     def select_rows(self, df: pd.DataFrame) -> pd.DataFrame: ...
 
@@ -915,6 +916,7 @@ class RoutePlanningModel(QType):
 class ObjOrderModel(QType):
     name = "obj_appearance_order"
     format = "mc"
+    target_col_override = "gt_idx"
 
     _opt_seq_cols = [f"opt_seq_{i}" for i in range(1, 5)]
     _opt_seq_comp_cols = [
@@ -1101,6 +1103,14 @@ def evaluate_bias_model(
 ):
     qdf = model.select_rows(df)
     all_scores = []
+
+    if model.target_col_override is not None and model.target_col_override != target_col:
+        print(f"[WARNING] {model.name} has an override target column '{model.target_col_override}'. Replacing '{target_col}'.")
+        target_col = model.target_col_override
+    if model.task == "reg" and target_col == "gt_idx":
+        # no gt_idx for regression tasks
+        target_col = "ground_truth"
+        print(f"[WARNING] {model.name} is numerical, with no gt_idx column. Overriding target column to 'ground_truth'")
 
     # Show progress bar over repeats
     repeat_pbar = tqdm(
