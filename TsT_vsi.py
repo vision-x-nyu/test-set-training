@@ -23,6 +23,15 @@ from scipy.stats import lognorm
 vsibench = load_dataset("nyu-visionx/VSI-Bench")
 df_full = vsibench["test"].to_pandas()
 
+# For numerical questions (no options)
+df_full['gt_val'] = df_full['ground_truth']
+df_full['gt_idx'] = -1
+
+# For multiple choice questions (with options)
+mc_mask = df_full['options'].notna()
+df_full.loc[mc_mask, 'gt_idx'] = df_full.loc[mc_mask, 'ground_truth'].apply(lambda x: "ABCD".index(x))
+df_full.loc[mc_mask, 'gt_val'] = df_full[mc_mask].apply(lambda row: row['options'][int(row['gt_idx'])].split(". ")[-1], axis=1)
+
 
 # =============================================================================
 # 1.  HELPERS ------------------------------------------------------------------
@@ -566,9 +575,7 @@ class RelDistanceModel(QType):
                 "target_object",
             ]
         ] = qdf["question"].str.extract(self._rel_regex)
-        qdf["gt_idx"] = qdf["ground_truth"].apply(lambda x: "ABCD".index(x))
-        qdf["gt_option"] = qdf.apply(lambda r: r["options"][r["gt_idx"]], axis=1)
-        qdf["gt_object"] = qdf["gt_option"].apply(lambda s: s.split(". ")[-1].strip())
+        qdf["gt_object"] = qdf["gt_val"]
         qdf["tgt_gt_pair"] = qdf.apply(
             lambda r: "-".join(sorted([r["target_object"], r["gt_object"]])),
             axis=1,
@@ -629,13 +636,13 @@ class RelDirModel(QType):
         # "poq_obj_pair_freq_score",
         # # "poq_obj_ord_pair_freq_score",
         # # NOTE: the below features leverage privileged gt info. Remove?
-        # "gt_opt_freq_score",
+        # "gt_val_freq_score",
     ]
 
     def __init__(self):
         # frequency maps learned on the training split
         self.obj_freq_map: pd.Series | None = None
-        self.gt_opt_freq_map: pd.Series | None = None
+        self.gt_val_freq_map: pd.Series | None = None
         self.pos_ori_obj_pair_freq_map: pd.Series | None = None
 
     def select_rows(self, df: pd.DataFrame) -> pd.DataFrame:
@@ -653,19 +660,13 @@ class RelDirModel(QType):
         for col in ["positioning_object", "orienting_object", "querying_object"]:
             qdf[col] = qdf[col].str.strip()
 
-        # Extract ground truth answer
-        qdf["gt_idx"] = qdf["ground_truth"].apply(lambda x: "ABCD".index(x))
-        qdf["gt_option"] = qdf.apply(
-            lambda row: row["options"][row["gt_idx"]].split(". ")[-1], axis=1
-        )
-
         # Drop rows where extraction failed
         qdf.dropna(
             subset=[
                 "positioning_object",
                 "orienting_object",
                 "querying_object",
-                "gt_option",
+                "gt_val",
             ],
             inplace=True,
         )
@@ -685,7 +686,7 @@ class RelDirModel(QType):
         self.obj_freq_map = all_objects.value_counts(normalize=True)
 
         # Calculate answer frequencies
-        self.gt_opt_freq_map = train_df["gt_option"].value_counts(normalize=True)
+        self.gt_val_freq_map = train_df["gt_val"].value_counts(normalize=True)
         self.pos_obj_freq_map = train_df["positioning_object"].value_counts(
             normalize=True
         )
@@ -737,7 +738,7 @@ class RelDirModel(QType):
         )
 
         # Calculate answer frequency score
-        df["gt_opt_freq_score"] = df["gt_option"].map(self.gt_opt_freq_map).fillna(0)
+        df["gt_val_freq_score"] = df["gt_val"].map(self.gt_val_freq_map).fillna(0)
 
         # Calculate object pair frequency score
         # positioning-orienting pairs
@@ -782,14 +783,21 @@ class RoutePlanningModel(QType):
     name = "route_planning"
     format = "mc"
 
+    _opt_cols = [f"opt_{i}" for i in range(4)]
+    _opt_freq_cols = [f"opt_{i}_freq_score" for i in range(4)]
+
     feature_cols = [
         "beginning_object",
         "facing_object",
         "target_object",
         "num_steps",
+        "num_choices",
         "obj_freq_score",
-        "route_freq_score",
-        "steps_dist_score",
+        *_opt_freq_cols,
+        *_opt_cols,
+        # NOTE: the below features leverage privileged gt info. Remove?
+        # "gt_route_freq_score",
+        # "steps_dist_score",
     ]
 
     def __init__(self):
@@ -822,15 +830,19 @@ class RoutePlanningModel(QType):
             )
 
         # Extract ground truth route
-        qdf["gt_idx"] = qdf["ground_truth"].apply(lambda x: "ABCD".index(x))
-        qdf["gt_route_str"] = qdf.apply(
-            lambda row: row["options"][row["gt_idx"]].strip(), axis=1
-        )
+        qdf["gt_route_str"] = qdf["gt_val"]
+
+        qdf["num_choices"] = qdf["options"].apply(lambda x: len(x))
+
+        # get route options
+        for i in range(4):
+            qdf[f"opt_{i}"] = qdf["options"].apply(lambda x: x[i].split(". ")[-1].strip() if len(x) > i else None)
 
         # Calculate number of steps in route
         qdf["num_steps"] = qdf["gt_route_str"].apply(
             lambda x: len(x.split(",")) if pd.notna(x) else 0
         )
+
 
         # Drop rows where extraction failed
         qdf.dropna(
@@ -883,8 +895,12 @@ class RoutePlanningModel(QType):
             axis=1,
         )
 
+        # add per-option frequency score
+        for i in range(4):
+            df[f"opt_{i}_freq_score"] = df[f"opt_{i}"].map(self.route_freq_map).fillna(0)
+
         # Calculate route frequency score
-        df["route_freq_score"] = df["gt_route_str"].map(self.route_freq_map).fillna(0)
+        df["gt_route_freq_score"] = df["gt_route_str"].map(self.route_freq_map).fillna(0)
 
         # Calculate step count typicality score
         norm_dist = abs(df["num_steps"] - self.mean_steps) / (self.std_steps + epsilon)
@@ -932,13 +948,9 @@ class ObjOrderModel(QType):
 
     def select_rows(self, df: pd.DataFrame) -> pd.DataFrame:
         qdf = df[df["question_type"] == self.name].copy()
-        qdf["gt_idx"] = qdf["ground_truth"].apply(lambda x: "ABCD".index(x))
-        qdf["gt_option"] = qdf.apply(
-            lambda r: r["options"][r["gt_idx"]].split(". ")[-1], axis=1
-        )
         # split ground‑truth sequence
         for i in range(4):
-            qdf[f"gt_obj_{i + 1}"] = qdf["gt_option"].apply(
+            qdf[f"gt_obj_{i + 1}"] = qdf["gt_val"].apply(
                 lambda s, idx=i: s.split(", ")[idx].strip()
             )
         # pre‑parse option sequences as lists
@@ -1215,7 +1227,7 @@ def run_evaluation(
         RelDistanceModel(),
         RelDirModel(),
         RoutePlanningModel(),
-        ObjOrderModel(),
+        # ObjOrderModel(),
     ]
 
     # Filter models if question_types is specified
