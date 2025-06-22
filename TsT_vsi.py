@@ -1083,6 +1083,7 @@ def evaluate_bias_model(
     random_state: int = 42,
     verbose: bool = True,
     repeats: int = 1,
+    target_col: str = "ground_truth",
 ):
     qdf = model.select_rows(df)
     all_scores = []
@@ -1103,7 +1104,7 @@ def evaluate_bias_model(
             splitter = StratifiedKFold(
                 n_splits=n_splits, shuffle=True, random_state=current_seed
             )
-            split_args = (qdf, qdf["ground_truth"])
+            split_args = (qdf, qdf[target_col])
 
         scores: List[float] = []
 
@@ -1122,7 +1123,7 @@ def evaluate_bias_model(
 
             X_tr, X_te = tr[model.feature_cols].copy(), te[model.feature_cols].copy()
             encode_categoricals(X_tr, X_te)
-            y_tr, y_te = tr["ground_truth"], te["ground_truth"]
+            y_tr, y_te = tr[target_col], te[target_col]
 
             est = _make_estimator(model.task, current_seed)
             est.fit(X_tr, y_tr)
@@ -1157,7 +1158,7 @@ def evaluate_bias_model(
     full_df = model.add_features(qdf.copy())
     X_full = full_df[model.feature_cols].copy()
     encode_categoricals(X_full, X_full.copy())
-    y_full = full_df["ground_truth"]
+    y_full = full_df[target_col]
 
     est_full = _make_estimator(model.task, random_state)
     est_full.fit(X_full, y_full)
@@ -1185,6 +1186,7 @@ def run_evaluation(
     verbose: bool = False,
     repeats: int = 1,
     question_types: Union[List[str], None] = None,
+    target_col: str = "ground_truth",
 ) -> pd.DataFrame:
     """
     Run evaluation for all models and return a summary table of results.
@@ -1195,6 +1197,7 @@ def run_evaluation(
         verbose: Whether to print detailed output during evaluation
         repeats: Number of times to repeat evaluation with different random seeds
         question_types: Optional list of question types to evaluate. If None, evaluate all types.
+        target_col: Column to use as target variable (default: "ground_truth")
 
     Returns:
         DataFrame with model results including mean score and standard deviation
@@ -1230,6 +1233,7 @@ def run_evaluation(
             random_state=random_state,
             verbose=verbose,
             repeats=repeats,
+            target_col=target_col,
         )
         all_results.append(
             {
@@ -1295,6 +1299,13 @@ if __name__ == "__main__":
         default=None,
         help="Comma-separated list of question types to evaluate (e.g. 'object_counting,object_abs_distance')",
     )
+    parser.add_argument(
+        "--target_col",
+        "-t",
+        type=str,
+        default="ground_truth",
+        help="Column to use as target variable (default: ground_truth)",
+    )
     args = parser.parse_args()
 
     # Parse question types if provided
@@ -1308,4 +1319,5 @@ if __name__ == "__main__":
         verbose=args.verbose,
         repeats=args.repeats,
         question_types=question_types,
+        target_col=args.target_col,
     )
