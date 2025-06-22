@@ -207,6 +207,7 @@ class ObjAbsDistModel(QType):
         "pair_count",
         "pair_val_mean_log",
         "pair_val_std_log",
+        # # below dont help much
         # "ord_pair_freq_score",
         # "ord_pair_inv_var_score",
         # "ord_pair_count",
@@ -631,6 +632,7 @@ class RelDirModel(QType):
         "orienting_object",
         "querying_object",
         "obj_freq_score",
+        # # below dont help much
         # "pos_ori_obj_pair_freq_score",
         # # "pos_ori_obj_ord_pair_freq_score",
         # "poq_obj_pair_freq_score",
@@ -1227,7 +1229,7 @@ def run_evaluation(
         RelDistanceModel(),
         RelDirModel(),
         RoutePlanningModel(),
-        # ObjOrderModel(),
+        ObjOrderModel(),
     ]
 
     # Filter models if question_types is specified
