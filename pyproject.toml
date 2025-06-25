@@ -20,5 +20,7 @@ dependencies = [
 
 [tool.uv]
 dev-dependencies = [
+    "hf-transfer>=0.1.9",
+    "huggingface-hub[hf-xet]>=0.33.0",
     "ruff>=0.12.0",
 ]
