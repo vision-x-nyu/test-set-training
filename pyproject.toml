@@ -1,5 +1,9 @@
+[build-system]
+requires = ["uv_build>=0.7.19,<0.8.0"]
+build-backend = "uv_build"
+
 [project]
-name = "non-visual-bias"
+name = "test-set-training"
 version = "0.1.0"
 description = "Code for NeurIPS 2025 Position Paper: Benchmark Designers Should ``Train on the Test Set'' to Expose Exploitable Non-Visual Shortcuts"
 readme = "README.md"
@@ -24,3 +28,7 @@ dev-dependencies = [
     "huggingface-hub[hf-xet]>=0.33.0",
     "ruff>=0.12.0",
 ]
+
+[tool.uv.build-backend]
+module-root = "src"
+module-name = "TsT"

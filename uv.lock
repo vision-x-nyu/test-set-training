@@ -1806,53 +1806,6 @@ wheels = [
 ]
 
 [[package]]
-name = "non-visual-bias"
-version = "0.1.0"
-source = { virtual = "." }
-dependencies = [
-    { name = "datasets" },
-    { name = "jupyter" },
-    { name = "matplotlib" },
-    { name = "notebook" },
-    { name = "numpy" },
-    { name = "pandas" },
-    { name = "scikit-learn" },
-    { name = "scipy" },
-    { name = "seaborn" },
-    { name = "text2digits" },
-    { name = "tqdm" },
-]
-
-[package.dev-dependencies]
-dev = [
-    { name = "hf-transfer" },
-    { name = "huggingface-hub", extra = ["hf-xet"] },
-    { name = "ruff" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "datasets", specifier = ">=3.6.0" },
-    { name = "jupyter", specifier = ">=1.1.1" },
-    { name = "matplotlib", specifier = ">=3.9.4" },
-    { name = "notebook", specifier = ">=7.4.3" },
-    { name = "numpy", specifier = ">=2.0.2" },
-    { name = "pandas", specifier = ">=2.3.0" },
-    { name = "scikit-learn", specifier = ">=1.6.1" },
-    { name = "scipy", specifier = ">=1.13.1" },
-    { name = "seaborn", specifier = ">=0.13.2" },
-    { name = "text2digits", specifier = ">=0.1.0" },
-    { name = "tqdm", specifier = ">=4.67.1" },
-]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "hf-transfer", specifier = ">=0.1.9" },
-    { name = "huggingface-hub", extras = ["hf-xet"], specifier = ">=0.33.0" },
-    { name = "ruff", specifier = ">=0.12.0" },
-]
-
-[[package]]
 name = "notebook"
 version = "7.4.3"
 source = { registry = "https://pypi.org/simple" }
@@ -2938,6 +2891,53 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/8a/11/965c6fd8e5cc254f1fe142d547387da17a8ebfd75a3455f637c663fb38a0/terminado-0.18.1.tar.gz", hash = "sha256:de09f2c4b85de4765f7714688fff57d3e75bad1f909b589fde880460c753fd2e", size = 32701, upload-time = "2024-03-12T14:34:39.026Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/6a/9e/2064975477fdc887e47ad42157e214526dcad8f317a948dee17e1659a62f/terminado-0.18.1-py3-none-any.whl", hash = "sha256:a4468e1b37bb318f8a86514f65814e1afc977cf29b3992a4500d9dd305dcceb0", size = 14154, upload-time = "2024-03-12T14:34:36.569Z" },
+]
+
+[[package]]
+name = "test-set-training"
+version = "0.1.0"
+source = { editable = "." }
+dependencies = [
+    { name = "datasets" },
+    { name = "jupyter" },
+    { name = "matplotlib" },
+    { name = "notebook" },
+    { name = "numpy" },
+    { name = "pandas" },
+    { name = "scikit-learn" },
+    { name = "scipy" },
+    { name = "seaborn" },
+    { name = "text2digits" },
+    { name = "tqdm" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "hf-transfer" },
+    { name = "huggingface-hub", extra = ["hf-xet"] },
+    { name = "ruff" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "datasets", specifier = ">=3.6.0" },
+    { name = "jupyter", specifier = ">=1.1.1" },
+    { name = "matplotlib", specifier = ">=3.9.4" },
+    { name = "notebook", specifier = ">=7.4.3" },
+    { name = "numpy", specifier = ">=2.0.2" },
+    { name = "pandas", specifier = ">=2.3.0" },
+    { name = "scikit-learn", specifier = ">=1.6.1" },
+    { name = "scipy", specifier = ">=1.13.1" },
+    { name = "seaborn", specifier = ">=0.13.2" },
+    { name = "text2digits", specifier = ">=0.1.0" },
+    { name = "tqdm", specifier = ">=4.67.1" },
+]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "hf-transfer", specifier = ">=0.1.9" },
+    { name = "huggingface-hub", extras = ["hf-xet"], specifier = ">=0.33.0" },
+    { name = "ruff", specifier = ">=0.12.0" },
 ]
 
 [[package]]
