@@ -38,12 +38,37 @@ git clone git@github.com:vision-x-nyu/vsibench_debiased_internal.git
 cd vsibench_debiased_internal
 
 # 2. Install dependencies:
+uv python install 3.9  # ensure using uv's cpython version over default distro
 uv sync
 
 # 3. Activate the environment:
 uv venv
 source .venv/bin/activate
 ```
+
+## TsT
+
+### Per-Dataset Scripts
+
+Stored in [scripts/](scripts/)
+
+#### VSI-Bench
+```bash
+uv run scripts/TsT_vsi.py
+```
+
+#### CV-Bench
+```bash
+uv run scripts/TsT_cvb.py
+```
+
+# [OLD] ~~VSI-Debiasing~~
+
+> [!WARNING]  
+> The below details are out of date.
+>
+> **TODO:** update with IBP code / instructions
+
 
 ## Running the Debiasing Script
 
