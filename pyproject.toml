@@ -1,7 +1,7 @@
 [project]
-name = "vsibench-debiased-internal"
+name = "non-visual-bias"
 version = "0.1.0"
-description = "Add your description here"
+description = "Code for NeurIPS 2025 Position Paper: Benchmark Designers Should ``Train on the Test Set'' to Expose Exploitable Non-Visual Shortcuts"
 readme = "README.md"
 requires-python = ">=3.9"
 dependencies = [
