@@ -15,6 +15,8 @@ from sklearn.model_selection import StratifiedKFold, KFold
 from sklearn.preprocessing import LabelEncoder, minmax_scale
 from scipy.stats import lognorm
 
+from TsT import QType, run_evaluation
+
 
 # =============================================================================
 # 0.  DATA LOADING -------------------------------------------------------------
@@ -54,35 +56,6 @@ def encode_categoricals(
 # =============================================================================
 # 2.  MICRO‑PROTOCOL FOR QUESTION TYPES ---------------------------------------
 # =============================================================================
-
-
-class QType(Protocol):
-    name: str
-    feature_cols: List[str]
-    format: Literal["mc", "num"]
-
-    def select_rows(self, df: pd.DataFrame) -> pd.DataFrame: ...
-
-    def fit_feature_maps(self, train_df: pd.DataFrame) -> None:
-        """Collect any statistics derived from *train* only (for leakage‑free CV)."""
-        ...
-
-    def add_features(self, df: pd.DataFrame) -> pd.DataFrame:
-        """Return a **copy** of `df` with question‑specific feature columns added."""
-        ...
-
-    @property
-    def task(self) -> Literal["clf", "reg"]:
-        if self.format == "mc":
-            return "clf"
-        elif self.format == "num":
-            return "reg"
-        else:
-            raise ValueError(f"Unknown format: {self.format}")
-
-    @property
-    def metric(self) -> Literal["acc", "mra"]:
-        return "acc"
 
 
 # =============================================================================
@@ -723,93 +696,6 @@ def evaluate_bias_model(
 # =============================================================================
 
 
-def run_evaluation(
-    n_splits: int = 5,
-    random_state: int = 42,
-    verbose: bool = False,
-    repeats: int = 1,
-    question_types: Union[List[str], None] = None,
-    target_col: str = "gt_idx",
-) -> pd.DataFrame:
-    """
-    Run evaluation for all models and return a summary table of results.
-
-    Args:
-        n_splits: Number of cross-validation splits
-        random_state: Random seed for reproducibility
-        verbose: Whether to print detailed output during evaluation
-        repeats: Number of times to repeat evaluation with different random seeds
-        question_types: Optional list of question types to evaluate. If None, evaluate all types.
-        target_col: Column to use as target variable (default: "gt_idx")
-
-    Returns:
-        DataFrame with model results including mean score and standard deviation
-    """
-    all_results = []
-
-    # Create models list once
-    models = [
-        ## MC
-        Count2DModel(),
-        Relation2DModel(),
-        Depth3DModel(),
-        Distance3DModel(),  # Uncommented to include in evaluation
-    ]
-
-    # Filter models if question_types is specified
-    if question_types is not None:
-        models = [m for m in models if m.name in question_types]
-        if not models:
-            raise ValueError(f"Unknown question types: {question_types}")
-
-    for m in models:
-        print(f"\n================  {m.name.upper()}  ================")
-        mean_score, std_score, fi = evaluate_bias_model(
-            m,
-            df_full,
-            n_splits=n_splits,
-            random_state=random_state,
-            verbose=verbose,
-            repeats=repeats,
-            target_col=target_col,
-        )
-        all_results.append(
-            {
-                "Model": m.name,
-                "Format": m.format.upper(),
-                "Metric": m.metric.upper(),
-                "Score": mean_score,
-                "± Std": std_score,
-                "Feature Importances": fi,
-            }
-        )
-
-    # Create summary table
-    summary = pd.DataFrame(all_results)
-    summary = summary.sort_values("Score", ascending=False)
-
-    # Calculate overall average score
-    overall_avg = summary["Score"].mean()
-    overall_std = summary["Score"].std()
-
-    # Format the scores as percentages
-    summary["Score"] = summary["Score"].map("{:.1%}".format)
-    summary["± Std"] = summary["± Std"].map("{:.1%}".format)
-
-    # Print pretty table
-    print("\n" * 3 + "=" * 80)
-    print("EVALUATION SUMMARY")
-    print("=" * 80)
-    print(
-        summary[["Model", "Format", "Metric", "Score", "± Std"]].to_string(index=False)
-    )
-    print("=" * 80)
-    print(f"OVERALL AVERAGE SCORE: {overall_avg:.1%} ± {overall_std:.1%}")
-    print("=" * 80)
-
-    return summary
-
-
 if __name__ == "__main__":
     import argparse
 
@@ -846,12 +732,22 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
+    models = [
+        ## MC
+        Count2DModel(),
+        Relation2DModel(),
+        Depth3DModel(),
+        Distance3DModel(),  # Uncommented to include in evaluation
+    ]
+
     # Parse question types if provided
     question_types = None
     if args.question_types is not None:
         question_types = [q.strip() for q in args.question_types.split(",")]
 
     run_evaluation(
+        models=models,
+        df_full=df_full,
         n_splits=args.n_splits,
         random_state=args.random_state,
         verbose=args.verbose,

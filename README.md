@@ -8,8 +8,8 @@ Code for the paper `Benchmark Designers Should ``Train on the Test Set'' to Expo
 
 ```bash
 # 1. Clone the repository:
-git clone git@github.com:vision-x-nyu/vsibench_debiased_internal.git
-cd vsibench_debiased_internal
+git clone git@github.com:vision-x-nyu/test-set-training.git
+cd test-set-training
 
 # 2. Install dependencies:
 uv python install 3.9  # ensure using uv's cpython version over default distro
