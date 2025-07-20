@@ -6,20 +6,20 @@ This directory contains scripts for running Test-Set Training evaluations on dif
 
 ### General Benchmark Runner
 
-The main script is `run_benchmark.py` which can run any supported benchmark:
+The main script is `run_tst.py` which can run any supported benchmark:
 
 ```bash
 # Run VSI benchmark
-uv run python scripts/run_benchmark.py --benchmark vsi --verbose
+uv run scripts/run_tst.py --benchmark vsi --verbose
 
 # Run CVB benchmark  
-uv run python scripts/run_benchmark.py --benchmark cvb --verbose
+uv run scripts/run_tst.py --benchmark cvb --verbose
 
 # Run specific question types
-uv run python scripts/run_benchmark.py --benchmark vsi --question_types object_counting,object_abs_distance
+uv run scripts/run_tst.py --benchmark vsi --question_types object_counting,object_abs_distance
 
 # Run with custom parameters
-uv run python scripts/run_benchmark.py --benchmark cvb --n_splits 10 --repeats 3 --random_state 123
+uv run scripts/run_tst.py --benchmark cvb --n_splits 10 --repeats 3 --random_state 123
 ```
 
 ### Arguments
@@ -46,11 +46,11 @@ uv run python scripts/run_benchmark.py --benchmark cvb --n_splits 10 --repeats 3
 
 ```bash
 # Quick test run
-uv run python scripts/run_benchmark.py --benchmark vsi --question_types object_counting --n_splits 2
+uv run python scripts/run_tst.py --benchmark vsi --question_types object_counting --n_splits 2
 
 # Full evaluation with multiple repeats
-uv run python scripts/run_benchmark.py --benchmark cvb --verbose --repeats 5 --n_splits 10
+uv run python scripts/run_tst.py --benchmark cvb --verbose --repeats 5 --n_splits 10
 
 # Run only spatial reasoning questions
-uv run python scripts/run_benchmark.py --benchmark vsi --question_types object_rel_distance,object_rel_direction,route_planning
+uv run python scripts/run_tst.py --benchmark vsi --question_types object_rel_distance,object_rel_direction,route_planning
 ``` 
