@@ -28,22 +28,36 @@ HF_HUB_ENABLE_HF_TRANSFER=1 huggingface-cli download --repo-type=dataset nyu-vis
 
 # CV-Bench
 HF_HUB_ENABLE_HF_TRANSFER=1 huggingface-cli download --repo-type=dataset nyu-visionx/CV-Bench
+
+# Video-MME
+HF_HUB_ENABLE_HF_TRANSFER=1 huggingface-cli download --repo-type=dataset lmms-lab/Video-MME
 ```
 
 ## TsT
 
-### Per-Dataset Scripts
+### Running Evaluations
 
-Stored in [scripts/](scripts/)
+Use the unified script to run evaluations on any benchmark:
 
-#### VSI-Bench
 ```bash
-uv run scripts/TsT_vsi.py
+# VSI-Bench
+uv run scripts/run_tst.py --benchmark vsi
+
+# CV-Bench  
+uv run scripts/run_tst.py --benchmark cvb
+
+# Video-MME
+uv run scripts/run_tst.py --benchmark video_mme
 ```
 
-#### CV-Bench
+#### Additional Options
+
 ```bash
-uv run scripts/TsT_cvb.py
+# With custom parameters
+uv run scripts/run_tst.py --benchmark video_mme --n_splits 10 --verbose --repeats 3
+
+# Evaluate specific question types only
+uv run scripts/run_tst.py --benchmark vsi --question_types "object_counting,object_size_estimation"
 ```
 
 ## IBP

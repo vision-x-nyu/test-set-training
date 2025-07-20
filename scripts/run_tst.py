@@ -10,7 +10,7 @@ def get_benchmark_module(benchmark_name: str):
         return module
     except ImportError:
         raise ValueError(
-            f"Unknown benchmark: {benchmark_name}. Available benchmarks: vsi, cvb"
+            f"Unknown benchmark: {benchmark_name}. Available benchmarks: vsi, cvb, video_mme"
         )
 
 
@@ -23,8 +23,8 @@ if __name__ == "__main__":
         "-b",
         type=str,
         required=True,
-        choices=["vsi", "cvb"],
-        help="Benchmark to run (vsi or cvb)",
+        choices=["vsi", "cvb", "video_mme"],
+        help="Benchmark to run (vsi, cvb, or video_mme)",
     )
     parser.add_argument(
         "--n_splits", "-k", type=int, default=5, help="Number of CV splits"
@@ -67,8 +67,8 @@ if __name__ == "__main__":
 
     # Set default target column if not specified
     if args.target_col is None:
-        # For CVB, most models use gt_idx
-        if args.benchmark == "cvb":
+        # For CVB and Video-MME, most models use gt_idx
+        if args.benchmark in ["cvb", "video_mme"]:
             target_col = "gt_idx"
         else:
             target_col = "ground_truth"  # default for VSI
