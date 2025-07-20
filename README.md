@@ -7,16 +7,15 @@ Code for the paper `Benchmark Designers Should ``Train on the Test Set'' to Expo
 ## Setup
 
 ```bash
-# 1. Clone the repository:
+# 1. Clone the repository
 git clone git@github.com:vision-x-nyu/test-set-training.git
 cd test-set-training
 
-# 2. Install dependencies:
+# 2. Install dependencies in a venv
 uv python install 3.9  # ensure using uv's cpython version over default distro
 uv sync
 
-# 3. Activate the environment:
-uv venv
+# 3. Activate the environment
 source .venv/bin/activate
 ```
 
