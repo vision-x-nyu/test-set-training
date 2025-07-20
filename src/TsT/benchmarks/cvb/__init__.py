@@ -6,6 +6,7 @@ from .models import (
 )
 from .data_loader import load_data
 
+
 def get_models():
     """Get all CVB benchmark models."""
     return [
@@ -14,4 +15,7 @@ def get_models():
         Relation2DModel(),
         Depth3DModel(),
         Distance3DModel(),
-    ] 
+    ]
+
+
+__all__ = ["load_data", "get_models"]

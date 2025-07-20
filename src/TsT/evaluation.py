@@ -5,7 +5,7 @@ from typing import List, Dict, Union
 
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.model_selection import StratifiedKFold, KFold
-from sklearn.preprocessing import LabelEncoder, minmax_scale
+from sklearn.preprocessing import LabelEncoder
 
 from .protocols import QType
 
@@ -71,13 +71,20 @@ def evaluate_bias_model(
     qdf = model.select_rows(df)
     all_scores = []
 
-    if model.target_col_override is not None and model.target_col_override != target_col:
-        print(f"[WARNING] {model.name} has an override target column '{model.target_col_override}'. Replacing '{target_col}'.")
+    if (
+        model.target_col_override is not None
+        and model.target_col_override != target_col
+    ):
+        print(
+            f"[WARNING] {model.name} has an override target column '{model.target_col_override}'. Replacing '{target_col}'."
+        )
         target_col = model.target_col_override
     if model.task == "reg" and target_col == "gt_idx":
         # no gt_idx for regression tasks
         target_col = "ground_truth"
-        print(f"[WARNING] {model.name} is numerical, with no gt_idx column. Overriding target column to 'ground_truth'")
+        print(
+            f"[WARNING] {model.name} is numerical, with no gt_idx column. Overriding target column to 'ground_truth'"
+        )
 
     # Show progress bar over repeats
     repeat_pbar = tqdm(
@@ -166,7 +173,6 @@ def evaluate_bias_model(
     return mean_acc, std_acc, fi
 
 
-
 def run_evaluation(
     models: List[QType],
     df_full: pd.DataFrame,
@@ -246,4 +252,4 @@ def run_evaluation(
     print(f"OVERALL AVERAGE SCORE: {overall_avg:.1%} ± {overall_std:.1%}")
     print("=" * 80)
 
-    return summary 
+    return summary

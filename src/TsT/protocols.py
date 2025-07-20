@@ -1,6 +1,7 @@
 from typing import Protocol, List, Literal, Optional
 import pandas as pd
 
+
 class QType(Protocol):
     name: str
     feature_cols: List[str]
@@ -33,4 +34,4 @@ class QType(Protocol):
         elif self.format == "num":
             return "mra"
         else:
-            raise ValueError(f"Unknown format: {self.format}") 
+            raise ValueError(f"Unknown format: {self.format}")

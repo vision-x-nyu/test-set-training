@@ -1,7 +1,5 @@
-import os
-import json
 from functools import partial
-from typing import Optional, List, Tuple, Dict, Literal, Union
+from typing import Tuple, Dict
 import re
 
 import numpy as np
@@ -758,13 +756,14 @@ class RoutePlanningModel(QType):
 
         # get route options
         for i in range(4):
-            qdf[f"opt_{i}"] = qdf["options"].apply(lambda x: x[i].split(". ")[-1].strip() if len(x) > i else None)
+            qdf[f"opt_{i}"] = qdf["options"].apply(
+                lambda x: x[i].split(". ")[-1].strip() if len(x) > i else None
+            )
 
         # Calculate number of steps in route
         qdf["num_steps"] = qdf["gt_route_str"].apply(
             lambda x: len(x.split(",")) if pd.notna(x) else 0
         )
-
 
         # Drop rows where extraction failed
         qdf.dropna(
@@ -819,10 +818,14 @@ class RoutePlanningModel(QType):
 
         # add per-option frequency score
         for i in range(4):
-            df[f"opt_{i}_freq_score"] = df[f"opt_{i}"].map(self.route_freq_map).fillna(0)
+            df[f"opt_{i}_freq_score"] = (
+                df[f"opt_{i}"].map(self.route_freq_map).fillna(0)
+            )
 
         # Calculate route frequency score
-        df["gt_route_freq_score"] = df["gt_route_str"].map(self.route_freq_map).fillna(0)
+        df["gt_route_freq_score"] = (
+            df["gt_route_str"].map(self.route_freq_map).fillna(0)
+        )
 
         # Calculate step count typicality score
         norm_dist = abs(df["num_steps"] - self.mean_steps) / (self.std_steps + epsilon)
@@ -979,4 +982,4 @@ class ObjOrderModel(QType):
         return df_copy.merge(bias_df, on="id", how="left")
 
     def add_features(self, df: pd.DataFrame) -> pd.DataFrame:
-        return self._add_order_feats(df) 
+        return self._add_order_feats(df)

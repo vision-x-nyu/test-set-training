@@ -1,12 +1,8 @@
-import os
-import json
-from functools import partial
-from typing import Protocol, List, Tuple, Dict, Literal, Union
+from typing import Tuple, Dict
 import re
 
 import numpy as np
 import pandas as pd
-from collections import Counter
 from sklearn.preprocessing import minmax_scale
 
 from ...protocols import QType
@@ -511,4 +507,4 @@ class Distance3DModel(QType):
             axis=1,
         )
 
-        return df 
+        return df

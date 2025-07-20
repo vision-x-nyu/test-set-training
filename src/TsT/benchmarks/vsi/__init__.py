@@ -10,6 +10,7 @@ from .models import (
 )
 from .data_loader import load_data
 
+
 def get_models():
     """Get all VSI benchmark models."""
     return [
@@ -23,4 +24,7 @@ def get_models():
         RelDirModel(),
         RoutePlanningModel(),
         ObjOrderModel(),
-    ] 
+    ]
+
+
+__all__ = ["load_data", "get_models"]

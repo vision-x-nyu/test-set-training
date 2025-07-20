@@ -2,22 +2,29 @@ import argparse
 import importlib
 from TsT import run_evaluation
 
+
 def get_benchmark_module(benchmark_name: str):
     """Import the benchmark module dynamically."""
     try:
         module = importlib.import_module(f"TsT.benchmarks.{benchmark_name}")
         return module
     except ImportError:
-        raise ValueError(f"Unknown benchmark: {benchmark_name}. Available benchmarks: vsi, cvb")
+        raise ValueError(
+            f"Unknown benchmark: {benchmark_name}. Available benchmarks: vsi, cvb"
+        )
+
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Run Test-Set Training evaluation on benchmarks")
+    parser = argparse.ArgumentParser(
+        description="Run Test-Set Training evaluation on benchmarks"
+    )
     parser.add_argument(
-        "--benchmark", "-b",
+        "--benchmark",
+        "-b",
         type=str,
         required=True,
         choices=["vsi", "cvb"],
-        help="Benchmark to run (vsi or cvb)"
+        help="Benchmark to run (vsi or cvb)",
     )
     parser.add_argument(
         "--n_splits", "-k", type=int, default=5, help="Number of CV splits"
@@ -40,20 +47,20 @@ if __name__ == "__main__":
         "-q",
         type=str,
         default=None,
-        help="Comma-separated list of question types to evaluate"
+        help="Comma-separated list of question types to evaluate",
     )
     parser.add_argument(
         "--target_col",
         "-t",
         type=str,
         default=None,
-        help="Column to use as target variable (defaults to benchmark-specific default)"
+        help="Column to use as target variable (defaults to benchmark-specific default)",
     )
     args = parser.parse_args()
 
     # Import the benchmark module
     benchmark_module = get_benchmark_module(args.benchmark)
-    
+
     # Load data and get models
     df_full = benchmark_module.load_data()
     models = benchmark_module.get_models()
@@ -89,4 +96,4 @@ if __name__ == "__main__":
         repeats=args.repeats,
         question_types=question_types,
         target_col=target_col,
-    ) 
+    )

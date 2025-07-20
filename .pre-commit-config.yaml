@@ -1,0 +1,14 @@
+repos:
+  # --- keep your lock-file current & use uv for envs -----------------
+  - repo: https://github.com/astral-sh/uv-pre-commit
+    rev: 0.7.18
+    hooks:
+      - id: uv-lock       # updates uv.lock whenever pyproject changes
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.12.0
+    hooks:
+      - id: ruff-check # Run the linter.
+        args: [ --fix ]
+      - id: ruff-format  # Run the formatter.
+exclude: 'notebooks/.*'
