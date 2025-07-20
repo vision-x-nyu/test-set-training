@@ -19,6 +19,17 @@ uv sync
 source .venv/bin/activate
 ```
 
+### Pre-Download Datasets (recommended)
+Using `hf_transfer` can speed up dataset downloads dramatically versus the default single-stream downloader used by the python `datsets` library.
+
+```bash
+# VSI-Bench
+HF_HUB_ENABLE_HF_TRANSFER=1 huggingface-cli download --repo-type=dataset nyu-visionx/VSI-Bench
+
+# CV-Bench
+HF_HUB_ENABLE_HF_TRANSFER=1 huggingface-cli download --repo-type=dataset nyu-visionx/CV-Bench
+```
+
 ## TsT
 
 ### Per-Dataset Scripts
