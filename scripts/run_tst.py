@@ -9,15 +9,11 @@ def get_benchmark_module(benchmark_name: str):
         module = importlib.import_module(f"TsT.benchmarks.{benchmark_name}")
         return module
     except ImportError:
-        raise ValueError(
-            f"Unknown benchmark: {benchmark_name}. Available benchmarks: vsi, cvb, video_mme"
-        )
+        raise ValueError(f"Unknown benchmark: {benchmark_name}. Available benchmarks: vsi, cvb, video_mme")
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        description="Run Test-Set Training evaluation on benchmarks"
-    )
+    parser = argparse.ArgumentParser(description="Run Test-Set Training evaluation on benchmarks")
     parser.add_argument(
         "--benchmark",
         "-b",
@@ -26,15 +22,9 @@ if __name__ == "__main__":
         choices=["vsi", "cvb", "video_mme"],
         help="Benchmark to run (vsi, cvb, or video_mme)",
     )
-    parser.add_argument(
-        "--n_splits", "-k", type=int, default=5, help="Number of CV splits"
-    )
-    parser.add_argument(
-        "--random_state", "-s", type=int, default=42, help="Random seed"
-    )
-    parser.add_argument(
-        "--verbose", "-v", action="store_true", help="Print detailed output"
-    )
+    parser.add_argument("--n_splits", "-k", type=int, default=5, help="Number of CV splits")
+    parser.add_argument("--random_state", "-s", type=int, default=42, help="Random seed")
+    parser.add_argument("--verbose", "-v", action="store_true", help="Print detailed output")
     parser.add_argument(
         "--repeats",
         "-r",

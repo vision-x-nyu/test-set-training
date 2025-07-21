@@ -13,9 +13,7 @@ def load_data() -> pd.DataFrame:
 
     # For multiple choice questions (with options)
     mc_mask = df_full["options"].notna()
-    df_full.loc[mc_mask, "gt_idx"] = df_full.loc[mc_mask, "ground_truth"].apply(
-        lambda x: "ABCD".index(x)
-    )
+    df_full.loc[mc_mask, "gt_idx"] = df_full.loc[mc_mask, "ground_truth"].apply(lambda x: "ABCD".index(x))
     df_full.loc[mc_mask, "gt_val"] = df_full[mc_mask].apply(
         lambda row: row["options"][int(row["gt_idx"])].split(". ")[-1], axis=1
     )

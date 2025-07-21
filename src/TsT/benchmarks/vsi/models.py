@@ -42,11 +42,7 @@ class ObjCountModel(QType):
     def select_rows(self, df: pd.DataFrame) -> pd.DataFrame:
         """Select and preprocess object counting questions."""
         qdf = df[df["question_type"] == self.name].copy()
-        qdf["object"] = (
-            qdf["question"]
-            .str.extract(r"How many (.*?)\(s\) are in this room")[0]
-            .str.strip()
-        )
+        qdf["object"] = qdf["question"].str.extract(r"How many (.*?)\(s\) are in this room")[0].str.strip()
         qdf["ground_truth"] = pd.to_numeric(qdf["ground_truth"], errors="coerce")
 
         qdf.dropna(subset=["object", "ground_truth"], inplace=True)
@@ -100,9 +96,7 @@ class ObjCountModel(QType):
         )
 
         # Calculate global distance score
-        global_dist = abs(df["log_ground_truth"] - self.global_mean_log) / (
-            self.global_std_log + epsilon
-        )
+        global_dist = abs(df["log_ground_truth"] - self.global_mean_log) / (self.global_std_log + epsilon)
         df["global_mean_dist_score"] = 1.0 - minmax_scale(global_dist + epsilon)
 
         df["global_mean_log"] = self.global_mean_log
@@ -148,9 +142,7 @@ class ObjAbsDistModel(QType):
 
         # Extract object pairs from questions
         def extract_objects(question, sort=True):
-            match = re.search(
-                r"between the (.*?) and the (.*?)(?: \(in meters\))?\?$", question
-            )
+            match = re.search(r"between the (.*?) and the (.*?)(?: \(in meters\))?\?$", question)
             if match:
                 objs = [match.group(1).strip(), match.group(2).strip()]
                 if sort:
@@ -160,9 +152,7 @@ class ObjAbsDistModel(QType):
             return None
 
         qdf["object_pair"] = qdf["question"].apply(extract_objects)
-        qdf["object_pair_ordered"] = qdf["question"].apply(
-            partial(extract_objects, sort=False)
-        )  # in the given order
+        qdf["object_pair_ordered"] = qdf["question"].apply(partial(extract_objects, sort=False))  # in the given order
         qdf.dropna(subset=["object_pair"], inplace=True)
 
         # Convert ground truth to numeric
@@ -199,12 +189,8 @@ class ObjAbsDistModel(QType):
         )
 
         # Fill NA std values with 0
-        self.pair_stats["pair_val_std_log"] = self.pair_stats[
-            "pair_val_std_log"
-        ].fillna(0)
-        self.pair_stats_ordered["ord_pair_val_std_log"] = self.pair_stats_ordered[
-            "ord_pair_val_std_log"
-        ].fillna(0)
+        self.pair_stats["pair_val_std_log"] = self.pair_stats["pair_val_std_log"].fillna(0)
+        self.pair_stats_ordered["ord_pair_val_std_log"] = self.pair_stats_ordered["ord_pair_val_std_log"].fillna(0)
 
         # Calculate global statistics
         self.global_mean_log = train_df["log_ground_truth"].mean()
@@ -227,19 +213,13 @@ class ObjAbsDistModel(QType):
         df["ord_pair_freq_score"] = minmax_scale(df["ord_pair_count"])
 
         # Calculate inverse variance score
-        ratio_log = (
-            df["pair_val_std_log"] / (df["pair_val_mean_log"] + epsilon)
-        ).fillna(0)
+        ratio_log = (df["pair_val_std_log"] / (df["pair_val_mean_log"] + epsilon)).fillna(0)
         df["pair_inv_var_score"] = 1.0 - minmax_scale(ratio_log + epsilon)
-        ord_ratio_log = (
-            df["ord_pair_val_std_log"] / (df["ord_pair_val_mean_log"] + epsilon)
-        ).fillna(0)
+        ord_ratio_log = (df["ord_pair_val_std_log"] / (df["ord_pair_val_mean_log"] + epsilon)).fillna(0)
         df["ord_pair_inv_var_score"] = 1.0 - minmax_scale(ord_ratio_log + epsilon)
 
         # Calculate distance from pair mean score
-        norm_dist = abs(df["log_ground_truth"] - df["pair_val_mean_log"]) / (
-            df["pair_val_std_log"] + epsilon
-        )
+        norm_dist = abs(df["log_ground_truth"] - df["pair_val_mean_log"]) / (df["pair_val_std_log"] + epsilon)
         df["pair_mean_dist_score"] = 1.0 - minmax_scale(norm_dist + epsilon)
         ord_norm_dist = abs(df["log_ground_truth"] - df["ord_pair_val_mean_log"]) / (
             df["ord_pair_val_std_log"] + epsilon
@@ -247,13 +227,9 @@ class ObjAbsDistModel(QType):
         df["ord_pair_mean_dist_score"] = 1.0 - minmax_scale(ord_norm_dist + epsilon)
 
         # Calculate global distance score
-        global_dist = abs(df["log_ground_truth"] - self.global_mean_log) / (
-            self.global_std_log + epsilon
-        )
+        global_dist = abs(df["log_ground_truth"] - self.global_mean_log) / (self.global_std_log + epsilon)
         df["global_mean_dist_score"] = 1.0 - minmax_scale(global_dist + epsilon)
-        ord_global_dist = abs(df["log_ground_truth"] - self.global_mean_log) / (
-            self.global_std_log + epsilon
-        )
+        ord_global_dist = abs(df["log_ground_truth"] - self.global_mean_log) / (self.global_std_log + epsilon)
         df["ord_global_mean_dist_score"] = 1.0 - minmax_scale(ord_global_dist + epsilon)
 
         return df
@@ -288,9 +264,7 @@ class ObjSizeEstModel(QType):
         qdf = df[df["question_type"] == self.name].copy()
 
         # Extract object name from question
-        qdf["object"] = qdf["question"].str.extract(r"height\) of the (.*?), measured")[
-            0
-        ]
+        qdf["object"] = qdf["question"].str.extract(r"height\) of the (.*?), measured")[0]
         qdf.dropna(subset=["object"], inplace=True)
 
         # Convert ground truth to numeric
@@ -324,8 +298,7 @@ class ObjSizeEstModel(QType):
 
         # Calculate ratios
         self.obj_stats["obj_val_log_ratio"] = (
-            self.obj_stats["obj_val_log_std"]
-            / (self.obj_stats["obj_val_log_mean"] + epsilon)
+            self.obj_stats["obj_val_log_std"] / (self.obj_stats["obj_val_log_mean"] + epsilon)
         ).fillna(0)
 
         # Calculate global statistics
@@ -350,15 +323,11 @@ class ObjSizeEstModel(QType):
         df["obj_val_log_ratio"] = 1.0 - minmax_scale(df["obj_val_log_ratio"] + epsilon)
 
         # Calculate distance from object mean score
-        norm_dist = abs(df["log_ground_truth"] - df["obj_val_log_mean"]) / (
-            df["obj_val_log_std"] + epsilon
-        )
+        norm_dist = abs(df["log_ground_truth"] - df["obj_val_log_mean"]) / (df["obj_val_log_std"] + epsilon)
         df["log_obj_mean_dist_score"] = 1.0 - minmax_scale(norm_dist + epsilon)
 
         # Calculate global distance score
-        global_dist = abs(df["log_ground_truth"] - self.global_mean_log) / (
-            self.global_std_log + epsilon
-        )
+        global_dist = abs(df["log_ground_truth"] - self.global_mean_log) / (self.global_std_log + epsilon)
         df["log_global_mean_dist_score"] = 1.0 - minmax_scale(global_dist + epsilon)
 
         return df
@@ -428,15 +397,11 @@ class RoomSizeEstModel(QType):
         df["pdf_score"] = minmax_scale(pdf + epsilon)
 
         # Calculate distance from global mean in log space
-        norm_dist = abs(df["log_size"] - self.global_mean_log) / (
-            self.global_std_log + epsilon
-        )
+        norm_dist = abs(df["log_size"] - self.global_mean_log) / (self.global_std_log + epsilon)
         df["global_mean_dist_score"] = 1.0 - minmax_scale(norm_dist + epsilon)
 
         # Calculate distance from global std in log space
-        std_dist = abs(df["log_size"] - self.global_mean_log) / (
-            self.global_std_log + epsilon
-        )
+        std_dist = abs(df["log_size"] - self.global_mean_log) / (self.global_std_log + epsilon)
         df["global_std_dist_score"] = 1.0 - minmax_scale(std_dist + epsilon)
 
         return df
@@ -499,9 +464,7 @@ class RelDistanceModel(QType):
             lambda r: "-".join(sorted([r["target_object"], r["gt_object"]])),
             axis=1,
         )
-        qdf["tgt_gt_ord_pair"] = qdf.apply(
-            lambda r: f"{r['target_object']}-{r['gt_object']}", axis=1
-        )
+        qdf["tgt_gt_ord_pair"] = qdf.apply(lambda r: f"{r['target_object']}-{r['gt_object']}", axis=1)
         return qdf
 
     def fit_feature_maps(self, train_df: pd.DataFrame) -> None:
@@ -512,25 +475,13 @@ class RelDistanceModel(QType):
     def _add_rel_feats(self, df: pd.DataFrame) -> pd.DataFrame:
         df = df.copy()
         for i in range(4):
-            df[f"opt_{i}_option_freq"] = (
-                df[f"object_{i + 1}"].map(self.gt_counts).fillna(0)
-            )
-            df[f"opt_{i}_tgt_option_pair_freq"] = (
-                df["tgt_gt_pair"].map(self.pair_counts).fillna(0)
-            )
-            df[f"opt_{i}_tgt_option_ord_pair_freq"] = (
-                df["tgt_gt_ord_pair"].map(self.ord_pair_counts).fillna(0)
-            )
+            df[f"opt_{i}_option_freq"] = df[f"object_{i + 1}"].map(self.gt_counts).fillna(0)
+            df[f"opt_{i}_tgt_option_pair_freq"] = df["tgt_gt_pair"].map(self.pair_counts).fillna(0)
+            df[f"opt_{i}_tgt_option_ord_pair_freq"] = df["tgt_gt_ord_pair"].map(self.ord_pair_counts).fillna(0)
 
-        df["max_option_freq"] = df[[f"opt_{i}_option_freq" for i in range(4)]].max(
-            axis=1
-        )
-        df["max_tgt_option_pair_freq"] = df[
-            [f"opt_{i}_tgt_option_pair_freq" for i in range(4)]
-        ].max(axis=1)
-        df["max_tgt_option_ord_pair_freq"] = df[
-            [f"opt_{i}_tgt_option_ord_pair_freq" for i in range(4)]
-        ].max(axis=1)
+        df["max_option_freq"] = df[[f"opt_{i}_option_freq" for i in range(4)]].max(axis=1)
+        df["max_tgt_option_pair_freq"] = df[[f"opt_{i}_tgt_option_pair_freq" for i in range(4)]].max(axis=1)
+        df["max_tgt_option_ord_pair_freq"] = df[[f"opt_{i}_tgt_option_ord_pair_freq" for i in range(4)]].max(axis=1)
         return df
 
     def add_features(self, df: pd.DataFrame) -> pd.DataFrame:
@@ -572,9 +523,9 @@ class RelDirModel(QType):
         qdf["difficulty"] = qdf["question_type"].str.split("_").str[-1]
 
         # Extract objects from question
-        qdf[["positioning_object", "orienting_object", "querying_object"]] = qdf[
-            "question"
-        ].str.extract(r"standing by the (.*?) and facing the (.*?), is the (.*?) to")
+        qdf[["positioning_object", "orienting_object", "querying_object"]] = qdf["question"].str.extract(
+            r"standing by the (.*?) and facing the (.*?), is the (.*?) to"
+        )
 
         # Clean object names
         for col in ["positioning_object", "orienting_object", "querying_object"]:
@@ -607,21 +558,13 @@ class RelDirModel(QType):
 
         # Calculate answer frequencies
         self.gt_val_freq_map = train_df["gt_val"].value_counts(normalize=True)
-        self.pos_obj_freq_map = train_df["positioning_object"].value_counts(
-            normalize=True
-        )
-        self.orient_obj_freq_map = train_df["orienting_object"].value_counts(
-            normalize=True
-        )
-        self.query_obj_freq_map = train_df["querying_object"].value_counts(
-            normalize=True
-        )
+        self.pos_obj_freq_map = train_df["positioning_object"].value_counts(normalize=True)
+        self.orient_obj_freq_map = train_df["orienting_object"].value_counts(normalize=True)
+        self.query_obj_freq_map = train_df["querying_object"].value_counts(normalize=True)
 
         # Calculate object pair frequencies (positioning-orienting pairs)
         pos_ori_pairs = train_df.apply(
-            lambda row: "-".join(
-                sorted([row["positioning_object"], row["orienting_object"]])
-            ),
+            lambda row: "-".join(sorted([row["positioning_object"], row["orienting_object"]])),
             axis=1,
         )
         self.pos_ori_obj_pair_freq_map = pos_ori_pairs.value_counts(normalize=True)
@@ -663,9 +606,7 @@ class RelDirModel(QType):
         # Calculate object pair frequency score
         # positioning-orienting pairs
         df["pos_ori_obj_pair"] = df.apply(
-            lambda row: "-".join(
-                sorted([row["positioning_object"], row["orienting_object"]])
-            ),
+            lambda row: "-".join(sorted([row["positioning_object"], row["orienting_object"]])),
             axis=1,
         )
         df["pos_ori_obj_ord_pair"] = df.apply(
@@ -687,13 +628,9 @@ class RelDirModel(QType):
             axis=1,
         )
 
-        df["pos_ori_obj_pair_freq_score"] = (
-            df["pos_ori_obj_pair"].map(self.pos_ori_obj_pair_freq_map).fillna(0)
-        )
+        df["pos_ori_obj_pair_freq_score"] = df["pos_ori_obj_pair"].map(self.pos_ori_obj_pair_freq_map).fillna(0)
 
-        df["poq_obj_pair_freq_score"] = (
-            df["poq_obj_pair"].map(self.poq_obj_pair_freq_map).fillna(0)
-        )
+        df["poq_obj_pair_freq_score"] = df["poq_obj_pair"].map(self.poq_obj_pair_freq_map).fillna(0)
 
         return df
 
@@ -732,9 +669,7 @@ class RoutePlanningModel(QType):
         qdf = df[df["question_type"] == self.name].copy()
 
         # Extract objects from question
-        qdf[["beginning_object", "facing_object", "target_object"]] = qdf[
-            "question"
-        ].str.extract(
+        qdf[["beginning_object", "facing_object", "target_object"]] = qdf["question"].str.extract(
             r"You are a robot beginning (?:at|by) the (.*?) "
             r"(?:facing the|facing to|facing towards the|facing|with your back to the) "
             r"(.*?)\. You want to navigate to the (.*?)\."
@@ -742,12 +677,7 @@ class RoutePlanningModel(QType):
 
         # Clean up object names
         for col in ["beginning_object", "facing_object", "target_object"]:
-            qdf[col] = (
-                qdf[col]
-                .str.replace(r" and$", "", regex=True)
-                .str.replace(r"^the ", "", regex=True)
-                .str.strip()
-            )
+            qdf[col] = qdf[col].str.replace(r" and$", "", regex=True).str.replace(r"^the ", "", regex=True).str.strip()
 
         # Extract ground truth route
         qdf["gt_route_str"] = qdf["gt_val"]
@@ -756,14 +686,10 @@ class RoutePlanningModel(QType):
 
         # get route options
         for i in range(4):
-            qdf[f"opt_{i}"] = qdf["options"].apply(
-                lambda x: x[i].split(". ")[-1].strip() if len(x) > i else None
-            )
+            qdf[f"opt_{i}"] = qdf["options"].apply(lambda x: x[i].split(". ")[-1].strip() if len(x) > i else None)
 
         # Calculate number of steps in route
-        qdf["num_steps"] = qdf["gt_route_str"].apply(
-            lambda x: len(x.split(",")) if pd.notna(x) else 0
-        )
+        qdf["num_steps"] = qdf["gt_route_str"].apply(lambda x: len(x.split(",")) if pd.notna(x) else 0)
 
         # Drop rows where extraction failed
         qdf.dropna(
@@ -818,14 +744,10 @@ class RoutePlanningModel(QType):
 
         # add per-option frequency score
         for i in range(4):
-            df[f"opt_{i}_freq_score"] = (
-                df[f"opt_{i}"].map(self.route_freq_map).fillna(0)
-            )
+            df[f"opt_{i}_freq_score"] = df[f"opt_{i}"].map(self.route_freq_map).fillna(0)
 
         # Calculate route frequency score
-        df["gt_route_freq_score"] = (
-            df["gt_route_str"].map(self.route_freq_map).fillna(0)
-        )
+        df["gt_route_freq_score"] = df["gt_route_str"].map(self.route_freq_map).fillna(0)
 
         # Calculate step count typicality score
         norm_dist = abs(df["num_steps"] - self.mean_steps) / (self.std_steps + epsilon)
@@ -841,11 +763,7 @@ class ObjOrderModel(QType):
     target_col_override = "gt_idx"
 
     _opt_seq_cols = [f"opt_seq_{i}" for i in range(1, 5)]
-    _opt_seq_comp_cols = [
-        f"seq_{i}_{comp}score"
-        for i in range(4)
-        for comp in ["pos_", "pair_", "comb_pair_", ""]
-    ]
+    _opt_seq_comp_cols = [f"seq_{i}_{comp}score" for i in range(4) for comp in ["pos_", "pair_", "comb_pair_", ""]]
     feature_cols = [
         *_opt_seq_cols,
         *_opt_seq_comp_cols,
@@ -876,14 +794,10 @@ class ObjOrderModel(QType):
         qdf = df[df["question_type"] == self.name].copy()
         # split ground‑truth sequence
         for i in range(4):
-            qdf[f"gt_obj_{i + 1}"] = qdf["gt_val"].apply(
-                lambda s, idx=i: s.split(", ")[idx].strip()
-            )
+            qdf[f"gt_obj_{i + 1}"] = qdf["gt_val"].apply(lambda s, idx=i: s.split(", ")[idx].strip())
         # pre‑parse option sequences as lists
         for i in range(4):
-            qdf[f"opt_seq_{i + 1}"] = qdf["options"].apply(
-                lambda opts, idx=i: opts[idx].split(". ", 1)[1].split(", ")
-            )
+            qdf[f"opt_seq_{i + 1}"] = qdf["options"].apply(lambda opts, idx=i: opts[idx].split(". ", 1)[1].split(", "))
         return qdf
 
     def fit_feature_maps(self, train_df: pd.DataFrame) -> None:
@@ -897,17 +811,13 @@ class ObjOrderModel(QType):
         # Adjacent pairs ------------------------------------------------------
         pair_counter: Counter = Counter()
         for pos in range(1, 4):
-            pair_counter.update(
-                zip(train_df[f"gt_obj_{pos}"], train_df[f"gt_obj_{pos + 1}"])
-            )
+            pair_counter.update(zip(train_df[f"gt_obj_{pos}"], train_df[f"gt_obj_{pos + 1}"]))
 
         # Combination pairs ---------------------------------------------------
         comb_counter: Counter = Counter()
         for i in range(1, 5):
             for j in range(i + 1, 5):
-                comb_counter.update(
-                    zip(train_df[f"gt_obj_{i}"], train_df[f"gt_obj_{j}"])
-                )
+                comb_counter.update(zip(train_df[f"gt_obj_{i}"], train_df[f"gt_obj_{j}"]))
 
         # min‑max normalise ----------------------------------------------------
         def _scale(counter: Counter) -> Dict:
@@ -967,9 +877,7 @@ class ObjOrderModel(QType):
 
             info["relative_bias_pos_score"] = info["gt_pos_score"] - max_d_pos
             info["relative_bias_pair_score"] = info["gt_pair_score"] - max_d_pair
-            info["relative_bias_comb_pair_score"] = (
-                info["gt_comb_pair_score"] - max_d_comb
-            )
+            info["relative_bias_comb_pair_score"] = info["gt_comb_pair_score"] - max_d_comb
             info["relative_bias_score"] = (
                 info["relative_bias_pos_score"]
                 + info["relative_bias_pair_score"]

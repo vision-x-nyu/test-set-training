@@ -57,11 +57,7 @@ class Count2DModel(QType):
         qdf = df[df["question_type"] == self.name].copy()
 
         # Extract object name from question
-        qdf["object"] = (
-            qdf["question"]
-            .str.extract(r"How many (.*?) are in the image")[0]
-            .str.strip()
-        )
+        qdf["object"] = qdf["question"].str.extract(r"How many (.*?) are in the image")[0].str.strip()
 
         # Use preprocessed ground truth
         qdf["ground_truth"] = pd.to_numeric(qdf["gt_option"], errors="coerce")
@@ -96,8 +92,7 @@ class Count2DModel(QType):
 
         # Calculate ratios
         self.obj_stats["obj_val_log_ratio"] = (
-            self.obj_stats["obj_val_log_std"]
-            / (self.obj_stats["obj_val_log_mean"] + epsilon)
+            self.obj_stats["obj_val_log_std"] / (self.obj_stats["obj_val_log_mean"] + epsilon)
         ).fillna(0)
 
         # Calculate global statistics
@@ -146,9 +141,7 @@ class Count2DModel(QType):
                     choice_log = np.log10(choice_val + 1.0)
 
                     # Calculate distances
-                    df.loc[row_idx, f"choice_{choice_idx}_dist_from_obj_mean"] = abs(
-                        choice_log - obj_mean
-                    )
+                    df.loc[row_idx, f"choice_{choice_idx}_dist_from_obj_mean"] = abs(choice_log - obj_mean)
                     df.loc[row_idx, f"choice_{choice_idx}_dist_from_global_mean"] = abs(
                         choice_log - self.global_mean_log
                     )
@@ -156,15 +149,11 @@ class Count2DModel(QType):
         # Privileged features
         # ---------------------------------------
         # Calculate distance from object mean score
-        gt_norm_dist = abs(df["log_ground_truth"] - df["obj_val_log_mean"]) / (
-            df["obj_val_log_std"] + epsilon
-        )
+        gt_norm_dist = abs(df["log_ground_truth"] - df["obj_val_log_mean"]) / (df["obj_val_log_std"] + epsilon)
         df["gt_log_obj_mean_dist_score"] = 1.0 - minmax_scale(gt_norm_dist + epsilon)
 
         # Calculate global distance score
-        gt_global_dist = abs(df["log_ground_truth"] - self.global_mean_log) / (
-            self.global_std_log + epsilon
-        )
+        gt_global_dist = abs(df["log_ground_truth"] - self.global_mean_log) / (self.global_std_log + epsilon)
         df["gt_global_mean_dist_score"] = 1.0 - minmax_scale(gt_global_dist + epsilon)
 
         return df
@@ -212,9 +201,7 @@ class Relation2DModel(QType):
             question = question.replace(" (annotated by the blue box)", "")
 
             # Try to find patterns like "the X and the Y"
-            match = re.search(
-                r"the relative positions of the ([^,]+?) and the ([^,]+?)[, ]", question
-            )
+            match = re.search(r"the relative positions of the ([^,]+?) and the ([^,]+?)[, ]", question)
             if match:
                 return match.group(1).strip(), match.group(2).strip()
 
@@ -225,9 +212,7 @@ class Relation2DModel(QType):
             return None, None
 
         # Extract object pairs and sort them for consistency
-        qdf[["object_1", "object_2"]] = qdf["question"].apply(
-            lambda q: pd.Series(sorted(extract_objects(q)))
-        )
+        qdf[["object_1", "object_2"]] = qdf["question"].apply(lambda q: pd.Series(sorted(extract_objects(q))))
 
         # Drop rows where extraction failed
         qdf.dropna(subset=["object_1", "object_2"], inplace=True)
@@ -237,9 +222,7 @@ class Relation2DModel(QType):
     def fit_feature_maps(self, train_df: pd.DataFrame) -> None:
         """Collect object pair frequencies and answer distributions from training data."""
         # Calculate pair frequencies
-        pairs = train_df.apply(
-            lambda row: f"{row['object_1']}-{row['object_2']}", axis=1
-        )
+        pairs = train_df.apply(lambda row: f"{row['object_1']}-{row['object_2']}", axis=1)
         self.pair_freq_map = pairs.value_counts(normalize=True)
 
         # Calculate answer frequencies for each pair
@@ -259,14 +242,11 @@ class Relation2DModel(QType):
         for pair in self.pair_answer_freq_map:
             total = sum(self.pair_answer_freq_map[pair].values())
             self.pair_answer_freq_map[pair] = {
-                ans: count / total
-                for ans, count in self.pair_answer_freq_map[pair].items()
+                ans: count / total for ans, count in self.pair_answer_freq_map[pair].items()
             }
 
         # NEW: Calculate answer position frequencies
-        self.answer_position_freq = (
-            train_df["gt_idx"].value_counts(normalize=True).to_dict()
-        )
+        self.answer_position_freq = train_df["gt_idx"].value_counts(normalize=True).to_dict()
 
         # NEW: Find majority answer
         self.answer_distribution = train_df["gt_option"].value_counts()
@@ -286,24 +266,18 @@ class Relation2DModel(QType):
 
         # Calculate pair frequency score
         df["pair_freq_score"] = df.apply(
-            lambda row: self.pair_freq_map.get(
-                f"{row['object_1']}-{row['object_2']}", 0
-            ),
+            lambda row: self.pair_freq_map.get(f"{row['object_1']}-{row['object_2']}", 0),
             axis=1,
         )
 
         # Calculate answer frequency score for the pair
         df["pair_answer_freq_score"] = df.apply(
-            lambda row: self.pair_answer_freq_map.get(
-                (row["object_1"], row["object_2"]), {}
-            ).get(row["gt_option"], 0),
+            lambda row: self.pair_answer_freq_map.get((row["object_1"], row["object_2"]), {}).get(row["gt_option"], 0),
             axis=1,
         )
 
         # NEW: Answer position bias
-        df["answer_position_bias"] = (
-            df["gt_idx"].map(self.answer_position_freq).fillna(0)
-        )
+        df["answer_position_bias"] = df["gt_idx"].map(self.answer_position_freq).fillna(0)
 
         # NEW: Spatial keyword features
         spatial_keywords = {
@@ -316,14 +290,10 @@ class Relation2DModel(QType):
         }
 
         for direction, keywords in spatial_keywords.items():
-            df[f"contains_{direction}"] = df["question"].apply(
-                lambda q: int(any(kw in q.lower() for kw in keywords))
-            )
+            df[f"contains_{direction}"] = df["question"].apply(lambda q: int(any(kw in q.lower() for kw in keywords)))
 
         # NEW: Total spatial keywords
-        df["spatial_keyword_count"] = sum(
-            df[f"contains_{direction}"] for direction in spatial_keywords
-        )
+        df["spatial_keyword_count"] = sum(df[f"contains_{direction}"] for direction in spatial_keywords)
 
         # NEW: Question length
         df["question_length"] = df["question"].str.len()
@@ -364,18 +334,14 @@ class Depth3DModel(QType):
 
         # For depth questions, the choices themselves are the objects being compared
         # Sort the choices to ensure consistent pairing
-        qdf[["object_1", "object_2"]] = qdf["choices"].apply(
-            lambda x: pd.Series(sorted(x))
-        )
+        qdf[["object_1", "object_2"]] = qdf["choices"].apply(lambda x: pd.Series(sorted(x)))
 
         return qdf
 
     def fit_feature_maps(self, train_df: pd.DataFrame) -> None:
         """Collect object pair frequencies and answer distributions from training data."""
         # Calculate pair frequencies
-        pairs = train_df.apply(
-            lambda row: f"{row['object_1']}-{row['object_2']}", axis=1
-        )
+        pairs = train_df.apply(lambda row: f"{row['object_1']}-{row['object_2']}", axis=1)
         self.pair_freq_map = pairs.value_counts(normalize=True)
 
         # Calculate answer frequencies for each pair
@@ -395,8 +361,7 @@ class Depth3DModel(QType):
         for pair in self.pair_answer_freq_map:
             total = sum(self.pair_answer_freq_map[pair].values())
             self.pair_answer_freq_map[pair] = {
-                ans: count / total
-                for ans, count in self.pair_answer_freq_map[pair].items()
+                ans: count / total for ans, count in self.pair_answer_freq_map[pair].items()
             }
 
     def add_features(self, df: pd.DataFrame) -> pd.DataFrame:
@@ -408,17 +373,13 @@ class Depth3DModel(QType):
 
         # Calculate pair frequency score
         df["pair_freq_score"] = df.apply(
-            lambda row: self.pair_freq_map.get(
-                f"{row['object_1']}-{row['object_2']}", 0
-            ),
+            lambda row: self.pair_freq_map.get(f"{row['object_1']}-{row['object_2']}", 0),
             axis=1,
         )
 
         # Calculate answer frequency score for the pair
         df["pair_answer_freq_score"] = df.apply(
-            lambda row: self.pair_answer_freq_map.get(
-                (row["object_1"], row["object_2"]), {}
-            ).get(row["gt_option"], 0),
+            lambda row: self.pair_answer_freq_map.get((row["object_1"], row["object_2"]), {}).get(row["gt_option"], 0),
             axis=1,
         )
 
@@ -449,18 +410,14 @@ class Distance3DModel(QType):
 
         # For distance questions, the choices themselves are the objects being compared
         # Sort the choices to ensure consistent pairing
-        qdf[["object_1", "object_2"]] = qdf["choices"].apply(
-            lambda x: pd.Series(sorted(x))
-        )
+        qdf[["object_1", "object_2"]] = qdf["choices"].apply(lambda x: pd.Series(sorted(x)))
 
         return qdf
 
     def fit_feature_maps(self, train_df: pd.DataFrame) -> None:
         """Collect object pair frequencies and answer distributions from training data."""
         # Calculate pair frequencies
-        pairs = train_df.apply(
-            lambda row: f"{row['object_1']}-{row['object_2']}", axis=1
-        )
+        pairs = train_df.apply(lambda row: f"{row['object_1']}-{row['object_2']}", axis=1)
         self.pair_freq_map = pairs.value_counts(normalize=True)
 
         # Calculate answer frequencies for each pair
@@ -480,8 +437,7 @@ class Distance3DModel(QType):
         for pair in self.pair_answer_freq_map:
             total = sum(self.pair_answer_freq_map[pair].values())
             self.pair_answer_freq_map[pair] = {
-                ans: count / total
-                for ans, count in self.pair_answer_freq_map[pair].items()
+                ans: count / total for ans, count in self.pair_answer_freq_map[pair].items()
             }
 
     def add_features(self, df: pd.DataFrame) -> pd.DataFrame:
@@ -493,17 +449,13 @@ class Distance3DModel(QType):
 
         # Calculate pair frequency score
         df["pair_freq_score"] = df.apply(
-            lambda row: self.pair_freq_map.get(
-                f"{row['object_1']}-{row['object_2']}", 0
-            ),
+            lambda row: self.pair_freq_map.get(f"{row['object_1']}-{row['object_2']}", 0),
             axis=1,
         )
 
         # Calculate answer frequency score for the pair
         df["pair_answer_freq_score"] = df.apply(
-            lambda row: self.pair_answer_freq_map.get(
-                (row["object_1"], row["object_2"]), {}
-            ).get(row["gt_option"], 0),
+            lambda row: self.pair_answer_freq_map.get((row["object_1"], row["object_2"]), {}).get(row["gt_option"], 0),
             axis=1,
         )
 
