@@ -100,6 +100,12 @@ QUESTION_OPTION_FEATURE_NAMES = [
     # "root_match",
 ]
 
+POST_PROC_FEATURE_NAMES = [
+    "opt_numeric_idx_max",
+    "opt_numeric_idx_min",
+    "opt_numeric_range",
+]
+
 # Option-level feature columns for each of the 4 options (A, B, C, D)
 OPTION_FEATURE_COLS = [f"opt_{i}_{feat}" for i in range(N_OPT) for feat in OPTION_FEATURE_NAMES]
 ST_FEATURE_COLS = [f"opt_{i}_{feat}" for i in range(N_OPT) for feat in ST_FEATURE_NAMES]
@@ -112,8 +118,9 @@ FEATURE_COLS = [
     "sub_category",
     "task_type",
     *OPTION_FEATURE_COLS,
-    *ST_FEATURE_COLS,
-    *QUESTION_OPTION_FEATURE_COLS,
+    # *ST_FEATURE_COLS,
+    # *QUESTION_OPTION_FEATURE_COLS,
+    # *POST_PROC_FEATURE_NAMES,
 ]
 
 
@@ -208,6 +215,25 @@ class VideoMMEModel(QType):
 
         return sim_q, mean_sim_A, max_sim_A
 
+    def _postprocess_option_numeric_features(self, numeric_vals: np.ndarray):
+        """Return arrays for idx of max/min and range for option-level numeric values."""
+        valid_mask = ~np.isnan(numeric_vals)
+        idx_max = np.full(numeric_vals.shape[0], -1)
+        idx_min = np.full(numeric_vals.shape[0], -1)
+        num_range = np.full(numeric_vals.shape[0], np.nan)
+        for row_idx, (row_vals, row_mask) in enumerate(zip(numeric_vals, valid_mask)):
+            if row_mask.any():
+                valid_vals = row_vals[row_mask]
+                idxs = np.arange(numeric_vals.shape[1])[row_mask]
+                idx_max[row_idx] = idxs[valid_vals.argmax()]
+                idx_min[row_idx] = idxs[valid_vals.argmin()]
+                num_range[row_idx] = valid_vals.max() - valid_vals.min()
+        return {
+            "opt_numeric_idx_max": idx_max,
+            "opt_numeric_idx_min": idx_min,
+            "opt_numeric_range": num_range,
+        }
+
     def add_features(self, df: pd.DataFrame) -> pd.DataFrame:
         """Add frequency-based and option-level features to the dataframe."""
         if self.domain_freq_map is None:
@@ -230,28 +256,35 @@ class VideoMMEModel(QType):
             for feat_name in OPTION_FEATURE_NAMES:
                 df[f"{opt_col}_{feat_name}"] = opt_feats[feat_name]
 
-        # Vectorized question-option-level features
-        for opt_idx in range(N_OPT):
-            opt_col = f"opt_{opt_idx}"
-            qo_feats = df.apply(
-                lambda row: self._analyze_question_option_pair(row["question"], row[opt_col]), axis=1
-            ).apply(pd.Series)
-            for qo_name in QUESTION_OPTION_FEATURE_NAMES:
-                df[f"qo_{opt_idx}_{qo_name}"] = qo_feats[qo_name]
+        # # Vectorized question-option-level features
+        # for opt_idx in range(N_OPT):
+        #     opt_col = f"opt_{opt_idx}"
+        #     qo_feats = df.apply(
+        #         lambda row: self._analyze_question_option_pair(row["question"], row[opt_col]), axis=1
+        #     ).apply(pd.Series)
+        #     for qo_name in QUESTION_OPTION_FEATURE_NAMES:
+        #         df[f"qo_{opt_idx}_{qo_name}"] = qo_feats[qo_name]
 
-        # Sentence-transformers features (option-level, all options at once)
-        def st_feats_row(row):
-            options = [row[f"opt_{i}"] for i in range(N_OPT)]
-            sim_q, mean_sim_A, max_sim_A = self.st_similarity_features(row["question"], options)
-            return {
-                **{f"opt_{i}_sim_q": float(sim_q[i]) for i in range(N_OPT)},
-                **{f"opt_{i}_mean_sim_A": float(mean_sim_A[i]) for i in range(N_OPT)},
-                **{f"opt_{i}_max_sim_A": float(max_sim_A[i]) for i in range(N_OPT)},
-            }
+        # # Sentence-transformers features (option-level, all options at once)
+        # def st_feats_row(row):
+        #     options = [row[f"opt_{i}"] for i in range(N_OPT)]
+        #     sim_q, mean_sim_A, max_sim_A = self.st_similarity_features(row["question"], options)
+        #     return {
+        #         **{f"opt_{i}_sim_q": float(sim_q[i]) for i in range(N_OPT)},
+        #         **{f"opt_{i}_mean_sim_A": float(mean_sim_A[i]) for i in range(N_OPT)},
+        #         **{f"opt_{i}_max_sim_A": float(max_sim_A[i]) for i in range(N_OPT)},
+        #     }
 
-        st_feats = df.apply(st_feats_row, axis=1).apply(pd.Series)
-        for col in st_feats.columns:
-            df[col] = st_feats[col]
+        # st_feats = df.apply(st_feats_row, axis=1).apply(pd.Series)
+        # for col in st_feats.columns:
+        #     df[col] = st_feats[col]
+
+        # Post-process option-level numeric features
+        numeric_val_cols = [f"opt_{i}_numeric_val" for i in range(N_OPT)]
+        numeric_vals = df[numeric_val_cols].values
+        post_proc_feats = self._postprocess_option_numeric_features(numeric_vals)
+        for feat_name in POST_PROC_FEATURE_NAMES:
+            df[feat_name] = post_proc_feats[feat_name]
 
         # Calculate frequency scores
         df["domain_freq_score"] = df["domain"].map(self.domain_freq_map).fillna(0)
