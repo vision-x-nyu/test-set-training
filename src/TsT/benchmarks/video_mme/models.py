@@ -1,7 +1,24 @@
 from typing import Dict
+from functools import lru_cache
+
 import pandas as pd
+import spacy
+from joblib import Memory
 
 from ...protocols import QType
+
+
+memory = Memory(location=".cache", compress=True, verbose=0)
+
+
+@lru_cache(maxsize=1)
+def get_nlp():
+    return spacy.load("en_core_web_sm")
+
+
+@memory.cache
+def get_doc(text: str):
+    return get_nlp()(text)
 
 
 # =============================================================================
@@ -21,8 +38,22 @@ OPTION_FEATURE_NAMES = [
     "len_option_str",
 ]
 
+QUESTION_OPTION_FEATURE_NAMES = [
+    # lexical overlap
+    "unigram_jaccard",
+    # POS‑pattern similarity
+    "pos_bigram_overlap",
+    # counts
+    "answer_len",
+    "num_digits",
+    "has_color",
+    # # dependency root match
+    # "root_match",
+]
+
 # Option-level feature columns for each of the 4 options (A, B, C, D)
 OPTION_FEATURE_COLS = [f"opt_{i}_{feat}" for i in range(N_OPT) for feat in OPTION_FEATURE_NAMES]
+QUESTION_OPTION_FEATURE_COLS = [f"qo_{i}_{feat}" for i in range(N_OPT) for feat in QUESTION_OPTION_FEATURE_NAMES]
 
 FEATURE_COLS = [
     "duration",
@@ -30,6 +61,7 @@ FEATURE_COLS = [
     "sub_category",
     "task_type",
     *OPTION_FEATURE_COLS,
+    *QUESTION_OPTION_FEATURE_COLS,
 ]
 
 
@@ -73,6 +105,32 @@ class VideoMMEModel(QType):
             "str_val": str_val,
             "is_all_caps": int(is_all_caps),
             "len_option_str": len_option_str,
+        }
+
+    def linguistic_features(self, question: str, answer: str):
+        q, a = get_doc(question), get_doc(answer)
+        return {
+            # lexical overlap
+            "unigram_jaccard": len(set(t.lemma_ for t in q) & set(t.lemma_ for t in a))
+            / max(1, len(set(t.lemma_ for t in q) | set(t.lemma_ for t in a))),
+            # POS‑pattern similarity
+            "pos_bigram_overlap": len(
+                set(p for p in zip([t.pos_ for t in q][:-1], [t.pos_ for t in q][1:]))
+                & set(p for p in zip([t.pos_ for t in a][:-1], [t.pos_ for t in a][1:]))
+            ),
+            # counts
+            "answer_len": len(a),
+            "num_digits": sum(t.like_num for t in a),
+            "has_color": any(t.ent_type_ == "COLOR" for t in a),
+            # # dependency root match
+            # "root_match": int(q.root.lemma_ == a.root.lemma_),
+        }
+
+    def _analyze_question_option_pair(self, question: str, option: str) -> Dict:
+        """Analyze a question-option pair and return feature dictionary."""
+        linguistic_features = self.linguistic_features(question, option)
+        return {
+            **linguistic_features,
         }
 
     def select_rows(self, df: pd.DataFrame) -> pd.DataFrame:
@@ -129,6 +187,15 @@ class VideoMMEModel(QType):
             opt_feats = df[opt_col].apply(self._analyze_option).apply(pd.Series)
             for feat_name in OPTION_FEATURE_NAMES:
                 df[f"{opt_col}_{feat_name}"] = opt_feats[feat_name]
+
+        # Vectorized question-option-level features
+        for opt_idx in range(N_OPT):
+            opt_col = f"opt_{opt_idx}"
+            qo_feats = df.apply(
+                lambda row: self._analyze_question_option_pair(row["question"], row[opt_col]), axis=1
+            ).apply(pd.Series)
+            for qo_name in QUESTION_OPTION_FEATURE_NAMES:
+                df[f"qo_{opt_idx}_{qo_name}"] = qo_feats[qo_name]
 
         return df
 
