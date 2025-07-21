@@ -15,9 +15,7 @@ from .protocols import QType
 # =============================================================================
 
 
-def encode_categoricals(
-    X_train: pd.DataFrame, X_test: pd.DataFrame
-) -> Dict[str, LabelEncoder]:
+def encode_categoricals(X_train: pd.DataFrame, X_test: pd.DataFrame) -> Dict[str, LabelEncoder]:
     """Label‑encode *object* columns (fit on **train only** to avoid leak).
     Unseen categories in test are mapped to -1."""
     cat_cols = X_train.select_dtypes(include="object").columns
@@ -54,6 +52,25 @@ def _score(est, X, y, metric="acc"):
         raise ValueError(f"Unknown metric: {metric}")
 
 
+def weighted_mean_std(scores: np.ndarray, counts: np.ndarray) -> tuple[float, float]:
+    """
+    Weighted mean:
+        weighted_avg = sum(score_i * count_i) / sum(count_i)
+    Weighted variance:
+        weighted_var = sum(count_i * (score_i - weighted_avg)**2) / sum(count_i)
+    Weighted std:
+        weighted_std = sqrt(weighted_var)
+    Only models with count > 0 are included.
+    """
+    mask = counts > 0
+    scores = scores[mask]
+    counts = counts[mask]
+    weighted_avg = (scores * counts).sum() / counts.sum() if counts.sum() > 0 else 0
+    weighted_var = ((counts * (scores - weighted_avg) ** 2).sum() / counts.sum()) if counts.sum() > 0 else 0
+    weighted_std = weighted_var**0.5
+    return weighted_avg, weighted_std
+
+
 # =============================================================================
 # 4.  COMMON EVALUATION LOOP --------------------------------------------------
 # =============================================================================
@@ -71,10 +88,7 @@ def evaluate_bias_model(
     qdf = model.select_rows(df)
     all_scores = []
 
-    if (
-        model.target_col_override is not None
-        and model.target_col_override != target_col
-    ):
+    if model.target_col_override is not None and model.target_col_override != target_col:
         print(
             f"[WARNING] {model.name} has an override target column '{model.target_col_override}'. Replacing '{target_col}'."
         )
@@ -82,14 +96,10 @@ def evaluate_bias_model(
     if model.task == "reg" and target_col == "gt_idx":
         # no gt_idx for regression tasks
         target_col = "ground_truth"
-        print(
-            f"[WARNING] {model.name} is numerical, with no gt_idx column. Overriding target column to 'ground_truth'"
-        )
+        print(f"[WARNING] {model.name} is numerical, with no gt_idx column. Overriding target column to 'ground_truth'")
 
     # Show progress bar over repeats
-    repeat_pbar = tqdm(
-        range(repeats), desc=f"[{model.name.upper()}] Repeats", disable=repeats == 1
-    )
+    repeat_pbar = tqdm(range(repeats), desc=f"[{model.name.upper()}] Repeats", disable=repeats == 1)
 
     for repeat in repeat_pbar:
         current_seed = random_state + repeat
@@ -99,9 +109,7 @@ def evaluate_bias_model(
             splitter = KFold(n_splits=n_splits, shuffle=True, random_state=current_seed)
             split_args = (qdf,)
         else:  # classification task
-            splitter = StratifiedKFold(
-                n_splits=n_splits, shuffle=True, random_state=current_seed
-            )
+            splitter = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=current_seed)
             split_args = (qdf, qdf[target_col])
 
         scores: List[float] = []
@@ -137,19 +145,16 @@ def evaluate_bias_model(
     mean_scores = [np.mean(scores) for scores in all_scores]
     mean_acc = float(np.mean(mean_scores))
     std_acc = float(np.std(mean_scores))
+    count = len(qdf)
 
     if verbose:
         print(
             f"\n[{model.name.upper()}] Overall {model.metric.upper()}: {mean_acc:.2%} ± {std_acc:.2%} (n_splits={n_splits}, repeats={repeats})"
         )
         if repeats == 1:
-            print(
-                f"[{model.name.upper()}] Fold {model.metric.upper()}s: {[f'{s:.2%}' for s in all_scores[0]]}"
-            )
+            print(f"[{model.name.upper()}] Fold {model.metric.upper()}s: {[f'{s:.2%}' for s in all_scores[0]]}")
         else:
-            print(
-                f"[{model.name.upper()}] Repeat {model.metric.upper()}s: {[f'{s:.2%}' for s in mean_scores]}"
-            )
+            print(f"[{model.name.upper()}] Repeat {model.metric.upper()}s: {[f'{s:.2%}' for s in mean_scores]}")
 
     # full‑data importances ---------------------------------------------------
     model.fit_feature_maps(qdf)  # all rows
@@ -161,16 +166,14 @@ def evaluate_bias_model(
     est_full = _make_estimator(model.task, random_state)
     est_full.fit(X_full, y_full)
     fi = (
-        pd.DataFrame(
-            {"feature": model.feature_cols, "importance": est_full.feature_importances_}
-        )
+        pd.DataFrame({"feature": model.feature_cols, "importance": est_full.feature_importances_})
         .sort_values("importance", ascending=False)
         .reset_index(drop=True)
     )
     if verbose:
         print(f"\n[{model.name.upper()}] Feature importances:")
         print(fi.head(15))
-    return mean_acc, std_acc, fi
+    return mean_acc, std_acc, fi, count
 
 
 def run_evaluation(
@@ -209,25 +212,45 @@ def run_evaluation(
 
     for m in models:
         print(f"\n================  {m.name.upper()}  ================")
-        mean_score, std_score, fi = evaluate_bias_model(
-            m,
-            df_full,
-            n_splits=n_splits,
-            random_state=random_state,
-            verbose=verbose,
-            repeats=repeats,
-            target_col=target_col,
-        )
-        all_results.append(
-            {
-                "Model": m.name,
-                "Format": m.format.upper(),
-                "Metric": m.metric.upper(),
-                "Score": mean_score,
-                "± Std": std_score,
-                "Feature Importances": fi,
-            }
-        )
+        try:
+            mean_score, std_score, fi, count = evaluate_bias_model(
+                m,
+                df_full,
+                n_splits=n_splits,
+                random_state=random_state,
+                verbose=verbose,
+                repeats=repeats,
+                target_col=target_col,
+            )
+            weighted_score = mean_score * count
+            all_results.append(
+                {
+                    "Model": m.name,
+                    "Format": m.format.upper(),
+                    "Metric": m.metric.upper(),
+                    "Score": mean_score,
+                    "± Std": std_score,
+                    "Feature Importances": fi,
+                    "Count": count,
+                    "Weighted Score": weighted_score,
+                    "Error": None,
+                }
+            )
+        except Exception as e:
+            print(f"[WARNING] Evaluation failed for model {m.name}: {e}")
+            all_results.append(
+                {
+                    "Model": m.name,
+                    "Format": getattr(m, "format", "N/A").upper() if hasattr(m, "format") else "N/A",
+                    "Metric": getattr(m, "metric", "N/A").upper() if hasattr(m, "metric") else "N/A",
+                    "Score": 0,
+                    "± Std": 0,
+                    "Feature Importances": None,
+                    "Count": 0,
+                    "Weighted Score": 0,
+                    "Error": str(e),
+                }
+            )
 
     # Create summary table
     summary = pd.DataFrame(all_results)
@@ -236,8 +259,12 @@ def run_evaluation(
     # Calculate overall average score
     overall_avg = summary["Score"].mean()
     overall_std = summary["Score"].std()
+    total_count = summary["Count"].sum()
 
-    # Format the scores as percentages
+    # Weighted mean and std calculation (use raw values before formatting)
+    weighted_avg, weighted_std = weighted_mean_std(summary["Score"].values, summary["Count"].values)
+
+    # Format the scores as percentages (after all calculations)
     summary["Score"] = summary["Score"].map("{:.1%}".format)
     summary["± Std"] = summary["± Std"].map("{:.1%}".format)
 
@@ -245,11 +272,10 @@ def run_evaluation(
     print("\n" * 3 + "=" * 80)
     print("EVALUATION SUMMARY")
     print("=" * 80)
-    print(
-        summary[["Model", "Format", "Metric", "Score", "± Std"]].to_string(index=False)
-    )
+    print(summary[["Model", "Format", "Metric", "Score", "± Std", "Count"]].to_string(index=False))
     print("=" * 80)
     print(f"OVERALL AVERAGE SCORE: {overall_avg:.1%} ± {overall_std:.1%}")
+    print(f"WEIGHTED AVERAGE SCORE: {weighted_avg:.1%} ± {weighted_std:.1%} (total examples: {total_count})")
     print("=" * 80)
 
     return summary

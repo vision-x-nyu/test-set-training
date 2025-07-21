@@ -34,3 +34,7 @@ dev-dependencies = [
 [tool.uv.build-backend]
 module-root = "src"
 module-name = "TsT"
+
+
+[tool.ruff]
+line-length = 120
