@@ -83,7 +83,7 @@ OPTION_FEATURE_NAMES = [
 ST_FEATURE_NAMES = [
     "sim_q",
     "mean_sim_A",
-    "combined_score",
+    "max_sim_A",
 ]
 
 QUESTION_OPTION_FEATURE_NAMES = [
@@ -192,7 +192,7 @@ class VideoMMEModel(QType):
         # Calculate duration frequencies
         self.duration_freq_map = train_df["duration"].value_counts(normalize=True)
 
-    def st_similarity_features(self, question: str, options: list[str], lambda_: float = 0.7):
+    def st_similarity_features(self, question: str, options: list[str]):
         """Compute sentence-transformers cosine similarity features for a question and its options."""
         q_vec = get_st_embedding(question)
         A = [get_st_embedding(opt) for opt in options]
@@ -203,8 +203,9 @@ class VideoMMEModel(QType):
         sim_A = util.cos_sim(A_mat, A_mat).cpu().numpy()  # (k,k)
         np.fill_diagonal(sim_A, 0)
         mean_sim_A = sim_A.mean(axis=1)
-        scores = sim_q - lambda_ * mean_sim_A
-        return sim_q, mean_sim_A, scores
+        max_sim_A = sim_A.max(axis=1)
+
+        return sim_q, mean_sim_A, max_sim_A
 
     def add_features(self, df: pd.DataFrame) -> pd.DataFrame:
         """Add frequency-based and option-level features to the dataframe."""
@@ -246,11 +247,11 @@ class VideoMMEModel(QType):
         # Sentence-transformers features (option-level, all options at once)
         def st_feats_row(row):
             options = [row[f"opt_{i}"] for i in range(N_OPT)]
-            sim_q, mean_sim_A, scores = self.st_similarity_features(row["question"], options)
+            sim_q, mean_sim_A, max_sim_A = self.st_similarity_features(row["question"], options)
             return {
                 **{f"opt_{i}_sim_q": float(sim_q[i]) for i in range(N_OPT)},
                 **{f"opt_{i}_mean_sim_A": float(mean_sim_A[i]) for i in range(N_OPT)},
-                **{f"opt_{i}_combined_score": float(scores[i]) for i in range(N_OPT)},
+                **{f"opt_{i}_max_sim_A": float(max_sim_A[i]) for i in range(N_OPT)},
             }
 
         st_feats = df.apply(st_feats_row, axis=1).apply(pd.Series)
