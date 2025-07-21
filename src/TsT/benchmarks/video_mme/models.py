@@ -4,6 +4,9 @@ from functools import lru_cache
 import pandas as pd
 import spacy
 from joblib import Memory
+import numpy as np
+
+from sentence_transformers import SentenceTransformer, util
 
 from ...protocols import QType
 
@@ -19,6 +22,44 @@ def get_nlp():
 @memory.cache
 def get_doc(text: str):
     return get_nlp()(text)
+
+
+@memory.cache
+def linguistic_features(question: str, answer: str) -> Dict:
+    # q, a = get_doc(question), get_doc(answer)
+    nlp = get_nlp()
+    q, a = nlp(question), nlp(answer)
+    return {
+        # lexical overlap
+        "unigram_jaccard": len(set(t.lemma_ for t in q) & set(t.lemma_ for t in a))
+        / max(1, len(set(t.lemma_ for t in q) | set(t.lemma_ for t in a))),
+        # POS‑pattern similarity
+        "pos_bigram_overlap": len(
+            set(p for p in zip([t.pos_ for t in q][:-1], [t.pos_ for t in q][1:]))
+            & set(p for p in zip([t.pos_ for t in a][:-1], [t.pos_ for t in a][1:]))
+        ),
+        # counts
+        "answer_len": len(a),
+        "num_digits": sum(t.like_num for t in a),
+        "has_color": any(t.ent_type_ == "COLOR" for t in a),
+        # # dependency root match
+        # "root_match": int(q.root.lemma_ == a.root.lemma_),
+    }
+
+
+# Sentence-transformers model and embedding cache
+ST_MODEL_NAME = "all-MiniLM-L6-v2"
+
+
+@lru_cache(maxsize=1)
+def get_st_model():
+    return SentenceTransformer(ST_MODEL_NAME)
+
+
+@memory.cache
+def get_st_embedding(text: str):
+    model = get_st_model()
+    return model.encode(text, normalize_embeddings=True)
 
 
 # =============================================================================
@@ -38,6 +79,13 @@ OPTION_FEATURE_NAMES = [
     "len_option_str",
 ]
 
+# Sentence-transformers feature names
+ST_FEATURE_NAMES = [
+    "sim_q",
+    "mean_sim_A",
+    "combined_score",
+]
+
 QUESTION_OPTION_FEATURE_NAMES = [
     # lexical overlap
     "unigram_jaccard",
@@ -53,7 +101,9 @@ QUESTION_OPTION_FEATURE_NAMES = [
 
 # Option-level feature columns for each of the 4 options (A, B, C, D)
 OPTION_FEATURE_COLS = [f"opt_{i}_{feat}" for i in range(N_OPT) for feat in OPTION_FEATURE_NAMES]
+ST_FEATURE_COLS = [f"opt_{i}_{feat}" for i in range(N_OPT) for feat in ST_FEATURE_NAMES]
 QUESTION_OPTION_FEATURE_COLS = [f"qo_{i}_{feat}" for i in range(N_OPT) for feat in QUESTION_OPTION_FEATURE_NAMES]
+
 
 FEATURE_COLS = [
     "duration",
@@ -61,6 +111,7 @@ FEATURE_COLS = [
     "sub_category",
     "task_type",
     *OPTION_FEATURE_COLS,
+    *ST_FEATURE_COLS,
     *QUESTION_OPTION_FEATURE_COLS,
 ]
 
@@ -107,30 +158,11 @@ class VideoMMEModel(QType):
             "len_option_str": len_option_str,
         }
 
-    def linguistic_features(self, question: str, answer: str):
-        q, a = get_doc(question), get_doc(answer)
-        return {
-            # lexical overlap
-            "unigram_jaccard": len(set(t.lemma_ for t in q) & set(t.lemma_ for t in a))
-            / max(1, len(set(t.lemma_ for t in q) | set(t.lemma_ for t in a))),
-            # POS‑pattern similarity
-            "pos_bigram_overlap": len(
-                set(p for p in zip([t.pos_ for t in q][:-1], [t.pos_ for t in q][1:]))
-                & set(p for p in zip([t.pos_ for t in a][:-1], [t.pos_ for t in a][1:]))
-            ),
-            # counts
-            "answer_len": len(a),
-            "num_digits": sum(t.like_num for t in a),
-            "has_color": any(t.ent_type_ == "COLOR" for t in a),
-            # # dependency root match
-            # "root_match": int(q.root.lemma_ == a.root.lemma_),
-        }
-
     def _analyze_question_option_pair(self, question: str, option: str) -> Dict:
         """Analyze a question-option pair and return feature dictionary."""
-        linguistic_features = self.linguistic_features(question, option)
+        li_feats = linguistic_features(question, option)
         return {
-            **linguistic_features,
+            **li_feats,
         }
 
     def select_rows(self, df: pd.DataFrame) -> pd.DataFrame:
@@ -159,6 +191,20 @@ class VideoMMEModel(QType):
 
         # Calculate duration frequencies
         self.duration_freq_map = train_df["duration"].value_counts(normalize=True)
+
+    def st_similarity_features(self, question: str, options: list[str], lambda_: float = 0.7):
+        """Compute sentence-transformers cosine similarity features for a question and its options."""
+        q_vec = get_st_embedding(question)
+        A = [get_st_embedding(opt) for opt in options]
+        A_mat = np.stack(A)
+        # Q→A similarity
+        sim_q = util.cos_sim(q_vec, A_mat).cpu().numpy().squeeze()  # (k,)
+        # A→A similarity
+        sim_A = util.cos_sim(A_mat, A_mat).cpu().numpy()  # (k,k)
+        np.fill_diagonal(sim_A, 0)
+        mean_sim_A = sim_A.mean(axis=1)
+        scores = sim_q - lambda_ * mean_sim_A
+        return sim_q, mean_sim_A, scores
 
     def add_features(self, df: pd.DataFrame) -> pd.DataFrame:
         """Add frequency-based and option-level features to the dataframe."""
@@ -196,6 +242,20 @@ class VideoMMEModel(QType):
             ).apply(pd.Series)
             for qo_name in QUESTION_OPTION_FEATURE_NAMES:
                 df[f"qo_{opt_idx}_{qo_name}"] = qo_feats[qo_name]
+
+        # Sentence-transformers features (option-level, all options at once)
+        def st_feats_row(row):
+            options = [row[f"opt_{i}"] for i in range(N_OPT)]
+            sim_q, mean_sim_A, scores = self.st_similarity_features(row["question"], options)
+            return {
+                **{f"opt_{i}_sim_q": float(sim_q[i]) for i in range(N_OPT)},
+                **{f"opt_{i}_mean_sim_A": float(mean_sim_A[i]) for i in range(N_OPT)},
+                **{f"opt_{i}_combined_score": float(scores[i]) for i in range(N_OPT)},
+            }
+
+        st_feats = df.apply(st_feats_row, axis=1).apply(pd.Series)
+        for col in st_feats.columns:
+            df[col] = st_feats[col]
 
         return df
 
