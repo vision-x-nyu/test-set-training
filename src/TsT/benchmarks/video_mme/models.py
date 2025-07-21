@@ -10,34 +10,34 @@ from ...protocols import QType
 
 
 # Video-MME General Model
+N_OPT = 4
+
+# Option-level feature names (single source of truth)
+OPTION_FEATURE_NAMES = [
+    # "is_numeric",  # Not used in _option_feature_cols
+    "numeric_val",
+    # "str_val",     # Not used in _option_feature_cols
+    "is_all_caps",
+    "len_option_str",
+]
+
+# Option-level feature columns for each of the 4 options (A, B, C, D)
+OPTION_FEATURE_COLS = [f"opt_{i}_{feat}" for i in range(N_OPT) for feat in OPTION_FEATURE_NAMES]
+
+FEATURE_COLS = [
+    "duration",
+    "domain",
+    "sub_category",
+    "task_type",
+    *OPTION_FEATURE_COLS,
+]
+
+
 class VideoMMEModel(QType):
     name = "video_mme"
     format = "mc"
 
-    # Option-level feature columns for each of the 4 options (A, B, C, D)
-    _option_feature_cols = [
-        f"opt_{i}_{feat}"
-        for i in range(4)
-        for feat in [
-            # "is_numeric",
-            "numeric_val",
-            # "str_val",
-            "is_all_caps",
-            "len_option_str",
-        ]
-    ]
-
-    feature_cols = [
-        "duration",
-        "domain",
-        "sub_category",
-        "task_type",
-        # "domain_freq_score",
-        # "sub_category_freq_score",
-        # "task_type_freq_score",
-        # "duration_freq_score",
-        *_option_feature_cols,
-    ]
+    feature_cols = FEATURE_COLS
 
     def __init__(self):
         # frequency maps learned on the training split
@@ -124,37 +124,16 @@ class VideoMMEModel(QType):
         df["task_type_freq_score"] = df["task_type"].map(self.task_type_freq_map).fillna(0)
         df["duration_freq_score"] = df["duration"].map(self.duration_freq_map).fillna(0)
 
-        # Add option-level features for each row
-        for row_idx, row in df.iterrows():
-            options = row["options"]
+        # Vectorized option-level features
+        # Assumes there are always 4 options per row
+        options_df = pd.DataFrame(df["options"].tolist(), columns=[f"opt_{i}" for i in range(N_OPT)], index=df.index)
 
-            # Analyze each option (A, B, C, D)
-            for opt_idx in range(4):
-                if opt_idx < len(options):
-                    option_str = options[opt_idx]
-                    opt_features = self._analyze_option(option_str)
-
-                    # Add features to dataframe
-                    for feat_name, feat_value in opt_features.items():
-                        df.loc[row_idx, f"opt_{opt_idx}_{feat_name}"] = feat_value
-                else:
-                    # Handle cases where there are fewer than 4 options
-                    for feat_name in [
-                        "is_numeric",
-                        "numeric_val",
-                        "is_str",
-                        "str_val",
-                        "is_all_caps",
-                        "len_option_str",
-                    ]:
-                        if feat_name == "numeric_val":
-                            df.loc[row_idx, f"opt_{opt_idx}_{feat_name}"] = float("nan")
-                        elif feat_name == "str_val":
-                            df.loc[row_idx, f"opt_{opt_idx}_{feat_name}"] = ""
-                        elif feat_name == "len_option_str":
-                            df.loc[row_idx, f"opt_{opt_idx}_{feat_name}"] = 0
-                        else:
-                            df.loc[row_idx, f"opt_{opt_idx}_{feat_name}"] = 0
+        for opt_idx in range(N_OPT):
+            opt_col = f"opt_{opt_idx}"
+            # Apply _analyze_option to each option string in the column
+            features = options_df[opt_col].apply(self._analyze_option).apply(pd.Series)
+            for feat_name in OPTION_FEATURE_NAMES:
+                df[f"{opt_col}_{feat_name}"] = features[feat_name]
 
         return df
 
