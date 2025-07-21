@@ -9,6 +9,7 @@ import numpy as np
 from sentence_transformers import SentenceTransformer, util
 
 from ...protocols import QType
+from ...utils import fuzzy_cleanup_numeric
 
 
 memory = Memory(location=".cache", compress=True, verbose=0)
@@ -135,7 +136,7 @@ class VideoMMEModel(QType):
         is_numeric = False
         numeric_val = float("nan")
         try:
-            numeric_val = float(option_str)
+            numeric_val = fuzzy_cleanup_numeric(option_str)
             is_numeric = True
         except (ValueError, TypeError):
             pass
@@ -214,12 +215,6 @@ class VideoMMEModel(QType):
 
         df = df.copy()
 
-        # Calculate frequency scores
-        df["domain_freq_score"] = df["domain"].map(self.domain_freq_map).fillna(0)
-        df["sub_category_freq_score"] = df["sub_category"].map(self.sub_category_freq_map).fillna(0)
-        df["task_type_freq_score"] = df["task_type"].map(self.task_type_freq_map).fillna(0)
-        df["duration_freq_score"] = df["duration"].map(self.duration_freq_map).fillna(0)
-
         for i in range(N_OPT):
             df[f"opt_{i}"] = df["options"].apply(
                 lambda x: x[i].split(". ", 1)[-1].strip()
@@ -257,6 +252,12 @@ class VideoMMEModel(QType):
         st_feats = df.apply(st_feats_row, axis=1).apply(pd.Series)
         for col in st_feats.columns:
             df[col] = st_feats[col]
+
+        # Calculate frequency scores
+        df["domain_freq_score"] = df["domain"].map(self.domain_freq_map).fillna(0)
+        df["sub_category_freq_score"] = df["sub_category"].map(self.sub_category_freq_map).fillna(0)
+        df["task_type_freq_score"] = df["task_type"].map(self.task_type_freq_map).fillna(0)
+        df["duration_freq_score"] = df["duration"].map(self.duration_freq_map).fillna(0)
 
         return df
 
