@@ -38,6 +38,19 @@ def test_fuzzy_cleanup(pred, expected):
         ("  3.14159  ", 3.14159),
         ("zero", 0.0),
         ("twenty one.", 21.0),
+        ("47.1%", 47.1),
+        ("$99.99", 99.99),
+        ("99 cents", 99),
+        ("-42", -42.0),
+        ("minus forty two", -42.0),
+        ("-$123.45", -123.45),
+        ("-47.1%", -47.1),
+        ("€1,234.56", 1234.56),
+        ("1,234.56 dollars", 1234.56),
+        ("£0.99", 0.99),
+        ("0.99p", 0.99),
+        ("twenty-five percent", 25.0),
+        ("twenty five percent", 25.0),
     ],
 )
 def test_fuzzy_cleanup_numeric(pred, expected):
@@ -56,3 +69,23 @@ def test_fuzzy_cleanup_numeric(pred, expected):
 def test_fuzzy_cleanup_numeric_invalid(pred):
     with pytest.raises(ValueError):
         utils.fuzzy_cleanup_numeric(pred)
+
+
+@pytest.mark.parametrize(
+    "pred,expected",
+    [
+        ("minus one hundred", -100.0),
+        ("negative one hundred", -100.0),
+        ("minus 42", -42.0),
+        ("negative 42", -42.0),
+        ("minus $123.45", -123.45),
+        ("negative 47.1%", -47.1),
+        ("minus 1,234.56 dollars", -1234.56),
+        ("negative £0.99", -0.99),
+        ("minus 0.99p", -0.99),
+        ("minus twenty-five percent", -25.0),
+        ("negative twenty five percent", -25.0),
+    ],
+)
+def test_fuzzy_cleanup_numeric_negative(pred, expected):
+    assert utils.fuzzy_cleanup_numeric(pred) == expected
