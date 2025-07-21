@@ -46,35 +46,26 @@ class VideoMMEModel(QType):
         self.task_type_freq_map: pd.Series | None = None
         self.duration_freq_map: pd.Series | None = None
 
-    def _extract_option_text(self, option_str: str) -> str:
-        """Extract the text content from an option string like 'A. Apples.'"""
-        # Remove the prefix (A. B. C. D.) and strip whitespace
-        if option_str and len(option_str) >= 3:
-            return option_str[3:].strip()
-        return option_str
-
     def _analyze_option(self, option_str: str) -> Dict:
         """Analyze a single option and return feature dictionary."""
-        option_text = self._extract_option_text(option_str)
-
         # Check if numeric
         is_numeric = False
         numeric_val = float("nan")
         try:
-            numeric_val = float(option_text)
+            numeric_val = float(option_str)
             is_numeric = True
         except (ValueError, TypeError):
             pass
 
         # String features
-        str_val = option_text
+        str_val = option_str
 
         # Check if all caps (only for alphabetic characters)
-        alphabetic_chars = [c for c in option_text if c.isalpha()]
+        alphabetic_chars = [c for c in option_str if c.isalpha()]
         is_all_caps = len(alphabetic_chars) > 0 and all(c.isupper() for c in alphabetic_chars)
 
         # Length
-        len_option_str = len(option_text)
+        len_option_str = len(option_str)
 
         return {
             "is_numeric": int(is_numeric),
@@ -124,16 +115,20 @@ class VideoMMEModel(QType):
         df["task_type_freq_score"] = df["task_type"].map(self.task_type_freq_map).fillna(0)
         df["duration_freq_score"] = df["duration"].map(self.duration_freq_map).fillna(0)
 
-        # Vectorized option-level features
-        # Assumes there are always 4 options per row
-        options_df = pd.DataFrame(df["options"].tolist(), columns=[f"opt_{i}" for i in range(N_OPT)], index=df.index)
+        for i in range(N_OPT):
+            df[f"opt_{i}"] = df["options"].apply(
+                lambda x: x[i].split(". ", 1)[-1].strip()
+                if len(x) > i and ". " in x[i]
+                else (x[i][3:].strip() if len(x[i]) > 3 else x[i])
+            )
 
+        # Vectorized option-level features
         for opt_idx in range(N_OPT):
             opt_col = f"opt_{opt_idx}"
             # Apply _analyze_option to each option string in the column
-            features = options_df[opt_col].apply(self._analyze_option).apply(pd.Series)
+            opt_feats = df[opt_col].apply(self._analyze_option).apply(pd.Series)
             for feat_name in OPTION_FEATURE_NAMES:
-                df[f"{opt_col}_{feat_name}"] = features[feat_name]
+                df[f"{opt_col}_{feat_name}"] = opt_feats[feat_name]
 
         return df
 
