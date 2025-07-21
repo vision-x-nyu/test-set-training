@@ -71,9 +71,7 @@ class VideoMMEModel(QType):
 
         # Check if all caps (only for alphabetic characters)
         alphabetic_chars = [c for c in option_text if c.isalpha()]
-        is_all_caps = len(alphabetic_chars) > 0 and all(
-            c.isupper() for c in alphabetic_chars
-        )
+        is_all_caps = len(alphabetic_chars) > 0 and all(c.isupper() for c in alphabetic_chars)
 
         # Length
         len_option_str = len(option_text)
@@ -95,9 +93,7 @@ class VideoMMEModel(QType):
         required_cols = ["duration", "domain", "sub_category", "task_type", "answer"]
         missing_cols = [col for col in required_cols if col not in qdf.columns]
         if missing_cols:
-            raise ValueError(
-                f"Required columns not found in Video-MME dataset: {missing_cols}"
-            )
+            raise ValueError(f"Required columns not found in Video-MME dataset: {missing_cols}")
 
         return qdf
 
@@ -107,9 +103,7 @@ class VideoMMEModel(QType):
         self.domain_freq_map = train_df["domain"].value_counts(normalize=True)
 
         # Calculate sub_category frequencies
-        self.sub_category_freq_map = train_df["sub_category"].value_counts(
-            normalize=True
-        )
+        self.sub_category_freq_map = train_df["sub_category"].value_counts(normalize=True)
 
         # Calculate task_type frequencies
         self.task_type_freq_map = train_df["task_type"].value_counts(normalize=True)
@@ -126,12 +120,8 @@ class VideoMMEModel(QType):
 
         # Calculate frequency scores
         df["domain_freq_score"] = df["domain"].map(self.domain_freq_map).fillna(0)
-        df["sub_category_freq_score"] = (
-            df["sub_category"].map(self.sub_category_freq_map).fillna(0)
-        )
-        df["task_type_freq_score"] = (
-            df["task_type"].map(self.task_type_freq_map).fillna(0)
-        )
+        df["sub_category_freq_score"] = df["sub_category"].map(self.sub_category_freq_map).fillna(0)
+        df["task_type_freq_score"] = df["task_type"].map(self.task_type_freq_map).fillna(0)
         df["duration_freq_score"] = df["duration"].map(self.duration_freq_map).fillna(0)
 
         # Add option-level features for each row
@@ -180,4 +170,23 @@ class VideoMMEModelSubset(VideoMMEModel):
         """Select and preprocess Video-MME questions."""
         qdf = df.copy()
         qdf = qdf[qdf[self.key] == self.val]
+        return super().select_rows(qdf)
+
+
+class VideoMMEModelSubsetCombo(VideoMMEModel):
+    def __init__(self, key_vals: dict):
+        """
+        key_vals: dict mapping column names to values to filter on.
+        Example: {"domain": "Sports Competition", "duration": "short"}
+        """
+        super().__init__()
+        self.key_vals = key_vals
+        # Create a name based on the key-value pairs, e.g. "domain=Sports Competition|duration=short"
+        self.name = "|".join(f"{k}={v}" for k, v in self.key_vals.items())
+
+    def select_rows(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Select and preprocess Video-MME questions based on multiple key-value pairs."""
+        qdf = df.copy()
+        for k, v in self.key_vals.items():
+            qdf = qdf[qdf[k] == v]
         return super().select_rows(qdf)
