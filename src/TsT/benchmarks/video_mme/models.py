@@ -167,3 +167,17 @@ class VideoMMEModel(QType):
                             df.loc[row_idx, f"opt_{opt_idx}_{feat_name}"] = 0
 
         return df
+
+
+class VideoMMEModelSubset(VideoMMEModel):
+    def __init__(self, key: str, val: str):
+        super().__init__()
+        self.key = key
+        self.val = val
+        self.name = f"{self.val}"
+
+    def select_rows(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Select and preprocess Video-MME questions."""
+        qdf = df.copy()
+        qdf = qdf[qdf[self.key] == self.val]
+        return super().select_rows(qdf)
