@@ -19,7 +19,7 @@ if __name__ == "__main__":
         "-b",
         type=str,
         required=True,
-        choices=["vsi", "cvb", "video_mme"],
+        choices=["vsi", "cvb", "video_mme", "mmmu"],
         help="Benchmark to run (vsi, cvb, or video_mme)",
     )
     parser.add_argument("--n_splits", "-k", type=int, default=5, help="Number of CV splits")

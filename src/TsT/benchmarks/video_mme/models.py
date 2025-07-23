@@ -304,9 +304,8 @@ class VideoMMEModelSubset(VideoMMEModel):
 
     def select_rows(self, df: pd.DataFrame) -> pd.DataFrame:
         """Select and preprocess Video-MME questions."""
-        qdf = df.copy()
-        qdf = qdf[qdf[self.key] == self.val]
-        return super().select_rows(qdf)
+        qdf = super().select_rows(df)
+        return qdf[qdf[self.key] == self.val]
 
 
 class VideoMMEModelSubsetCombo(VideoMMEModel):
