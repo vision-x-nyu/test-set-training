@@ -1,0 +1,4 @@
+[submodule "src/external/LLaMA-Factory"]
+	path = src/external/LLaMA-Factory
+	url = git@github.com:ellisbrown/TsT-LLaMA-Factory.git
+	branch = v0.9.3
