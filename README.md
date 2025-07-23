@@ -6,16 +6,24 @@ Code for the paper `Benchmark Designers Should ``Train on the Test Set'' to Expo
 
 ## Setup
 
+> [!IMPORTANT]
+> You must follow commands in **Step 3** below for `flash-attn` to install correctly.
+> See this reference for details https://docs.astral.sh/uv/concepts/projects/config/#build-isolation
+
 ```bash
 # 1. Clone the repository
 git clone git@github.com:vision-x-nyu/test-set-training.git --recurse-submodules
 cd test-set-training
 
-# 2. Install dependencies in a venv
-uv python install 3.9  # ensure using uv's cpython version over default distro
+# 2. Install python via uv
+uv python install 3.10  # ensure using uv's cpython version over default distro
+
+# 3. Install dependencies in a venv
+uv venv
+uv pip install setuptools torch
 uv sync
 
-# 3. Activate the environment
+# 4. Activate the environment
 source .venv/bin/activate
 ```
 
