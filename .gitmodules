@@ -2,3 +2,6 @@
 	path = src/external/LLaMA-Factory
 	url = git@github.com:ellisbrown/TsT-LLaMA-Factory.git
 	branch = v0.9.3
+[submodule "src/reference/dataenvgym"]
+	path = src/reference/dataenvgym
+	url = https://github.com/codezakh/dataenvgym.git
