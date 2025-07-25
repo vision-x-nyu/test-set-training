@@ -7,7 +7,7 @@ Code for the paper `Benchmark Designers Should ``Train on the Test Set'' to Expo
 ## Setup
 
 > [!IMPORTANT]
-> You must follow commands in **Step 3** below for `flash-attn` to install correctly.
+> We urge you to use the [bootstrap.sh](scripts/bootstrap.sh) script listed in  **Step 2** below for `flash-attn` + `torch` to install correctly.
 > See this reference for details https://docs.astral.sh/uv/concepts/projects/config/#build-isolation
 
 ```bash
@@ -15,13 +15,8 @@ Code for the paper `Benchmark Designers Should ``Train on the Test Set'' to Expo
 git clone git@github.com:vision-x-nyu/test-set-training.git --recurse-submodules
 cd test-set-training
 
-# 2. Install python via uv
-uv python install 3.10  # ensure using uv's cpython version over default distro
-
-# 3. Install dependencies in a venv
-uv venv
-uv pip install setuptools torch
-uv sync
+# 2. Run the "bootstrapping" setup script to initialize the env with torch
+bash scripts/bootstrap.sh
 
 # 4. Activate the environment
 source .venv/bin/activate
