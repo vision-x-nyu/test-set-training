@@ -46,6 +46,32 @@ if __name__ == "__main__":
         default=None,
         help="Column to use as target variable (defaults to benchmark-specific default)",
     )
+    parser.add_argument(
+        "--mode",
+        "-m",
+        type=str,
+        choices=["rf", "llm"],
+        default="rf",
+        help="Evaluation mode: 'rf' for Random Forest, 'llm' for LLM-based TsT",
+    )
+    parser.add_argument(
+        "--llm_model",
+        type=str,
+        default="google/gemma-2-2b-it",
+        help="LLM model to use for LLM mode (default: google/gemma-2-2b-it)",
+    )
+    parser.add_argument(
+        "--llm_batch_size",
+        type=int,
+        default=4,
+        help="Batch size for LLM inference (default: 4)",
+    )
+    parser.add_argument(
+        "--llm_epochs",
+        type=int,
+        default=1,
+        help="Number of training epochs for LLM fine-tuning (default: 1)",
+    )
     args = parser.parse_args()
 
     # Import the benchmark module
@@ -70,11 +96,29 @@ if __name__ == "__main__":
     if args.question_types is not None:
         question_types = [q.strip() for q in args.question_types.split(",")]
 
+    # Create LLM config if using LLM mode
+    llm_config = None
+    if args.mode == "llm":
+        llm_config = {
+            "model_name": args.llm_model,
+            "batch_size": args.llm_batch_size,
+            "learning_rate": 2e-4,
+            "num_epochs": args.llm_epochs,
+            "lora_rank": 8,
+            "lora_alpha": 16,
+            "max_seq_length": 512,
+        }
+
     print(f"Running {args.benchmark.upper()} benchmark...")
+    print(f"Mode: {args.mode.upper()}")
     print(f"Target column: {target_col}")
     print(f"Number of models: {len(models)}")
     if question_types:
         print(f"Question types: {question_types}")
+    if args.mode == "llm":
+        print(f"LLM model: {args.llm_model}")
+        print(f"LLM batch size: {args.llm_batch_size}")
+        print(f"LLM epochs: {args.llm_epochs}")
     print()
 
     run_evaluation(
@@ -86,4 +130,6 @@ if __name__ == "__main__":
         repeats=args.repeats,
         question_types=question_types,
         target_col=target_col,
+        mode=args.mode,
+        llm_config=llm_config,
     )
