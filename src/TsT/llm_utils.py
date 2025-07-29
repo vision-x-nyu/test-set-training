@@ -20,7 +20,8 @@ import os
 import subprocess
 import tempfile
 import yaml
-from pathlib import Path
+import sh
+import sys
 from typing import Dict, List, Optional
 from pydantic import BaseModel
 
@@ -29,6 +30,10 @@ from transformers import AutoTokenizer
 from ezcolorlog import root_logger as logger
 from vllm import LLM, SamplingParams
 from vllm.lora.request import LoRARequest
+
+
+llamafactory_cli = sh.Command("llamafactory-cli")
+lf_trainer = llamafactory_cli.bake("train")
 
 
 class AlpacaFormatExpectedKeysPerRecord(BaseModel):
@@ -124,6 +129,7 @@ def generate_llama_factory_config(
     lora_alpha: int = 16,
     max_seq_length: int = 512,
     seed: int = 42,
+    **kwargs,
 ) -> str:
     """
     Generate a LLaMA-Factory configuration file for LoRA fine-tuning.
@@ -163,6 +169,8 @@ def generate_llama_factory_config(
         "per_device_eval_batch_size": batch_size,
         # Other
         "seed": seed,
+        # other overrides
+        **kwargs,
     }
 
     # Write config to temporary file
@@ -178,18 +186,19 @@ def run_llama_factory_training(config_path: str, cuda_visible_devices: Optional[
     Run LLaMA-Factory training with the given configuration.
     """
     # Set up environment
-    env = os.environ.copy()
+    _env = os.environ.copy()
     if cuda_visible_devices is not None:
-        env["CUDA_VISIBLE_DEVICES"] = ",".join(map(str, cuda_visible_devices))
+        _env["CUDA_VISIBLE_DEVICES"] = ",".join(map(str, cuda_visible_devices))
 
     # Run training command
     # Use the llamafactory-cli command from our LLaMA-Factory installation
-    llamafactory_path = Path(__file__).parent.parent / "external" / "LLaMA-Factory" / "src" / "train.py"
+    # llamafactory_path = Path(__file__).parent.parent / "external" / "LLaMA-Factory" / "src" / "train.py"
 
-    cmd = ["python", str(llamafactory_path), config_path]
+    # cmd = ["python", str(llamafactory_path), config_path]
 
     try:
-        result = subprocess.run(cmd, env=env, check=True, capture_output=True, text=True)
+        # result = subprocess.run(cmd, env=env, check=True, capture_output=True, text=True)
+        result = lf_trainer(config_path, _out=sys.stdout, _err=sys.stderr, _env=_env)
         logger.info(f"Training completed successfully for {config_path}")
         return result
     except subprocess.CalledProcessError as e:

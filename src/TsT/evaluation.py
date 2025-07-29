@@ -521,6 +521,11 @@ def _train_llm_fold(train_data: List[Dict[str, str]], temp_path: Path, llm_confi
         overwrite=True,
     )
 
+    # TODO: make this configurable
+    # Add template to LLM config
+    template = "gemma"
+    assert llm_config["model_name"] == "google/gemma-2-2b-it", "Only Gemma is supported for now"
+
     # Generate training config
     config_path = generate_llama_factory_config(
         dataset_dir=str(dataset_dir),
@@ -534,6 +539,7 @@ def _train_llm_fold(train_data: List[Dict[str, str]], temp_path: Path, llm_confi
         lora_alpha=llm_config["lora_alpha"],
         max_seq_length=llm_config["max_seq_length"],
         seed=seed,
+        template=template,
     )
 
     # Run training
