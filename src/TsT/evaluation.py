@@ -8,6 +8,7 @@ from pathlib import Path
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.model_selection import StratifiedKFold, KFold
 from sklearn.preprocessing import LabelEncoder
+from ezcolorlog import root_logger as logger
 
 from .protocols import QType
 from .llm_utils import (
@@ -97,14 +98,16 @@ def evaluate_bias_model(
     all_scores = []
 
     if model.target_col_override is not None and model.target_col_override != target_col:
-        print(
+        logger.warning(
             f"[WARNING] {model.name} has an override target column '{model.target_col_override}'. Replacing '{target_col}'."
         )
         target_col = model.target_col_override
     if model.task == "reg" and target_col == "gt_idx":
         # no gt_idx for regression tasks
         target_col = "ground_truth"
-        print(f"[WARNING] {model.name} is numerical, with no gt_idx column. Overriding target column to 'ground_truth'")
+        logger.warning(
+            f"[WARNING] {model.name} is numerical, with no gt_idx column. Overriding target column to 'ground_truth'"
+        )
 
     # Show progress bar over repeats
     repeat_pbar = tqdm(range(repeats), desc=f"[{model.name.upper()}] Repeats", disable=repeats == 1)
@@ -156,13 +159,13 @@ def evaluate_bias_model(
     count = len(qdf)
 
     if verbose:
-        print(
+        logger.info(
             f"\n[{model.name.upper()}] Overall {model.metric.upper()}: {mean_acc:.2%} ± {std_acc:.2%} (n_splits={n_splits}, repeats={repeats})"
         )
         if repeats == 1:
-            print(f"[{model.name.upper()}] Fold {model.metric.upper()}s: {[f'{s:.2%}' for s in all_scores[0]]}")
+            logger.info(f"[{model.name.upper()}] Fold {model.metric.upper()}s: {[f'{s:.2%}' for s in all_scores[0]]}")
         else:
-            print(f"[{model.name.upper()}] Repeat {model.metric.upper()}s: {[f'{s:.2%}' for s in mean_scores]}")
+            logger.info(f"[{model.name.upper()}] Repeat {model.metric.upper()}s: {[f'{s:.2%}' for s in mean_scores]}")
 
     # full‑data importances ---------------------------------------------------
     model.fit_feature_maps(qdf)  # all rows
@@ -179,8 +182,8 @@ def evaluate_bias_model(
         .reset_index(drop=True)
     )
     if verbose:
-        print(f"\n[{model.name.upper()}] Feature importances:")
-        print(fi.head(15))
+        logger.info(f"\n[{model.name.upper()}] Feature importances:")
+        logger.info(fi.head(15))
     return mean_acc, std_acc, fi, count
 
 
@@ -223,7 +226,7 @@ def run_evaluation(
             raise ValueError(f"Unknown question types: {question_types}")
 
     for m in models:
-        print(f"\n================  {m.name.upper()}  ================")
+        logger.info(f"\n================  {m.name.upper()}  ================")
         try:
             if mode == "rf":
                 mean_score, std_score, fi, count = evaluate_bias_model(
@@ -263,7 +266,7 @@ def run_evaluation(
                 }
             )
         except Exception as e:
-            print(f"[WARNING] Evaluation failed for model {m.name}: {e}")
+            logger.warning(f"[WARNING] Evaluation failed for model {m.name}: {e}")
             all_results.append(
                 {
                     "Model": m.name,
@@ -295,14 +298,17 @@ def run_evaluation(
     summary["± Std"] = summary["± Std"].map("{:.1%}".format)
 
     # Print pretty table
-    print("\n" * 3 + "=" * 80)
-    print("EVALUATION SUMMARY")
-    print("=" * 80)
-    print(summary[["Model", "Format", "Metric", "Score", "± Std", "Count"]].to_string(index=False))
-    print("=" * 80)
-    print(f"OVERALL AVERAGE SCORE: {overall_avg:.1%} ± {overall_std:.1%}")
-    print(f"WEIGHTED AVERAGE SCORE: {weighted_avg:.1%} ± {weighted_std:.1%} (total examples: {total_count})")
-    print("=" * 80)
+    table_summary = "\n" * 3 + "=" * 80 + "\n"
+    table_summary += "EVALUATION SUMMARY\n"
+    table_summary += "=" * 80 + "\n"
+    table_summary += summary[["Model", "Format", "Metric", "Score", "± Std", "Count"]].to_string(index=False) + "\n"
+    table_summary += "=" * 80 + "\n"
+    table_summary += f"OVERALL AVERAGE SCORE: {overall_avg:.1%} ± {overall_std:.1%}\n"
+    table_summary += (
+        f"WEIGHTED AVERAGE SCORE: {weighted_avg:.1%} ± {weighted_std:.1%} (total examples: {total_count})\n"
+    )
+    table_summary += "=" * 80 + "\n"
+    logger.info(table_summary)
 
     return summary
 
@@ -340,13 +346,15 @@ def evaluate_bias_model_llm(
 
     # Check target column override
     if model.target_col_override is not None and model.target_col_override != target_col:
-        print(
+        logger.warning(
             f"[WARNING] {model.name} has an override target column '{model.target_col_override}'. Replacing '{target_col}'."
         )
         target_col = model.target_col_override
     if model.task == "reg" and target_col == "gt_idx":
         target_col = "ground_truth"
-        print(f"[WARNING] {model.name} is numerical, with no gt_idx column. Overriding target column to 'ground_truth'")
+        logger.warning(
+            f"[WARNING] {model.name} is numerical, with no gt_idx column. Overriding target column to 'ground_truth'"
+        )
 
     # Initialize LLM predictor
     llm_predictor = LLMPredictor(
@@ -426,14 +434,14 @@ def evaluate_bias_model_llm(
     improvement = mean_acc - zero_shot_acc
 
     if verbose:
-        print(f"\n[{model.name.upper()}] LLM TsT Results:")
-        print(f"Zero-shot baseline: {zero_shot_acc:.2%}")
-        print(f"TsT-LoRA accuracy: {mean_acc:.2%} ± {std_acc:.2%}")
-        print(f"Improvement: +{improvement:.2%}")
+        logger.info(f"\n[{model.name.upper()}] LLM TsT Results:")
+        logger.info(f"Zero-shot baseline: {zero_shot_acc:.2%}")
+        logger.info(f"TsT-LoRA accuracy: {mean_acc:.2%} ± {std_acc:.2%}")
+        logger.info(f"Improvement: +{improvement:.2%}")
         if repeats == 1:
-            print(f"[{model.name.upper()}] Fold accuracies: {[f'{s:.2%}' for s in all_scores[0]]}")
+            logger.info(f"[{model.name.upper()}] Fold accuracies: {[f'{s:.2%}' for s in all_scores[0]]}")
         else:
-            print(f"[{model.name.upper()}] Repeat accuracies: {[f'{s:.2%}' for s in mean_scores]}")
+            logger.info(f"[{model.name.upper()}] Repeat accuracies: {[f'{s:.2%}' for s in mean_scores]}")
 
     # Create mock feature importances for compatibility
     fi = pd.DataFrame(

@@ -1,5 +1,7 @@
 import argparse
 import importlib
+
+from ezcolorlog import root_logger as logger
 from TsT import run_evaluation
 
 
@@ -109,17 +111,17 @@ if __name__ == "__main__":
             "max_seq_length": 512,
         }
 
-    print(f"Running {args.benchmark.upper()} benchmark...")
-    print(f"Mode: {args.mode.upper()}")
-    print(f"Target column: {target_col}")
-    print(f"Number of models: {len(models)}")
+    logger.info(f"Running {args.benchmark.upper()} benchmark...")
+    logger.info(f"Mode: {args.mode.upper()}")
+    logger.info(f"Target column: {target_col}")
+    logger.info(f"Number of models: {len(models)}")
     if question_types:
-        print(f"Question types: {question_types}")
+        logger.info(f"Question types: {question_types}")
     if args.mode == "llm":
-        print(f"LLM model: {args.llm_model}")
-        print(f"LLM batch size: {args.llm_batch_size}")
-        print(f"LLM epochs: {args.llm_epochs}")
-    print()
+        logger.info(f"LLM model: {args.llm_model}")
+        logger.info(f"LLM batch size: {args.llm_batch_size}")
+        logger.info(f"LLM epochs: {args.llm_epochs}")
+    logger.info("")
 
     run_evaluation(
         models=models,

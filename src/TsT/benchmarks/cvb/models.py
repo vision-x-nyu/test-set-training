@@ -6,6 +6,7 @@ import pandas as pd
 from sklearn.preprocessing import minmax_scale
 
 from ...protocols import QType
+from ezcolorlog import root_logger as logger
 
 
 # =============================================================================
@@ -252,10 +253,12 @@ class Relation2DModel(QType):
         self.answer_distribution = train_df["gt_option"].value_counts()
         self.majority_answer = self.answer_distribution.idxmax()
 
-        # # Print diagnostic info
-        # print(f"\n[DIAGNOSTIC] Answer distribution in training:")
-        # print(self.answer_distribution.sort_index())
-        # print(f"Majority answer: {self.majority_answer} ({self.answer_distribution[self.majority_answer]/len(train_df)*100:.1f}%)")
+        # Print diagnostic info
+        logger.debug("\n[DIAGNOSTIC] Answer distribution in training:")
+        logger.debug(self.answer_distribution.sort_index())
+        logger.debug(
+            f"Majority answer: {self.majority_answer} ({self.answer_distribution[self.majority_answer] / len(train_df) * 100:.1f}%)"
+        )
 
     def add_features(self, df: pd.DataFrame) -> pd.DataFrame:
         """Add frequency-based and spatial features to the dataframe."""

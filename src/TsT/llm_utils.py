@@ -26,6 +26,7 @@ from pydantic import BaseModel
 
 import torch
 from transformers import AutoTokenizer
+from ezcolorlog import root_logger as logger
 from vllm import LLM, SamplingParams
 from vllm.lora.request import LoRARequest
 
@@ -189,12 +190,12 @@ def run_llama_factory_training(config_path: str, cuda_visible_devices: Optional[
 
     try:
         result = subprocess.run(cmd, env=env, check=True, capture_output=True, text=True)
-        print(f"Training completed successfully for {config_path}")
+        logger.info(f"Training completed successfully for {config_path}")
         return result
     except subprocess.CalledProcessError as e:
-        print(f"Training failed: {e}")
-        print(f"stdout: {e.stdout}")
-        print(f"stderr: {e.stderr}")
+        logger.error(f"Training failed: {e}")
+        logger.error(f"stdout: {e.stdout}")
+        logger.error(f"stderr: {e.stderr}")
         raise
     finally:
         # Clean up config file
@@ -238,7 +239,7 @@ class LLMPredictor:
 
     def _load_base_model(self):
         """Load the base model and tokenizer."""
-        print(f"Loading base model: {self.model_name}")
+        logger.info(f"Loading base model: {self.model_name}")
 
         self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
 
@@ -252,7 +253,7 @@ class LLMPredictor:
 
     def load_adapter(self, adapter_path: str):
         """Load a LoRA adapter for fine-tuned inference."""
-        print(f"Loading LoRA adapter: {adapter_path}")
+        logger.info(f"Loading LoRA adapter: {adapter_path}")
 
         # Update tokenizer to include any new tokens from fine-tuning
         self.tokenizer = AutoTokenizer.from_pretrained(adapter_path)
