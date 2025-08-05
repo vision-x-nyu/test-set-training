@@ -23,6 +23,7 @@ dependencies = [
     "tqdm>=4.67.1",
     "flash-attn>=2.8.2",
     "ezcolorlog>=1.0.3",
+    "sh>=2.2.2",
 ]
 
 [tool.uv]
