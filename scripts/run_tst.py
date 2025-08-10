@@ -108,7 +108,8 @@ if __name__ == "__main__":
             "num_epochs": args.llm_epochs,
             "lora_rank": 8,
             "lora_alpha": 16,
-            "max_seq_length": 512,
+            # "max_seq_length": 512,
+            "max_seq_length": 1024,
         }
 
     logger.info(f"Running {args.benchmark.upper()} benchmark...")

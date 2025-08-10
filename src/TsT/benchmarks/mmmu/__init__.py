@@ -1,12 +1,13 @@
 # from .models import MMMUMCModel
-from .models import MMMUModelSubset
+from .models import MMMUModelSubset, MMMUMCModel
 from .data_loader import load_data
 
 
+# TODO: make a get_models for LLMs?
 def get_models():
     """Get all MMMU benchmark models (just the global model for now)."""
     # # MC model
-    # return [MMMUMCModel()]
+    return [MMMUMCModel()]
 
     # subfield models
     df = load_data()

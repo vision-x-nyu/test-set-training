@@ -332,9 +332,9 @@ def evaluate_bias_model_llm(
     if llm_config is None:
         llm_config = {
             "model_name": "google/gemma-2-2b-it",
-            "batch_size": 4,
+            "batch_size": 32,
             "learning_rate": 2e-4,
-            "num_epochs": 1,
+            "num_epochs": 5,
             "lora_rank": 8,
             "lora_alpha": 16,
             "max_seq_length": 512,
@@ -462,6 +462,7 @@ def _convert_to_blind_qa_format(df: pd.DataFrame, target_col: str, format_type: 
     training_data = []
 
     for _, row in df.iterrows():
+        # TODO: make this configurable
         # Extract question text - this varies by benchmark
         if "question" in row:
             question = row["question"]
@@ -474,14 +475,22 @@ def _convert_to_blind_qa_format(df: pd.DataFrame, target_col: str, format_type: 
             text_cols = [col for col in row.index if isinstance(row[col], str) and len(str(row[col])) > 10]
             question = row[text_cols[0]] if text_cols else str(row.iloc[0])
 
+        post_prompt = "Answer with the option's letter from the given choices directly."
+
         # Format based on question type
         if format_type == "mc":  # Multiple choice
             # Include answer choices in the question
+            # TODO: make this configurable
             if "choices" in row:
                 choices_text = " ".join([f"({chr(65 + i)}) {choice}" for i, choice in enumerate(row["choices"])])
                 instruction = f"{question} Choices: {choices_text}"
+            elif "options" in row:
+                choices_text = "\n".join(row["options"])
+                instruction = f"{question} Options:\n{choices_text}"
             else:
                 instruction = question
+
+            instruction = f"{instruction}\n{post_prompt}"
 
             # Get the correct answer
             if target_col == "gt_idx":
@@ -567,6 +576,10 @@ def _evaluate_llm_fold(predictor: "LLMPredictor", test_data: List[Dict[str, str]
 
     # Generate predictions
     predictions = predictor.predict(instructions)
+
+    # print the first prediction and ground truth
+    logger.info(f"First prediction: {predictions[0]}")
+    logger.info(f"First ground truth: {ground_truth[0]}")
 
     # Calculate accuracy
     if format_type == "mc":

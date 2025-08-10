@@ -325,3 +325,132 @@ class VideoMMEModelSubsetCombo(VideoMMEModel):
         for k, v in self.key_vals.items():
             qdf = qdf[qdf[k] == v]
         return super().select_rows(qdf)
+
+
+# TODO: not sure if this is used?
+class LLMVideoMMEModel(QType):
+    name = "video_mme"
+    format = "mc"
+
+    feature_cols = FEATURE_COLS
+
+    def select_rows(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Select and preprocess Video-MME questions."""
+        # For now, treat all Video-MME questions as the same type
+        qdf = df.copy()
+
+        # Ensure we have the required columns
+        required_cols = ["duration", "domain", "sub_category", "task_type", "answer"]
+        missing_cols = [col for col in required_cols if col not in qdf.columns]
+        if missing_cols:
+            raise ValueError(f"Required columns not found in Video-MME dataset: {missing_cols}")
+
+        return qdf
+
+    def fit_feature_maps(self, train_df: pd.DataFrame) -> None:
+        """Collect frequency statistics from training data."""
+        # Calculate domain frequencies
+        self.domain_freq_map = train_df["domain"].value_counts(normalize=True)
+
+        # Calculate sub_category frequencies
+        self.sub_category_freq_map = train_df["sub_category"].value_counts(normalize=True)
+
+        # Calculate task_type frequencies
+        self.task_type_freq_map = train_df["task_type"].value_counts(normalize=True)
+
+        # Calculate duration frequencies
+        self.duration_freq_map = train_df["duration"].value_counts(normalize=True)
+
+    def st_similarity_features(self, question: str, options: list[str]):
+        """Compute sentence-transformers cosine similarity features for a question and its options."""
+        q_vec = get_st_embedding(question)
+        A = [get_st_embedding(opt) for opt in options]
+        A_mat = np.stack(A)
+        # Q→A similarity
+        sim_q = util.cos_sim(q_vec, A_mat).cpu().numpy().squeeze()  # (k,)
+        # A→A similarity
+        sim_A = util.cos_sim(A_mat, A_mat).cpu().numpy()  # (k,k)
+        np.fill_diagonal(sim_A, 0)
+        mean_sim_A = sim_A.mean(axis=1)
+        max_sim_A = sim_A.max(axis=1)
+
+        return sim_q, mean_sim_A, max_sim_A
+
+    def _postprocess_option_numeric_features(self, numeric_vals: np.ndarray):
+        """Return arrays for idx of max/min and range for option-level numeric values."""
+        valid_mask = ~np.isnan(numeric_vals)
+        idx_max = np.full(numeric_vals.shape[0], -1)
+        idx_min = np.full(numeric_vals.shape[0], -1)
+        num_range = np.full(numeric_vals.shape[0], np.nan)
+        for row_idx, (row_vals, row_mask) in enumerate(zip(numeric_vals, valid_mask)):
+            if row_mask.any():
+                valid_vals = row_vals[row_mask]
+                idxs = np.arange(numeric_vals.shape[1])[row_mask]
+                idx_max[row_idx] = idxs[valid_vals.argmax()]
+                idx_min[row_idx] = idxs[valid_vals.argmin()]
+                num_range[row_idx] = valid_vals.max() - valid_vals.min()
+        return {
+            "opt_numeric_idx_max": idx_max,
+            "opt_numeric_idx_min": idx_min,
+            "opt_numeric_range": num_range,
+        }
+
+    def add_features(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Add frequency-based and option-level features to the dataframe."""
+        if self.domain_freq_map is None:
+            raise RuntimeError("fit_feature_maps must be called first")
+
+        df = df.copy()
+
+        for i in range(N_OPT):
+            df[f"opt_{i}"] = df["options"].apply(
+                lambda x: x[i].split(". ", 1)[-1].strip()
+                if len(x) > i and ". " in x[i]
+                else (x[i][3:].strip() if len(x[i]) > 3 else x[i])
+            )
+
+        # Vectorized option-level features
+        for opt_idx in range(N_OPT):
+            opt_col = f"opt_{opt_idx}"
+            # Apply _analyze_option to each option string in the column
+            opt_feats = df[opt_col].apply(self._analyze_option).apply(pd.Series)
+            for feat_name in OPTION_FEATURE_NAMES:
+                df[f"{opt_col}_{feat_name}"] = opt_feats[feat_name]
+
+        # # Vectorized question-option-level features
+        # for opt_idx in range(N_OPT):
+        #     opt_col = f"opt_{opt_idx}"
+        #     qo_feats = df.apply(
+        #         lambda row: self._analyze_question_option_pair(row["question"], row[opt_col]), axis=1
+        #     ).apply(pd.Series)
+        #     for qo_name in QUESTION_OPTION_FEATURE_NAMES:
+        #         df[f"qo_{opt_idx}_{qo_name}"] = qo_feats[qo_name]
+
+        # # Sentence-transformers features (option-level, all options at once)
+        # def st_feats_row(row):
+        #     options = [row[f"opt_{i}"] for i in range(N_OPT)]
+        #     sim_q, mean_sim_A, max_sim_A = self.st_similarity_features(row["question"], options)
+        #     return {
+        #         **{f"opt_{i}_sim_q": float(sim_q[i]) for i in range(N_OPT)},
+        #         **{f"opt_{i}_mean_sim_A": float(mean_sim_A[i]) for i in range(N_OPT)},
+        #         **{f"opt_{i}_max_sim_A": float(max_sim_A[i]) for i in range(N_OPT)},
+        #     }
+
+        # st_feats = df.apply(st_feats_row, axis=1).apply(pd.Series)
+        # for col in st_feats.columns:
+        #     df[col] = st_feats[col]
+
+        # Post-process option-level numeric features
+        numeric_val_cols = [f"opt_{i}_numeric_val" for i in range(N_OPT)]
+        numeric_vals = df[numeric_val_cols].values
+        post_proc_feats = self._postprocess_option_numeric_features(numeric_vals)
+        for feat_name in POST_PROC_FEATURE_NAMES:
+            df[feat_name] = post_proc_feats[feat_name]
+
+        # Calculate frequency scores
+        df["domain_freq_score"] = df["domain"].map(self.domain_freq_map).fillna(0)
+        df["sub_category_freq_score"] = df["sub_category"].map(self.sub_category_freq_map).fillna(0)
+        df["task_type_freq_score"] = df["task_type"].map(self.task_type_freq_map).fillna(0)
+        df["duration_freq_score"] = df["duration"].map(self.duration_freq_map).fillna(0)
+
+        return df

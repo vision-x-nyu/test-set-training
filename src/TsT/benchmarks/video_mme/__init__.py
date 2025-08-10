@@ -122,10 +122,10 @@ def get_models():
     """Get all Video-MME benchmark models."""
 
     # ── global models ──────────────────────────────────────────────────────────
-    # return global_models  # random
+    return global_models  # random
 
     # ── sub-models ────────────────────────────────────────────────────────────
-    return task_models  # ok
+    # return task_models  # ok
     # return duration_models  # random
     # return domain_models  # random
     # return sub_cat_models  # random
