@@ -1,0 +1,769 @@
+\documentclass{article}
+
+% if you need to pass options to natbib, use, e.g.:
+%     \PassOptionsToPackage{numbers, compress}{natbib}
+% before loading neurips_2025
+
+% The authors should use one of these tracks.
+% Before accepting by the NeurIPS conference, select one of the options below.
+% 0. "default" for submission
+%  \usepackage[nonatbib]{neurips_2025}
+% the "default" option is equal to the "main" option, which is used for the Main Track with double-blind reviewing.
+% 1. "main" option is used for the Main Track
+%  \usepackage[main]{neurips_2025}
+% 2. "position" option is used for the Position Paper Track
+%  \usepackage[position]{neurips_2025}
+% 3. "dandb" option is used for the Datasets & Benchmarks Track
+ % \usepackage[dandb]{neurips_2025}
+% 4. "creativeai" option is used for the Creative AI Track
+%  \usepackage[creativeai]{neurips_2025}
+% 5. "sglblindworkshop" option is used for the Workshop with single-blind reviewing
+ % \usepackage[sglblindworkshop]{neurips_2025}
+% 6. "dblblindworkshop" option is used for the Workshop with double-blind reviewing
+%  \usepackage[dblblindworkshop]{neurips_2025}
+
+% \usepackage[position, nonatbib]{neurips_2025}
+\usepackage[preprint, nonatbib]{neurips_2025}
+
+% After being accepted, the authors should add "final" behind the track to compile a camera-ready version.
+% 1. Main Track
+ % \usepackage[main, final]{neurips_2025}
+% 2. Position Paper Track
+%  \usepackage[position, final]{neurips_2025}
+% 3. Datasets & Benchmarks Track
+ % \usepackage[dandb, final]{neurips_2025}
+% 4. Creative AI Track
+%  \usepackage[creativeai, final]{neurips_2025}
+% 5. Workshop with single-blind reviewing
+%  \usepackage[sglblindworkshop, final]{neurips_2025}
+% 6. Workshop with double-blind reviewing
+%  \usepackage[dblblindworkshop, final]{neurips_2025}
+% Note. For the workshop paper template, both \title{} and \workshoptitle{} are required, with the former indicating the paper title shown in the title and the latter indicating the workshop title displayed in the footnote.
+% For workshops (5., 6.), the authors should add the name of the workshop, "\workshoptitle" command is used to set the workshop title.
+% \workshoptitle{WORKSHOP TITLE}
+
+% "preprint" option is used for arXiv or other preprint submissions
+ % \usepackage[preprint]{neurips_2025}
+
+% to avoid loading the natbib package, add option nonatbib:
+%    \usepackage[nonatbib]{neurips_2025}
+
+\usepackage[utf8]{inputenc} % allow utf-8 input
+\usepackage[T1]{fontenc}    % use 8-bit T1 fonts
+\usepackage{hyperref}       % hyperlinks
+\usepackage{url}            % simple URL typesetting
+\usepackage{booktabs}       % professional-quality tables
+\usepackage{amsfonts}       % blackboard math symbols
+\usepackage{nicefrac}       % compact symbols for 1/2, etc.
+\usepackage{microtype}      % microtypography
+\usepackage[dvipsnames]{xcolor} % colors with dvipsnames option
+\usepackage{multirow}       % for multirow cells in tables
+
+% \usepackage{algorithm}                % float wrapper
+% \usepackage[noend]{algpseudocode}     % algorithmicx pseudocode style
+\usepackage[ruled,vlined,noend]{algorithm2e}
+\usepackage{amsmath}
+\usepackage{graphicx}  % images
+% \usepackage{enumitem}  % enumerate with leftmargin
+\usepackage[inline]{enumitem}
+\usepackage{subcaption}
+\usepackage{xspace}
+
+% to use SI units in tables
+\usepackage[retain-explicit-plus]{siunitx}
+
+% Cref abbreviations
+% \usepackage[capitalize]{cleveref}  % \cref
+% \usepackage[capitalise,nameinlink,compress,sort]{cleveref}
+\usepackage[capitalise,compress,sort]{cleveref}
+\crefname{section}{Sec.}{Secs.}
+\Crefname{section}{Section}{Sections}
+\crefname{table}{Tab.}{Tabs.}
+\Crefname{table}{Table}{Tables}
+% \crefname{appendix}{Appx.}{Appxs.}
+% \Crefname{appendix}{Appendix}{Appendices}
+% \crefname{algorithm}{Alg.}{Algs.}
+% \Crefname{algorithm}{Algorithm}{Algorithms}
+
+\usepackage[
+    style=numeric-comp,
+    doi=true,
+    url=false,
+    uniquename=false,
+    giveninits=true,
+    natbib,
+    backend=biber]{biblatex}
+\addbibresource{main.bib}
+
+% For TODO notes - can be enabled/disabled
+\newif\ifshowtodos
+\showtodostrue % Set to \showtodosfalse to hide TODO notes
+\ifshowtodos
+    \newcommand{\todotxt}[1]{#1}
+\else
+    \newcommand{\todotxt}[1]{}
+\fi
+
+
+\newcommand{\todo}[1]{\todotxt{\textcolor{red}{\textbf{TODO:} #1}}}
+\newcommand{\eb}[1]{\todotxt{\textcolor{Green}{[\textbf{EB:} #1]}}}
+\newcommand{\sx}[1]{\todotxt{\textcolor{Brown}{[\textbf{SX:} #1]}}}
+\newcommand{\jy}[1]{\todotxt{\textcolor{orange}{[\textbf{JY:} #1]}}}
+\definecolor{navyblue}{HTML}{0071BC}
+\newcommand{\sy}[1]{\todotxt{\textcolor{navyblue}{[\textbf{SY:} #1]}}}
+
+% method aliases
+\newcommand{\methodDiagnose}{\textsc{TsT-Diagnostic}\xspace}
+\newcommand{\methodDiagnoseLong}{{Test-set Training}\xspace}
+\newcommand{\methodDebias}{\textsc{IBP}\xspace}
+\newcommand{\methodDebiasLong}{{Iterative Bias Pruning}\xspace}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\title{Benchmark Designers Should ``Train on the Test Set'' to Expose Exploitable Non-Visual Shortcuts}
+% \title{Benchmark Designers Should ``Train on the Test Set'' to Expose Non-Visual Shortcuts}
+% \title{Benchmark Designers Should ``Train on the Test Set'' to Diagnose and Debias Non-Visual Shortcuts}
+% \title{Multimodal Benchmark Designers Should Prevent Non-Visual Biases by ``Training on the Test Set''}
+% \title{Multimodal Benchmark Designers Should ``Train'' on their Test Sets to Prevent Non-Visual Biases}
+% \title{Multimodal Benchmark Designers should ``Train'' on their Test Sets to Prevent Non-Visual Biases}
+% \title{Non-Visual Shortcuts Proliferate Multimodal Benchmarks}
+% \title{Non-Visual Shortcuts Exist in Multimodal Benchmarks (and how to uncover them by Training on the Test Set)
+% \title{Uncovering Non-Visual Shortcuts in Multimodal Benchmarks by Training on the Test Set}
+% \title{Uncovering Shortcuts in Multimodal Benchmarks by Training on the Test Set}
+% \title{Uncovering Exploitable Non-Visual Biases in Multimodal Benchmarks}
+% Training on the Test Set: A Diagnostic Framework for Uncovering and Mitigating Shortcut Learning in Multimodal Benchmarks
+% Vision or Shortcut? A General Framework for Diagnosing and Debiasing Multimodal Benchmarks
+% Training on the Test Set Reveals Exploitable Biases in Multimodal Benchmarks
+% Uncovering Shortcuts in Multimodal Benchmarks by Training on the Test Set
+
+
+\author{%
+    Ellis Brown \quad
+    Jihan Yang \quad
+    Shusheng Yang \quad
+    Rob Fergus \quad
+    Saining Xie \\[0.5em]
+    New York University
+}
+
+
+\begin{document}
+
+
+\maketitle
+
+\begin{abstract}
+    Robust benchmarks are crucial for accurately evaluating Multimodal Large Language Models (MLLMs).
+    However, we find that vision-language models can ace multimodal benchmarks \emph{without} strong visual understanding by exploiting biases, linguistic priors, and superficial patterns. This is particularly problematic for vision-centric benchmarks, which explicitly aim to require visual inputs to be solved. 
+    \textbf{Our position is simple but provocative: If your benchmark can be gamed, it will be---so you better game it first.}
+    Multimodal benchmark designers should proactively identify, quantify, and mitigate these non-visual biases by adopting systematic diagnostic and debiasing frameworks as an integral part of the benchmark development lifecycle.
+    Furthermore, we contend that truly effective diagnosis of these issues \emph{must} involve directly ``training on the test set''---i.e., probing the \emph{specific test set} being released for its intrinsic, exploitable patterns.
+    \vspace{0.125em}
+
+    To demonstrate an effective realization of this standard, we propose a systematic approach involving two core components:
+    First, we \emph{Diagnose} benchmark susceptibility using a \methodDiagnoseLong{} (\methodDiagnose{}) methodology, training simple statistical models on non-visual features of the test set questions to unveil baseline shortcut performance and derive a quantitative, sample-level bias score, $s(x)$.
+    Second, we \emph{Debias} benchmarks by systematically filtering samples identified as highly biased according to $s(x)$ using an \methodDebiasLong{} (\methodDebias{}) procedure.
+    Applying this methodology to prominent multimodal benchmarks such as VSI-Bench and CV-Bench, we uncover substantial non-visual biases.
+    % To demonstrate an effective realization of this standard, we introduce a general diagnostic framework:
+    % First, we \emph{Diagnose} benchmark susceptibility using a \methodDiagnoseLong{} (\methodDiagnose{}) methodology, training simple statistical models on non-visual features of the test set questions to unveil baseline shortcut performance and derive a quantitative, sample-level bias score, $s(x)$.
+    % Second, we \emph{Debias} benchmarks by systematically filtering samples identified as highly biased according to $s(x)$ using an \methodDebiasLong{} (\methodDebias{}) procedure.
+    % Applying our diagnostic framework to prominent multimodal benchmarks such as VSI-Bench and CV-Bench, we uncover substantial non-visual biases.
+    % Our experiments demonstrate that the \methodDiagnose{} effectively quantifies these shortcuts, and that \methodDebias{} debiasing markedly reduces non-visual solvability, significantly widening the performance gap between vision-enabled and ``blind'' models on our debiased version of VSI-Bench.
+    % We argue that the adoption of such rigorous auditing and mitigation practices focusing on \emph{test-set specific} vulnerabilities is essential for developing \emph{meaningful} multimodal evaluations and guiding future MLLM development.
+\end{abstract}
+
+
+\section{Introduction}\label{sec:introduction}
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=\linewidth]{figures/teaser2.pdf}
+    \caption{\textbf{The Evolving Landscape of Visual Understanding Benchmarks.} This diagram illustrates the progression of benchmarks used to evaluate visual understanding in AI systems. Along the x-axis, benchmarks transition from constrained, well-defined tasks like image classification to more open-ended, real-world scenarios, culminating in multimodal tasks enabled by LLMs. These newer benchmarks allow flexible, natural-language queries about images, greatly increasing expressivity and coverage. However, as shown on the y-axis, this comes at the cost of benchmarking reliability: as tasks become more language-driven, it becomes harder to disentangle true visual understanding from linguistic shortcuts or biases. While classification tasks offer precise, interpretable evaluation, tasks like VQA introduce ambiguity and are prone to overestimating visual capabilities due to compensatory reasoning by language models. From left to right, the benchmarks are MNIST~\cite{lecun1998gradient}, CIFAR-10~\cite{krizhevsky2009learning}, ImageNet~\cite{deng2009imagenet}, Kinetics~\cite{kay2017kinetics}, COCO~\cite{lin2014microsoft}, ScanNet~\cite{dai2017scannet}, LVIS~\cite{gupta2019lvis}, and VQA examples from~\cite{yang2023dawn}.\vspace{-1.5em}}
+    \label{fig:teaser}
+\end{figure}
+
+Despite significant advances in visual understanding, evaluating progress remains challenging. From MNIST to ImageNet, from COCO to VQA, benchmarks have served as the backbone of progress in computer vision. As tasks grew more complex and models more capable, benchmarks evolved accordingly---shifting from clean, domain-specific datasets to open-ended, real-world evaluations (\cref{fig:teaser}). Today, with multimodal LLMs, we can ask models anything about an image---but this expressive power comes at a hidden cost: \emph{we've lost control over what's being measured.}
+
+The uncomfortable truth is this: vision-language models can ace multimodal benchmarks without strong visual understanding. They exploit biases, linguistic priors, and superficial patterns. A model can answer a \emph{visual} question \emph{without looking} at the image. It can ground language without grounding perception, yet still get a high score. Although concerns about language bias were raised years ago in the VQA era (see discussion in \cref{sec:related_work_unbiased_multimodal_eval}), the rise of large language models as both knowledge engines and sources of shortcuts makes it necessary to reexamine our methodology and benchmark design with greater attention to nuance and complexity~\cite{tong2024cambrian}. 
+
+\eb{considering rephrasing this paragraph to be: central claim = benchmark designers should stress-test, explain why. THEN, furthermore, advocate for the train on the test set methodology specifically as it targets the *specific* test set and its idiosyncratic vulnerabilities}
+This observation motivates a central argument of this paper: benchmark designers should \textbf{``train on the test set''---not to overfit, but to \emph{stress-test} their benchmarks.} By deliberately probing benchmarks for exploitable non-visual cues, shortcut strategies, or language-only biases, designers can better diagnose where current benchmarks fail to isolate visual understanding. This approach transforms the design process from static dataset curation to an adversarial and iterative evaluation of benchmark robustness. One common sanity check has been the so-called ``blind'' test: disabling the vision input and measuring how well the model performs using only the text. If performance remains high, the benchmark is clearly compromised. But while this technique is useful as a diagnostic, it's fundamentally insufficient. Blind probing tells us that something is wrong---but not what, why, or how to fix it. It also offers no concrete path forward. Knowing that vision isn't necessary doesn't tell us what a better benchmark should look like---or how to systematically build one. If we want to move beyond fragile benchmarks, we need to stop passively checking for bias and start \emph{actively reverse-engineering it}. That means treating benchmarks not as static artifacts, but as adversarial objects---ones that must be tested, broken, and rebuilt through intentional probing.
+
+% To demonstrate an effective realization of these principles, we introduce a general two-stage framework: First, we \textbf{Diagnose} benchmark susceptibility using a \methodDiagnoseLong{} (\methodDiagnose{}) methodology, training simple statistical models on non-visual features of the test set questions to unveil baseline shortcut performance and derive a quantitative, sample-level bias score, $s(x)$.
+% Second, we \textbf{Debias} benchmarks by systematically filtering samples identified as highly biased according to $s(x)$ using an \methodDebiasLong{} (\methodDebias{}) procedure.
+To demonstrate an effective realization of these principles, we introduce systematic approaches for both diagnosing and mitigating non-visual shortcuts. We first \textbf{Diagnose} benchmark susceptibility using a \methodDiagnoseLong{} (\methodDiagnose{}) methodology---training simple statistical models on non-visual features of the test set questions to unveil baseline shortcut performance and derive a quantitative, sample-level bias score, $s(x)$.
+We then \textbf{Debias} benchmarks by systematically filtering samples identified as highly biased according to $s(x)$ using an \methodDebiasLong{} (\methodDebias{}) procedure.
+
+Applying our diagnostic framework to prominent \emph{vision-centric} multimodal benchmarks such as VSI-Bench~\cite{yang2024think} and CV-Bench~\cite{tong2024cambrian}, we uncover substantial non-visual biases, highlighting the prevalence of this issue (\cref{sec:diagnosing_shortcuts}).
+As a primary case study, we apply our framework to VSI-Bench, resulting in \textbf{VSI-Bench-Robust} (\cref{subsec:mitigation_vsi_robust}).
+Our experiments demonstrate that the \methodDiagnose{} effectively quantifies these shortcuts, and that \methodDebias{} debiasing markedly reduces non-visual solvability. Crucially, this leads to a significantly wider performance gap between vision-enabled and ``blind'' MLLM configurations on VSI-Bench-Robust compared to the original, confirming that our debiased benchmark more effectively necessitates visual reasoning.
+
+\eb{this last paragraph is repetetive with the previous. merge them.}
+Ultimately, this work advocates for a paradigm shift in how we approach benchmark integrity. To articulate our position---that rigorous, test-set focused auditing and systematic mitigation of non-visual shortcuts \emph{should} be a standard practice in multimodal benchmark development and usage---and to demonstrate a viable path towards this standard, this paper unfolds as follows:
+First, \cref{sec:problem_statement} delves deeper into the critical challenge posed by non-visual shortcuts, using VSI-Bench as a detailed case study to illustrate their manifestation, their origins in procedural generation, and, crucially, how readily MLLMs learn to exploit them, thereby compromising evaluation validity.
+Building upon this understanding of the problem, \cref{sec:diagnosing_shortcuts} introduces our diagnostic approach. We detail the \methodDiagnoseLong{} (\methodDiagnose{}) methodology (\cref{subsec:tst_methodology}) for quantifying a benchmark's susceptibility to non-visual biases by training models on test-set non-visual features via $k$-fold cross-validation. Empirical validation (\cref{subsec:diagnostics_validation}) reveals substantial non-visual biases in VSI-Bench (43.5\% accuracy) and CV-Bench (75.5\% accuracy), demonstrating the pervasiveness of this issue.
+Next, \cref{sec:mitigating_shortcuts} presents our mitigation approach. We introduce the \methodDebiasLong{} (\methodDebias{}) procedure (\cref{subsec:ibp_methodology}), which iteratively removes biased samples guided by their $s(x)$ scores while re-diagnosing the remaining data. As a comprehensive case study (\cref{subsec:mitigation_vsi_robust}), we apply our full approach to create VSI-Bench-Robust, which significantly reduces blind model performance and widens the vision-blind performance gap.
+Finally, we conclude by emphasizing the critical need for benchmark designers to adopt such rigorous, test-set-focused auditing and mitigation practices as standard procedure, calling on the community to embrace tools like \methodDiagnose{} to ensure our benchmarks foster genuine progress in multimodal understanding rather than sophisticated pattern matching.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{The Challenge: Non-Visual Shortcuts Undermine Multimodal Evaluation}
+\label{sec:problem_statement}
+% Defining Shortcut Learning in Multimodal Contexts
+In multimodal evaluation, non-visual shortcuts occur when questions
+can be solved \emph{without} utilizing the visual input.
+% remain solvable even after removing visual input.
+This can happen when MLLMs exploit world knowledge acquired during linguistic pretraining or leverage correlations within the question-answer pairs themselves. %, rendering visual input unnecessary. 
+% that are predictive of the target label but are not causally related to the underlying task the benchmark intends to measure~\cite{geirhos2020shortcut}.
+% In multimodal benchmarks, especially in those designed specifically to be \emph{vision-centric}, we operate under the core assumption that visual input is indispensable for arriving at the correct answer.
+% However, non-visual shortcuts manifest when models achieve high accuracy by relying predominantly on unimodal cues---often from the language modality (e.g., question text, answer options) or statistical patterns within the dataset's structure---rather than engaging in genuine multimodal reasoning. 
+The prevalence of such shortcuts leads to inflated performance metrics, misrepresents true visual understanding capabilities, and can misguide research by rewarding models adept at pattern matching instead of truly understanding.
+
+% General Categories of Non-Visual Shortcuts
+% These non-visual shortcuts can take various forms. Common types we observe include:
+% (1) \textbf{Answer Distribution Skews}, where certain answers are disproportionately frequent, allowing models to guess effectively (e.g., a specific number in a counting task or a common direction in navigation).
+% (2) \textbf{Question-Answer Correlations}, where patterns in the question text (e.g., specific keywords or question types) highly correlate with particular answers, irrespective of the visual content.
+% (3) \textbf{Choice Artifacts in Multiple-Choice Questions}, where the construction or selection of the correct answer or distractors might introduce statistical regularities (e.g., the correct option often being longer or exhibiting a particular lexical style).
+
+\vspace{-0.2cm}
+\subsection{Non-visual Shortcuts from Knowledge}\label{subsec:knowledge_shortcuts}
+\vspace{-0.2cm}
+% The first type of non-visual shortcut is knowledge-based non-visual shortcuts which arise from the extensive, compressed world knowledge embedded in LLMs~\cite{tong2024cambrian}.
+Knowledge-based non-visual shortcuts arise from the extensive, compressed world knowledge embedded in LLMs~\cite{tong2024cambrian}.
+For example, when asked about the size of a bed in a specific room without visual cues, humans do not provide uniformly distributed answers across all possible sizes. Instead, drawing on common knowledge, they tend to favor standard bed dimensions that reflect typical size categories. This type of shortcut also manifests in evaluation scenarios.
+%
+% the knowledge-based shortcut, which arises from the extensive world knowledge embedded in LLMs during pretraining. 
+% For example, when asked about the size of a bed in a specific room without visual cues, humans do not provide uniformly distributed answers across all possible sizes. Instead, drawing on common knowledge, they tend to favor standard bed dimensions that reflect typical size categories. This type of shortcut also manifests in evaluation scenarios.
+%
+As shown in \cref{tab:benchmark_lov}, compared to VSI-Bench~\cite{yang2024think} and CV-Bench~\cite{tong2024cambrian}, MMMU~\cite{yue2023mmmu} and VideoMME~\cite{fu2024video} exhibit a clear preference for LLM sizes over enhanced visual inputs, suggesting a strong bias toward linguistic knowledge rather than visual understanding. Notably, VSI-Bench shows a unique tendency where scaling up LLM size yields no improvement, demonstrating that this multimodal benchmark is robust against knowledge-based non-visual shortcuts.
+Since knowledge-based non-visual shortcuts have been well-documented in prior studies, this paper focuses primarily on exploring other forms of non-visual shortcuts beyond those rooted in general world knowledge.
+
+% \begin{table}[htbp]
+%     \centering
+%     \caption{
+%         Comparison of vision-disabled (Blind) and vision-enabled (Vision) settings across various multimodal benchmarks and LLM backbone model scales.
+%         $\Delta^{V-B}$ denotes the improvement from enabling vision, while $\Delta_B$ represents the gain from improving the LLM backbone (measured as the improvement over the 0.5B model in \emph{Blind} evaluation).
+%         We observe that MMMU benefits more significantly from scaling up LLM size than from incorporating visual inputs, indicating a strong bias toward language knowledge. In contrast, VSI-Bench shows greater gains from visual inputs, aligning with its goal of evaluating visual-spatial intelligence.}
+%     \label{tab:benchmark_lov}
+%     \resizebox{1.0\textwidth}{!}{
+%     % \begin{tabular}{l|ccc|cccc|cccc}
+%     \begin{tabular}{l|SSS|SSSS|SSSS}
+%         \toprule
+%         & \multicolumn{3}{c|}{LLaVA-OneVision 0.5B} & \multicolumn{4}{c|}{LLaVA-OneVision 7B} & \multicolumn{4}{c}{LLaVA-OneVision 72B} \\
+%          & {Blind} & {Vision} & {$\Delta^{{V-B}}$} & {Blind} & {Vision} & {$\Delta^{{V-B}}$} & {$\Delta_{B}^{{7B-0.5B}}$} & {Blind} & {Vision} & {$\Delta^{{V-B}}$} &  {$\Delta_{B}^{{72B-0.5B}}$} \\
+%         \midrule
+%         VSI-Bench~\cite{yang2024think}   & 28.6 & 28.0 & -0.6 & 25.3 & 32.4 & +7.1 & -3.3 & 28.9 & 40.2 & +11.3 & +0.3 \\
+%         VideoMME~\cite{fu2024mmecomprehensiveevaluationbenchmark}   & 31.8 & 44.0 & +12.2 & 40.9 & 58.2 & +17.3 & +9.1 & 48.1 & 66.2 & +18.1 & +16.3 \\
+%         MMMU (val)~\cite{yue2023mmmu}  & 31.0 & 31.4 & +0.4 & 42.9 & 48.8 & +5.9 & +11.9 & 49.0 & 56.8 & +7.8 & +18.0 \\
+%         CV-Bench~\cite{tong2024cambrian}    & 48.9 & 55.5 & +6.6 & 53.0 & 77.6 & +24.6 & +4.1 & 62.5 & 80.9 & +18.4 & +13.9 \\
+%         \bottomrule
+%     \end{tabular}}
+% \end{table}
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=1\linewidth]{figures/blind_ov.pdf}
+    \caption{
+        Comparison of \textit{vision-disabled} (``Blind'', red squares) and \textit{vision-enabled} (``Vision'', blue circles) settings across various multimodal benchmarks using LLaVA-OneVision models at different scales (0.5B, 7B, 72B).
+        The \textbf{vertical gap} between red and blue points represents the improvement from enabling vision, while the \textbf{horizontal progression} of red squares shows the gain from scaling up the LLM backbone (Blind improvement over 0.5B model).
+        MMMU shows minimal improvement from visual inputs but substantial gains from LLM scaling, indicating a strong bias toward language knowledge.
+        In contrast, VSI-Bench demonstrates larger improvements from enabling vision while showing negligible gains from LLM scaling in the blind setting, aligning with its goal of evaluating visual-spatial intelligence. CV-Bench and VideoMME show intermediate patterns, benefiting from visual inputs slightly more than LLM scaling.
+        \todo{color code text?}
+    }
+    \label{fig:benchmark_lov}
+\end{figure}
+
+% \paragraph{Illustrative Shortcuts in VSI-Bench.}
+% The VSI-Bench dataset~\cite{yang2024think}, which was designed to evaluate visual-spatial intelligence from video, provides salient examples of these issues in its original form. For instance, as we depict in \cref{fig:vsi_bias_examples}, the \texttt{object\_counting} task in  VSI-Bench exhibits a severe skew in its ground truth answer distribution, where the answer ``2'' appears as the correct count in over 50\% of samples. This imbalance allows a model to achieve a high baseline accuracy simply by defaulting to this common answer, without any reference to the visual input.
+% Similarly, in the \texttt{route\_planning} task, we find that certain answer choices (e.g., option 'A') are statistically more frequent, providing another avenue for non-visual exploitation.
+% Other VSI-Bench tasks demonstrate how models can predict answers from non-visual cues related to object properties; for example, in \texttt{object\_size\_estimation} and \texttt{object\_abs\_distance} tasks, the typical size or distance associated with certain object categories (e.g., ``chair'', ``table'') provide strong non-visual priors learnable from textual mentions alone.
+
+% Placeholder for Figure: VSI-Bench Bias Examples (Previously fig:placeholder_counting_dist_skew)
+\begin{figure}[t]
+    \centering
+    % \begin{subfigure}[b]{0.49\linewidth}
+    %     \centering
+    %     \includegraphics[width=\linewidth,height=0.5\linewidth]{figures/obj_ct_dist.pdf}
+    %     \caption{Object Counting Skew}
+    %     \label{fig:vsi_bias_examples_counting}
+    % \end{subfigure}
+    % \hfill
+    % \begin{subfigure}[b]{0.49\linewidth}
+    %     \centering
+    %     \includegraphics[width=\linewidth,height=0.8\linewidth]{example-image-b}
+    %     \caption{Route Planning Skew}
+    %     \label{fig:vsi_bias_examples_route}
+    % \end{subfigure}
+    \includegraphics[width=1\linewidth]{figures/bias_examples.pdf}
+    \caption{\textbf{Examples of non-visual statistical biases from multimodal benchmarks}~\cite{yang2024think,tong2024cambrian,li2024seed,fu2023mme}. (a) Highly skewed distribution of ground truth answers in object counting tasks, where certain counts appear disproportionately more often than others. (b) Imbalanced answer choice frequencies in spatial relation tasks (\textit{e.g.}, relative distance or depth), where specific categories have significantly higher probability of being correct answers. (c) Certain object categories have much higher probability of appearing in specific sequential positions in an appearance order task. (d) Object and room sizes fit log-normal distributions, creating predictable scale patterns that models can exploit. When ground truth distributions are this skewed, random guessing is no longer truly random.
+    }
+    \label{fig:vsi_bias_examples}
+\end{figure}
+
+\subsection{Non-visual Shortcuts from Statistical Correlations}\label{subsec:statistical_shortcuts}
+Another type of under-explored non-visual shortcut stems from underlying statistical correlations between questions and answers, and more fundamentally, from real-world statistical biases.
+
+\vspace{0.2cm}
+\noindent\textbf{Sources of Bias in Multimodal Benchmarks.} We investigate existing multimodal benchmarks~\cite{yang2024think,tong2024cambrian,li2024seed,fu2023mme} and exemplify four representative tasks in \cref{fig:vsi_bias_examples}. As shown in \cref{fig:vsi_bias_examples} (a), statistical bias in counting tasks is widespread across multimodal benchmarks, reflecting inherent biases in real-world statistics. The natural distribution when counting instances from images or videos within categories is skewed toward smaller values, forming a long-tail distribution. In this regard, without any intelligence, a model can achieve over 50\% accuracy by consistently predicting ``2'' for such counting tasks.
+% single image  The algorithms we use to define questions, identify answers by querying 3D ground truth, sample objects or regions of interest from videos, and generate distractors can inadvertently introduce statistical regularities. For example, if the sampling strategy for object counts within scenes favors small numbers, this will lead to skewed answer distributions.
+% (2) \textbf{Inherent Statistics of Source Video Data}: The underlying real-world video datasets (ScanNet, etc.) capture scenes that possess their own inherent statistical properties (e.g., typical room layouts, common object co-occurrences and sizes, frequent camera motion patterns). These properties can propagate into the generated benchmark questions and answers, creating learnable non-visual priors. While some of these priors reflect real-world tendencies and might seem innocuous, their presence in a finite benchmark becomes problematic if they allow models to bypass the intended visual reasoning task. Our goal in evaluating MLLMs is to measure their ability to answer questions \emph{based on the provided visual input}, not merely to leverage learned statistical priors about the world that are also encoded in the non-visual components of the benchmark.
+% (3) \textbf{Annotation Artifacts}: Any biases in the original scene annotations of the source datasets (if used by the QA generation) or subtle patterns introduced during the automated QA generation process itself can also contribute to shortcuts.
+% \todo{make some reference to "Benford Law" as mentioned by SY, or to Zipf's Law which is similar?}
+% brief, illustrative point about how "natural" statistical distributions can inadvertently create patterns that become exploitable shortcuts in a finite benchmark, distinct from the visual task itself. It needs to tie back to the core problem.
+In addition, such statistical bias also occurs in vision-centric object spatial relation tasks, which involve assessing the relative proximity of multiple objects within images or videos. As illustrated in \cref{fig:vsi_bias_examples} (b), a significant portion of categories consistently or almost always appear as the correct answer, irrespective of the other candidate options provided. Similarly, the appearance order and estimated size of objects or rooms, also demonstrate considerable statistical bias, as shown in \cref{fig:vsi_bias_examples} (c) and (d). These examples highlight how statistical biases hidden in benchmarks are even robust against knowledge-based, non-visual shortcuts (e.g., VSI-Bench~\cite{yang2024think}).
+
+While some inherent statistical patterns in data are natural (e.g., analogous to distributions described by Zipf's Law in language), their manifestation within a benchmark's non-visual components can become an unintended shortcut if they allow models to bypass visual reasoning.
+
+\vspace{0.2cm}
+\noindent\textbf{The Harm: MLLMs Readily Exploit Shortcuts.}
+The existence of these non-visual statistical regularities becomes particularly detrimental since modern MLLMs are highly adept at identifying and exploiting such patterns, even from relatively small amounts of data. To demonstrate this critical issue, we conduct an experiment using VSI-Bench~\cite{yang2024think}.
+We first curate a small, in-distribution training set, ``VSI-Train-10k'', comprising 10,000 samples generated using the same procedural logic as the VSI-Bench test set and sourced from the \emph{training} splits of datasets like ScanNet~\cite{dai2017scannet}. We then fine-tune a representative MLLM model (LLaVA-Video-7B~\cite{zhang2024video}) on this VSI-Train-10k set.
+% \todo{@jihan @shusheng add details in appendix of this and reference here}
+
+\cref{tab:vsi_bias_exploitation_results} presents the performance of LLaVA-Video-7B~\cite{zhang2024video} on the original VSI-Bench test set, both before and after fine-tuning on VSI-Train-10k. We report accuracy for the standard vision-enabled model and a ``blind'' configuration where the model only receives non-visual (textual) inputs.
+Before fine-tuning, the blind model performs above chance, indicating some inherent exploitability in VSI-Bench. However, after fine-tuning on VSI-Train-10k, we observe a substantial increase in the blind model's accuracy. This demonstrates that the MLLM effectively learns the statistical shortcuts present in the VSI-Train-10k data (which mirror those in the VSI-Bench test set) and successfully applies them to improve its performance on VSI-Bench without relying on visual information. While the vision-enabled model's performance also improves, the significant boost in the blind model's score shows how easily these non-visual biases can be learned and exploited, potentially masking true visual understanding capabilities.
+
+% These examples from VSI-Bench, and the ease with which MLLMs learn to exploit its statistical shortcuts (as shown in \cref{tab:vsi_bias_exploitation_results}), show a critical vulnerability in current evaluation methodologies. Relying on overall accuracy scores can be \emph{misleading} if a significant portion of that accuracy is attainable through non-visual means. This situation necessitates a systematic and quantitative approach to diagnose the extent of these non-visual shortcuts within any benchmark and, subsequently, to mitigate them. Our work aims to provide such a framework, enabling the development and use of more robust and reliable evaluation tools that genuinely measure multimodal reasoning.
+These results highlight a critical vulnerability in current multimodal benchmarks: overall accuracy scores can be misleading if non-visual shortcuts significantly contribute to performance. Thus, a systematic approach is needed to identify and mitigate these shortcuts. 
+% Our work provides such a framework, facilitating the creation of more reliable multimodal evaluation tools.
+
+% MLLM Performance on Original VSI-Bench (Before/After Training on VSI-Train-10k)
+\begin{table}[thb]
+    \centering
+    % \vspace{-0.4cm}
+    \caption{
+        Performance of an MLLM on the VSI-Bench, before and after fine-tuning on the VSI-Train-10k dataset. Fine-tuning on data with similar statistical biases significantly boosts the ``Blind'' model's performance, highlighting MLLM's ability to learn and exploit non-visual shortcuts.
+        % \todo{Key: show a significant jump in $M_{b2}$ compared to $M_{b1}$.}
+        \eb{cleanup this table}
+        }
+    \label{tab:vsi_bias_exploitation_results}
+    % \setlength{\tabcolsep}{0.3em}
+    % \renewcommand{\arraystretch}{0.2}
+    % \setlength{\parskip}{0pt}
+    \resizebox{\columnwidth}{!} {
+    \begin{tabular}{lccc}
+        \toprule
+        MLLM & Vis.\ Enabled Acc (\%) & Vis.\ Disabled Acc (\%) & Enabled$-$Disabled Gap ($\Delta$) \\
+        \midrule
+        LLaVA-Video 7B & 36.7 & 25.9 & 10.8 \\
+        + VSI-Train-10k FT & 57.1 (+20.4) & 44.7 (+18.8) & 12.4 (+1.6) \\
+        \bottomrule
+    \end{tabular}
+    % \begin{tabular}{l c c c}
+    %     \toprule
+    %     MLLM & Vis.\ Enabled Acc (\%) & Vis.\ Disabled Acc (\%) & Enabled$-$Disabled Gap ($\Delta$) \\
+    %     \midrule
+    %     LLaVA-Video 7B & 36.7 & 25.9 & 10.8 \\
+    %     + VSI-Train-10k FT & 57.1 & 44.7 & 12.4 \\
+    %     \midrule
+    %     $\Delta$ & \textit{(+20.4)} & \textit{(+18.8)} & \textit{(+1.6)} \\
+    %     \bottomrule
+    % \end{tabular}
+    }
+    % \vspace{-0.2cm}
+\end{table}
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%% Section 3: Diagnosing w/ TsT
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\vspace{-0.3cm}
+\section{Diagnosing Non-Visual Shortcuts via \methodDiagnoseLong{} (TsT)}
+\vspace{-0.2cm}
+\label{sec:diagnosing_shortcuts}
+
+%% introduce TsT and then immediately show usage on vsib + cvb + blink
+
+% 1 - Reiterate what we are aiming to do and why
+Benchmarks are pivotal in driving progress in multimodal research. Once a test set becomes an established yardstick, the community endeavors to optimize models, methodologies, and, particularly in recent times, training datasets to enhance performance on it~\cite{schaeffer2023pretraining}.
+% \todo{[citations]}.
+However, as demonstrated in \cref{sec:problem_statement}, these evaluations can be deceptive. 
+They may inadvertently harbor unintended non-visual shortcuts, which models can exploit to achieve high scores without engaging in the intended multimodal reasoning, thereby potentially misdirecting research efforts and creating an ``illusion of progress''.
+
+% 2 – So what can we do? Justify the \methodDiagnose{} approach.
+A critical question then arises: \emph{How can we reliably detect and quantify these non-visual shortcuts within a benchmark's test set itself?}
+One might consider using available in-distribution training data to diagnose general learnable biases, as we demonstrated with the VSI-Train-10K subset (\cref{tab:vsi_bias_exploitation_results}), or if none is available, randomly split the test set into train and validation splits.
+While informative, these approaches have a limitation: Any fixed train-test split, whether using external training data or a random split of the test set, will be contingent on the \emph{specific distribution of that training set}, potentially missing idiosyncrasies present in the test set's particular composition.
+
+To overcome these limitations and directly probe the \emph{intrinsic exploitability of a given test set}, we advocate for a more rigorous approach rooted in standard machine learning validation practices: $k$-fold cross-validation performed directly on non-visual features of the test set.
+In fact, we argue that our \methodDiagnoseLong{} (\methodDiagnose{}) diagnostic approach, which embodies this principle, is often \textit{preferable to relying on separate, held-out training data for bias diagnosis, even when such data is readily available}.
+The primary advantage of the \methodDiagnose{} methodology is its ability to uncover and quantify exploitable biases, statistical artifacts, and unintended regularities that are specific to the particular test set under examination.
+These might arise from the test set's unique sampling process, procedural generation logic, or even subtle human filtering, and may not be fully represented in any general training distribution.
+The objective of our ``train on the test set'' diagnostic is precisely to identify if \emph{this specific collection of questions and answers} contains inherent patterns that allow it to be ``solved'' without relying on the visual modality.
+
+In this section, we first detail the \methodDiagnose{} methodology (\cref{subsec:tst_methodology}). We then present empirical validation (\cref{subsec:diagnostics_validation}), applying \methodDiagnose{} to VSI-Bench and CV-Bench to demonstrate its effectiveness in revealing substantial non-visual shortcut susceptibility across these diverse benchmarks. This diagnostic stage provides not only a global measure of a benchmark's non-visual solvability but also crucial sample-level bias scores $s(x)$, which, as we will discuss in \cref{sec:mitigating_shortcuts}, form the foundation for targeted mitigation efforts.
+
+
+% ===============================================
+% === Section 3.1: The Diagnostic Methodology
+% ===============================================
+\subsection{The \methodDiagnoseLong{} (\methodDiagnose{}) Methodology}\label{subsec:tst_methodology}
+
+% Overview of the TsT-Diagnostic
+\begin{figure}[t]
+    \centering
+    % \includegraphics[width=\linewidth,height=0.4\linewidth]{figures/TsT_overview_placeholder.jpg}
+    \begin{subfigure}[b]{2.16in}
+        \centering
+        \includegraphics[width=\linewidth]{figures/TsT_overview_bias_space.pdf}
+        % \caption{Bias space.
+        %     % TsT-Diagnostic probes bias \emph{intrinsic to the test-set distribution} (blue cloud), independent of source- or train-set artifacts.
+        % }
+        % \label{fig:bias_space_concept}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{3.3in}
+        \centering
+        \includegraphics[width=\linewidth]{figures/TsT_overview.pdf}
+        % \caption{Diagnostic pipeline.
+            % % $k$-fold cross-validation on non-visual features yields a dataset-level \emph{blind accuracy} $\mu\!\pm\!\sigma$ and per-item bias scores $s(x)$.
+        % }
+        % \label{fig:tst_pipeline}
+    \end{subfigure}
+    \caption{
+        \textbf{Test-set-Training (TsT-Diagnostic).}
+            \textbf{(Left)} Conceptual \emph{bias-space} illustration: TsT-Diagnostic \emph{directly} targets bias intrinsic to the specific \emph{test-set} (pink region), rather than approximating the source distribution using an external train set.
+            \textbf{(Right)} Operational pipeline: the benchmark's test set is split into \(k\) folds; a \emph{blind} diagnostic model is trained on non-visual cues from \(k{-}1\) folds and evaluated on the held-out fold. Iterating this loop produces (i) a dataset-level \emph{blind accuracy} \(\mu\!\pm\!\sigma\) and (ii) per-sample \emph{bias scores} \(s(x)\) that measure each question's vulnerability to textual shortcuts.
+            % Conceptual overview of the \methodDiagnoseLong{} (\methodDiagnose{}) approach. The diagnostic procedure applies $k$-fold cross-validation directly on the test set's non-visual features. For each fold, a model is trained on $k-1$ parts and evaluated on the held-out part. This process yields an overall non-visual solvability score for the benchmark and a sample-level bias score $s(x)$ for each question, quantifying its susceptibility to being answered correctly without visual information.
+    }
+    \label{fig:tst_diagnostic_overview}
+    \vspace{-0.7cm}
+\end{figure}
+
+
+The foundational principle of our diagnostic stage is to quantitatively estimate the extent to which a benchmark's questions can be answered correctly using \emph{only} non-visual information intrinsically present in the test set questions themselves.
+% ~\todo{[citations]}.
+If a diagnostic model, trained exclusively on such non-visual features, achieves performance significantly above chance, it signals the presence of exploitable biases that allow models to circumvent genuine visual understanding.
+% ~\todo{[citations]}.
+This \methodDiagnose{} approach, illustrated in \cref{fig:tst_diagnostic_overview}, provides a direct measure of a benchmark's ``non-visual solvability''.
+% ~\todo{[citations]}.
+
+\noindent\textbf{Non-Visual Feature Extraction.}
+For each VQA sample $x$ within a benchmark's test set, we extract a comprehensive set of non-visual features using the question text, $f_{nv}(x)$. These features are designed to capture any information present at test time---excluding the primary visual input (image or video)---that might correlate with the correct answer. The specific features can vary depending on the benchmark's structure and question types but could include:
+\begin{itemize}[noitemsep,topsep=0pt,parsep=0pt,partopsep=0pt,leftmargin=1.5em]
+    \item \textbf{Textual information derived from the question} and, if applicable, answer choices (e.g., TF-IDF vectors, sentence embeddings, presence of specific keywords, question length, and \emph{etc.}).
+    \item \textbf{Characteristics of the answer space}, such as the format of the answer (e.g., numerical, multiple-choice), properties of multiple-choice options (e.g., length of options, frequency of answer tokens), or the expected answer type for open-ended questions.
+    \item \textbf{Metadata extracted from the question}, such as its designated type or category or object categories mentioned in the question.
+    % \item Statistical properties related to the ground truth answer itself within the context of the dataset, such as its overall frequency for a given question type, if such dataset-level statistics are suspected of creating biases. \todo{Ensure this doesn't create a trivial circularity in feature definition for $s(x)$ if $s(x)$ is then used to prune based on GT answer frequency directly. The idea is that the \methodDiagnose{} model learns if *other* non-visual features predict these frequent GTs.}
+    % \sy{I think this statistical properties can be directly learnt by the model?}
+\end{itemize}
+The goal is to provide the diagnostic model with all plausible non-visual cues that a sophisticated model \emph{could possibly} implicitly learn to exploit instead of relying on the visual input.
+
+\noindent\textbf{Diagnostic Model and \methodDiagnose{} Methodology.}
+As our diagnostic model, we employ a standard, robust machine learning classifier, Random Forest~\cite{breiman2001random}, chosen for its ability to handle heterogeneous features and capture non-linear relationships~\cite{parmar2018review}.
+% ~\todo{[citations]}.
+To train and evaluate this model rigorously on the test set itself, without traditional train/test contamination where the model is evaluated on data it was directly trained on, we employ $k$-fold cross-validation~\cite{stone1974cross,hastie2009elements}. The benchmark's test set is partitioned into $k$ disjoint folds (typically $k=5$ or $k=10$), ensuring stratification by answer or question type if necessary to maintain representative distributions in each fold. For each fold $i$, the diagnostic model is trained on the non-visual features $f_{nv}(x)$ of the samples in the remaining $k-1$ folds and is then used to predict answers for the samples in the held-out fold $i$. This process is repeated $k$ times, such that predictions are obtained for every sample in the test set from a model instance that was not exposed to that specific sample during its training phase.
+
+% \paragraph{Outputs and Interpretation.}
+\noindent\textbf{Outputs and Interpretation.}
+The \methodDiagnose{} methodology yields two primary outputs crucial for understanding a benchmark's non-visual exploitability and for guiding subsequent mitigation:
+\begin{enumerate}[noitemsep,topsep=0pt,parsep=0pt,partopsep=0pt,leftmargin=1.5em]
+    \item \textbf{Overall \methodDiagnose{} Accuracy:}
+        This is the aggregated accuracy (or other task-specific metric) of the diagnostic model across all $k$ folds. It provides a global, quantitative estimate of the benchmark's overall ``non-visual solvability''.
+        A high \methodDiagnose{} accuracy suggests that a significant portion of the benchmark can be ``solved'' by exploiting these dataset-internal non-visual patterns, potentially inflating reported MLLM performances.
+        We consider this \methodDiagnose{} accuracy to be a pragmatic lower bound on the true non-visual exploitability, as more complex diagnostic models or more exhaustive feature engineering could potentially achieve even higher scores by uncovering more subtle cues.
+    \item \textbf{Sample-Level Bias Score $s(x)$:}
+        For each individual sample $x$ in the test set, we derive a bias score $s(x)$.
+        This score typically corresponds to the confidence of the diagnostic model (e.g., the predicted probability from the random forest for the answer to ground truth) when the sample $x$ was part of the validation fold.
+        A high $s(x)$ indicates that the sample is highly likely to be answerable correctly using only the non-visual cues learned by the diagnostic model, marking it as a candidate for potential shortcut learning.
+        These $s(x)$ scores are the primary input for the debiasing procedures we discuss in \cref{sec:mitigating_shortcuts}.
+\end{enumerate}
+Optionally, analyzing feature importances from the trained \methodDiagnose{} models (e.g., Gini importance~\cite{nembrini2018revival} from a Random Forest) could provide valuable qualitative insights into \emph{which specific} non-visual cues are most predictive and are driving the non-visual solvability of the benchmark---informing future benchmark design by highlighting patterns to avoid.
+% \todo{Consider adding a small illustrative figure here or referring to one in Sec 2 (e.g., \cref{fig:vsi_bias_examples}), e.g., example features and their hypothetical importance scores for a VSI-Bench task.}
+
+% ===============================================
+% === Section 3.2: Empirical Validation
+% ===============================================
+\subsection{Empirical Validation: \methodDiagnose{} Reveals Widespread Shortcut Susceptibility}\label{subsec:diagnostics_validation}
+
+To demonstrate the widespread nature of non-visual shortcut susceptibility and the utility of our diagnostic approach, we employ our \methodDiagnose{} on VSI-Bench~\cite{yang2024think} and CV-Bench~\cite{tong2024cambrian}. For each benchmark, we extract relevant non-visual features from question text and associated metadata, and train Random Forest classifiers using $k$-fold cross-validation to predict answers without access to the visual input, as detailed in \cref{subsec:tst_methodology}.
+% Specifics on the feature sets tailored for each benchmark are provided in \cref{app:exp_details}.
+% \todo{Ensure this Appendix section is created and covers VSI-Bench, CV-Bench, and BLINK feature sets. Jihan and Shusheng to contribute CV-Bench/BLINK details.}
+
+Our analysis, summarized in \cref{tab:diagnostic_summary_all_benchmarks}, reveals significant non-visual solvability on both benchmarks.
+For VSI-Bench, a video-QA benchmark focused on visual-spatial reasoning, the \methodDiagnose{} achieves an accuracy of 43.5\%.
+Similarly, for CV-Bench, an image-based benchmark evaluating a wide spectrum of visual understanding, our \methodDiagnose{} analysis yields an accuracy of 75.5\%.
+This indicates that a substantial fraction of its questions can be answered correctly by exploiting patterns in non-visual data alone.
+% Qualitative inspection of feature importances suggests that \todo{mention 1-2 key types of non-visual cues found to be predictive for CV-Bench, e.g., question structure, keyword presence}.
+% \todo{actual \methodDiagnose{} accuracy for CV-Bench. @Jihan to provide qualitative insights.}
+% We observe a comparable trend for BLINK, an image-based benchmark centered on fine-grained visual knowledge, where the \methodDiagnose{} reaches \todo{B.B\%}. For BLINK, exploitable non-visual cues appear to stem from [mention 1-2 key types of non-visual cues for BLINK]. \todo{Populate B.B\% with actual \methodDiagnose{} accuracy for BLINK. @Shusheng to provide qualitative insights.}
+% Illustrative diagnostic statistics for CV-Bench and BLINK, such as [mention what Figure \ref{fig:cvbench_blink_stats} will show, e.g., specific biased distributions or feature importances], are presented in \cref{fig:cvbench_blink_stats}.
+
+% Placeholder for Table: Master Diagnostic Summary
+\begin{table}[h]
+    \centering
+    \caption{Overall \methodDiagnose{} accuracy (non-visual solvability) for VSI-Bench and CV-Bench. Chance/Majority baselines are provided for context. Higher \methodDiagnose{} accuracy indicates greater susceptibility to non-visual shortcuts.
+    % \todo{add majority \emph{value} acc}
+    }
+    \label{tab:diagnostic_summary_all_benchmarks}
+    \begin{tabular}{lccc}
+        \toprule
+        Benchmark & Chance Acc. & Majority Acc. & \methodDiagnose{} Acc. (Ours) \\
+        \midrule
+        VSI-Bench    & - & $34.0\%$ & $43.5\%$ \\
+        CV-Bench     & $33.3\%$ & $43.1\%$ & $75.5\%$ \\
+        % BLINK        & 37.7\% & 37.3\% & $B.B\%$ \\
+        \bottomrule
+    \end{tabular}
+    \vspace{-0.5cm}
+\end{table}
+% \todo{Populate Table \ref{tab:diagnostic_summary_all_benchmarks} with actual numbers. This table is critical for showing the widespread issue.}
+
+These consistent findings across benchmarks of different modalities (video and image) and tasks demonstrate that non-visual shortcut vulnerability is a pervasive challenge. This highlights the critical need for benchmark designers and the broader community to adopt systematic diagnostic tools like the \methodDiagnose{} analysis to proactively identify and understand these potential issues. The sample-level bias scores $s(x)$ generated by this diagnostic stage further provide a concrete foundation for targeted mitigation efforts, which we explore in \cref{sec:mitigating_shortcuts}.
+
+
+% ===============================================
+% === Section 4: Mitigating Non-Visual Shortcuts
+% ===============================================
+\section{Mitigating Non-Visual Shortcuts Guided by \methodDiagnose{} Insights}\label{sec:mitigating_shortcuts}
+
+% \sy{I think the following paragraph can be removed.}
+% The preceding section demonstrated the efficacy of our \methodDiagnoseLong{} (\methodDiagnose{}) approach in uncovering significant non-visual shortcut vulnerabilities across diverse multimodal benchmarks (\cref{subsec:diagnostics_validation}). Such diagnoses, culminating in sample-level bias scores $s(x)$, are a critical first step. However, to truly enhance the integrity of multimodal evaluations and ensure that benchmarks robustly assess genuine visual reasoning, identifying these biases must be complemented by systematic mitigation strategies. Simply knowing that a benchmark is susceptible to shortcuts is insufficient if we are to guide MLLM development meaningfully; we must also endeavor to create more resilient evaluation instruments.
+
+% This section addresses the challenge of mitigation.
+Given the effective approach in \cref{subsec:diagnostics_validation} to measure the bias score of each data sample, we then study how to efficiently mitigate the bias of the benchmark and build an unbiased evaluation.
+% We posit that the quantitative, sample-specific insights provided by the $s(x)$ scores from our \methodDiagnose{} offer a powerful, data-driven foundation for targeted debiasing. By pinpointing which particular samples are most likely solvable via non-visual cues, we can move beyond generic debiasing heuristics and towards precise, evidence-based benchmark refinement.
+To this end, we propose a general procedure for systematically pruning biased samples, termed \methodDebiasLong{} (\methodDebias{}). We first detail this iterative methodology (\cref{subsec:ibp_methodology}), which leverages the $s(x)$ scores to guide the filtering process. Subsequently, we present an in-depth case study (\cref{subsec:mitigation_vsi_robust}), applying \methodDebias{} to VSI-Bench to create VSI-Bench-Robust and demonstrating the tangible improvements in benchmark quality and its ability to compel visual reasoning.
+
+% ===============================================
+% === Section 4.1: The Debiasing Procedure
+% ===============================================
+\subsection{The \methodDebiasLong{} (\methodDebias{}) Procedure}\label{subsec:ibp_methodology}
+The goal of the \methodDebiasLong{} (\methodDebias{}) procedure is to systematically prune or filter a benchmark in a data-driven manner, guided by the sample-level bias scores $s(x)$ derived from our \methodDiagnose{} (\cref{subsec:tst_methodology}). This process aims to yield a debiased version of the benchmark that more effectively compels genuine visual reasoning from evaluated models. We detail this unified procedure in \cref{alg:ibp}.
+
+\begin{algorithm}[h]
+    \caption{\methodDebiasLong{} (\methodDebias{})}
+    \label{alg:ibp}
+    \KwIn{Dataset $\mathcal{D}$; bias-diagnosis function $\mathrm{ComputeSampleBiasScores}(\cdot)$; removal budget $B$;
+        batch size $b$; early-stopping threshold $\tau$}
+    \KwOut{Debiased dataset $\mathcal{D}'$}
+    
+    $R \leftarrow 0$ \tcp*[r]{samples removed so far}
+    \While{$R < B$}{
+        $\{\,s_i\}_{x_i \in \mathcal{D}} \leftarrow \mathrm{ComputeSampleBiasScores}(\mathcal{D})$\ \tcp*[r]{\ Re-diagnose}
+        \If{$ \max_{i} s_i \le \tau$}{
+            \textbf{break} \tcp*[r]{Early stop:\ all biases below threshold}
+        }
+        $k \leftarrow \min\bigl(b,\; B - R\bigr)$\;
+        $\mathcal{I} \leftarrow \mathrm{SelectBatch}\bigl(\{\,s_i\}_{x_i \in \mathcal{D}}, k, \mathcal{D}\bigr)$\ \tcp*[r]{Select batch for removal}
+        %\tcp{\footnotesize Optional: skip any $x_j$ whose removal would empty its answer group}
+        $\mathcal{D} \leftarrow \mathcal{D} \setminus \mathcal{I}$\;
+        $R \leftarrow R + |\mathcal{I}|$\;
+    }
+    \Return{$\mathcal{D}' \leftarrow \mathcal{D}$}
+\end{algorithm}
+
+The core idea behind \methodDebias{} is to iteratively remove small batches of the currently most biased samples (as indicated by their $s(x)$ scores) and then \emph{re-diagnose} the remaining set by re-computing all $s(x)$ scores. % \todo{Clarify that ``re-diagnose'' == re-training the RF model for \methodDiagnose{}.}
+This iterative re-computation is crucial because the removal of some highly biased samples can alter the statistical landscape of the remaining data. Consequently, the relative exploitability of other samples, or even the predictive power of different non-visual features, might change. This adaptive approach helps to ensure that the debiasing process doesn't inadvertently ``shift the bias under the rug''---for example, by addressing one dominant shortcut only to leave secondary ones untouched or even amplified.
+% \todo{Add reference to \cref{subsec:ablation_iterative_vs_single} or a similar section  where the benefit of iterative vs. single-pass pruning is quantified/discussed, perhaps using the object counting '2's then '3's example?}
+
+% \todo{(Appendix?) Add a brief paragraph discussing the typical runtime characteristics of the \methodDebias{} process on a benchmark like VSI-Bench, noting the \methodDiagnose{} re-fit time for the diagnostic model (e.g., Random Forest on CPU) and overall \methodDebias{} completion time.}
+
+% ===============================================
+% === Section 4.2: Case Study: Creating VSI-Bench-Robust
+% ===============================================
+\subsection{Case Study: Creating VSI-Bench-Robust with \methodDebias{}}\label{subsec:mitigation_vsi_robust}
+% Having detailed our \methodDiagnose{} approach for identifying non-visual shortcuts (\cref{sec:diagnosing_shortcuts}) and the \methodDebiasLong{} (\methodDebias{}) procedure for mitigating them (\cref{subsec:ibp_methodology}), we now present an in-depth case study.
+We apply the full \methodDebias{} algorithm to the original VSI-Bench test set~\cite{yang2024think}, using the sample-level bias scores $s(x)$ derived from its \methodDiagnose{} analysis (presented in \cref{subsec:diagnostics_validation}), to create \textbf{VSI-Bench-Robust}. This serves to demonstrate how identified biases can be systematically mitigated to produce a more reliable benchmark.
+
+% The specifics of the \methodDebias{} hyperparameters used for VSI-Bench---including the total removal budget $B$, the batch removal size $b$, the early-stopping threshold $\tau$, and the tailored selection strategies $\mathcal{S}$ (from \cref{subsec:ibp_methodology}) employed for different VSI-Bench question types---are detailed in \cref{app:vsi_debiasing_details}.
+% \todo{Ensure Appendix section \ref{app:vsi_debiasing_details} is comprehensive, covering IBP parameters and the mapping of VSI-Bench question types to specific $\mathcal{S}$ strategies (e.g., top-k, group-aware).}
+
+The application of \methodDebias{} to VSI-Bench yields two primary categories of improvements. First, we observe notable shifts in the ground truth answer distributions for several representative question types, which makes the questions in VSI-Bench-Robust less predictable from non-visual statistical priors alone.
+Second, and more critically for the fair evaluation of genuine multimodal reasoning, VSI-Bench-Robust elicits markedly different behavior from MLLMs compared to the original benchmark. \cref{tab:vsi_robust_results} presents the performance of the LLaVA-Video-7B MLLM (both before and after fine-tuning on VSI-Train-10k, as evaluated in \ref{tab:vsi_bias_exploitation_results}) on both the original VSI-Bench and the newly created VSI-Bench-Robust.
+The results clearly show a substantial reduction in the performance of the ``blind'' (non-visual input only) model configuration on VSI-Bench-Robust compared to its performance on the original VSI-Bench. For instance, the blind model fine-tuned on VSI-Train-10k achieves 44.7\% on the original VSI-Bench but drops to 32.0\% on VSI-Bench-Robust.
+Consequently, the ``Vision-Blind Gap'' ($\Delta$)---the performance difference between the vision-enabled and blind configurations---is significantly wider on VSI-Bench-Robust, particularly after fine-tuning (e.g., increasing from 12.4\% to 16.6\%). This outcome strongly indicates that VSI-Bench-Robust is more reliant on visual input and is less susceptible to the non-visual shortcuts that the MLLM had readily learned. The detailed analysis in the caption of \cref{tab:vsi_robust_results} further explores how in-distribution training impacts vision-enabled versus blind scores differently across the original and robust benchmarks.
+
+% As illustrated in \cref{fig:vsi_dist_comparison}, the procedure typically reduces severe skews towards previously common answers and increases overall answer entropy. This makes the questions in VSI-Bench-Robust less predictable from non-visual statistical priors alone.
+% \todo{Consider if \cref{fig:vsi_dist_comparison} should be moved to \cref{app:vsi_debiasing_details} to save space in the main paper, focusing the main text on the MLLM evaluation impact. A brief textual summary of distributional changes might suffice here.}
+
+% Placeholder for Figure: VSI-Bench Distribution Comparison
+% \begin{figure}[h]
+%     \centering
+%     % \includegraphics[width=\linewidth]{path/to/your/vsi_distribution_comparison.png}
+%     \includegraphics[width=\linewidth,height=0.3\linewidth]{example-image-b} % Copied from your draft
+%     \caption{
+%         Comparison of ground truth answer distributions for select VSI-Bench question types in the original benchmark (left) and in VSI-Bench-Robust (right) after applying \methodDebiasLong{} (\methodDebias{}). Debiasing leads to more uniform and less predictable answer distributions for several categories.
+%         \todo{Finalize \cref{fig:vsi_dist_comparison}. Ensure it shows compelling examples of distribution changes, e.g., for \texttt{object\_counting} or \texttt{route\_planning}.}
+%         }
+%     \label{fig:vsi_dist_comparison}
+% \end{figure}
+
+
+% Placeholder for Table: MLLM Performance on Original vs. Robust VSI-Bench
+\begin{table}[h]
+    \centering
+    %\vspace{-0.5cm}
+    \caption{
+        Accuracy (\%) of LLaVA-Video-7B on the original VSI-Bench and VSI-Bench-Robust. Vision-disabled (Blind) scores are in parentheses; $\Delta$ is Vision $-$ Blind. FT indicates fine-tuning. % on VSI-Train-10k.
+        % \todo{verify robust chance?}
+        % \eb{The key insight is the widening of the enabled-disabled gap ($\Delta$) on VSI-Bench-Robust, especially after FT. FT on original VSI-Bench improves Vision and Blind scores by similar amounts (+20.4 vs +18.8), minimally changing $\Delta$. However, on VSI-Bench-Robust, FT improves Vision scores much more than Blind scores (+17.4 vs +11.7), significantly increasing $\Delta$ by +5.6 points. This suggests VSI-Bench-Robust better isolates visual reasoning improvements from general statistical learning.}
+        % \eb{I think the most interesting point from this is that the enabled-disabled gap \textbf{widens} after the robustification. i.e., training on in-dist data still improves the blind score onf VSIB-R, but it only improves it to around chance. and furthermore the in-dist training improves BLIND robust scores \emph{relatively} less than it does for the normal scores---or put differently, in dist training imrpoves vis. and blind both by almost the same amount (+20.4 vs +18.8) for original benchmark but the in dist training improves vis. scores MUCH more than the blind scores (+17.4 vs +11.7) for the robust benchmark.}
+    }
+    \label{tab:vsi_robust_results}
+    \begin{tabular}{lcccc}
+    \toprule
+    & \multicolumn{2}{c}{\textbf{VSI-Bench (Original)}} &
+    \multicolumn{2}{c}{\textbf{VSI-Bench-Robust}}\\
+    \cmidrule(lr){2-3}\cmidrule(lr){4-5}
+    \textbf{Model Configuration} & Vis.\ (Blind) & $\Delta$ & Vis.\ (Blind) & $\Delta$ \\ % Clarified Model header
+    \midrule
+    LLaVA-Video 7B (Base)  & 36.7 \;(\,25.9\;) & \textit{10.8} & % Added (Base)
+                        31.3 \;(\,20.3\;) & \textit{11.0} \\
+    + VSI-Train-10k FT     & 57.1 \;(\,44.7\;) & \textit{12.4} &
+                        48.7 \;(\,32.0\;) & \textit{16.6} \\
+    \midrule
+    $\Delta$ due to FT     & 20.4 \;(\,18.8\;) & \textit{1.6} & % Changed from "after training"
+                        17.4 \;(\,11.7\;) & \textit{5.6} \\
+    \midrule
+    Chance (Frequency)     & \multicolumn{2}{c}{34.0} &
+                        \multicolumn{2}{c}{34.0} \\
+    \bottomrule
+    \end{tabular}
+    % \vspace{-0.8em}
+\end{table}
+    
+This case study on VSI-Bench demonstrates that our proposed framework, combining \methodDiagnose{} diagnosis with \methodDebias{}-based mitigation, provides an effective pathway to creating more robust benchmark versions that better isolate and assess genuine multimodal understanding. While we focus the full \methodDebias{} application on VSI-Bench in this paper due to the intensive nature of tailoring and evaluating specific debiasing strategies for each question type, the diagnostic insights from \cref{subsec:diagnostics_validation} strongly suggest that applying similar mitigation approaches, guided by \methodDiagnose{} scores, would be beneficial for other benchmarks exhibiting non-visual shortcut vulnerabilities.
+
+
+% \noindent\textbf{Conclusion}\quad % \label{sec:discussion}% 
+% In this work, we address the critical challenge of non-visual shortcuts in multimodal benchmarks, where models can achieve high scores by exploiting linguistic priors and statistical biases rather than engaging in genuine visual understanding. This phenomenon risks creating an ``illusion of progress'' and misdirecting research efforts. To counter this, we introduced a proactive diagnostic framework: first, the \methodDiagnose{} methodology, which `trains on the test set' via $k$-fold cross-validation to directly probe a benchmark's intrinsic vulnerabilities and derive sample-level bias scores, $s(x)$; and second, the Iterative Bias Pruning (IBP) procedure, which uses these scores to systematically filter out biased samples. Our application of \methodDiagnose{} revealed substantial non-visual biases in benchmarks like VSI-Bench and CV-Bench. Furthermore, by applying IBP to create VSI-Bench-Robust, we demonstrated a marked reduction in non-visual solvability and a significant increase in the performance gap between vision-enabled and `blind' models, confirming its enhanced ability to compel visual grounding. We strongly advocate for the integration of such rigorous, test-set-focused auditing and mitigation practices into the standard benchmark development lifecycle. We urge the community to adopt critical evaluation practices and tools like \methodDiagnose{} to ensure that our benchmarks foster genuine progress in true multimodal understanding.
+
+%\noindent\textbf{Conclusion}\quad % \label{sec:discussion}%
+\section{Conclusion}
+In this work, we address the critical challenge of non-visual shortcuts in multimodal benchmarks, where models can achieve high scores by exploiting linguistic priors and statistical biases rather than engaging in genuine visual understanding. This phenomenon risks creating an ``illusion of progress'' and misdirecting research efforts. To counter this, we introduced a proactive, systematic approach involving two core components: % MODIFIED LINE
+first, the \methodDiagnose{} methodology, which ``trains on the test set'' via $k$-fold cross-validation to directly probe a benchmark's intrinsic vulnerabilities and derive sample-level bias scores, $s(x)$; and second, the Iterative Bias Pruning (IBP) procedure, which uses these scores to systematically filter out biased samples. Our application of \methodDiagnose{} revealed substantial non-visual biases in benchmarks like VSI-Bench and CV-Bench. Furthermore, by applying IBP to create VSI-Bench-Robust, we demonstrated a marked reduction in non-visual solvability and a significant increase in the performance gap between vision-enabled and ``blind'' models, confirming its enhanced ability to compel visual grounding. We strongly advocate for the integration of such rigorous, test-set-focused auditing and mitigation practices into the standard benchmark development lifecycle. We urge the community to adopt critical evaluation practices and tools like \methodDiagnose{} to ensure that our benchmarks foster genuine progress in true multimodal understanding.
+
+% \begin{itemize}
+%     \item Recap the problem of non-visual shortcuts in multimodal benchmarks and our proposed framework (\methodDiagnose{} for diagnosis yielding $s(x)$, and systematic debiasing via $s(x)$).
+%     \item Summarize key contributions: the creation of VSI-Bench Hard \todo{Naming}, the generalizable diagnostic and debiasing framework, cross-benchmark analysis revealing widespread biases, and (if included) human evaluation insights.
+%     \item Reiterate the call for rigorous bias diagnostics to be a first-class citizen in benchmark development and MLLM evaluation.
+%     \item Call to action for the community: more critical evaluation of benchmarks, adoption of diagnostic tools like \methodDiagnose{}, and development of more robust evaluation practices to foster genuine progress in multimodal AI.
+%     % \item \textbf{Limitations:}
+%     % \begin{itemize}
+%     %     \item Debiasing might remove some "good" but statistically common samples.
+%     %     \item $s(x)$ might not capture all possible non-visual shortcuts; debiasing is not perfect.
+%     %     \item Focus on statistical dataset properties, not necessarily model-specific overfitting.
+%     % \end{itemize}
+%     % \item \textbf{Future Work / implications for multimodal benchmark creators:}
+%     % \begin{itemize}
+%     %     \item Applying the framework to more benchmarks.
+%     %     \item Debiasing-in-the-loop model training?
+%     %     \item Creating benchmarks "debiased-by-design."
+%     %     \item Developing automated debiasing tools.
+%     % \end{itemize}
+% \end{itemize}
+
+
+\clearpage
+\printbibliography[heading=bibintoc]
+
+\clearpage
+\appendix
+\section*{Appendix}\label{app:appendix}
+
+\todo{provide a brief overview of the appendix here.}
+Related Work: \cref{sec:related_work}.
+Implementation Details: \cref{app:exp_details}.
+
+
+\section{Related Work}\label{sec:related_work}
+
+\subsection{Multimodal Large Language Model Evaluation}\label{sec:related_work_mllm_eval}
+
+A significant paradigm shift in the vision field has been witnessed during the past few years, from traditional task-specific specialist model, to a task-agnostic generalist model.
+The transition has been further accelerated by the success of large-scale pretrained models, like large language models (LLMs,) which show unprecedented language and reasoning capabilities, and the language-aligned vision encoder, which can easily connect vision and language into a shared semantic space, leading to increasingly competitive MLLMs.
+
+However, evaluating generalist models remains a non-trivial challenge, motivating a growing body of work focused on assessing MLLM performance from specific perspectives. For instance, \cite{li2024seed,liang2024survey,goyal2017making,liu2024mmbench,hudson2019gqa,chen2024we} benchmarks MLLMs' ability to understand common and basic visual content, while \cite{mathew2021docvqa,masry2022chartqa,liu2024ocrbench} evaluates their scene-text understanding capabilities. Other works, such as \cite{fu2024blink} and \cite{tong2024cambrian}, focus on vision-centric capabilities, and \cite{yang2024think} proposes a benchmark to assess visual-spatial intelligence by posing spatial reasoning questions based on videos.
+Despite these efforts toward building more comprehensive evaluations, we argue that existing MLLM benchmarks may contain unintended non-visual shortcuts that artificially inflate model performance and potentially deviate the evaluation from its original purpose.
+
+
+\subsection{Shortcut Learning and Dataset Bias}\label{sec:related_work_shortcut_learning}
+
+As discussed in many previous works~\cite{geirhos2020shortcut,liu2024decade,hermann2023foundations}, Deep Neural Networks (DNNs) frequently achieve high performance on benchmarks by exploiting "shortcuts" — superficial decision rules based on spurious correlations — rather than developing genuine intelligence, a phenomenon largely fueled by pervasive biases within training and evaluation datasets.
+This reliance on easily "available" yet less predictive features leads to models that excel in specific data regimes but lack real-world robustness and generalization, a problem evident across computer vision~\cite{liu2024decade,zeng2024understanding}, NLP (including Large Language Models which exhibit "instinctive" and "acquired" shortcuts)~\cite{du2021towards}, and some other critical domains.
+Current standard benchmarks often fail to expose these vulnerabilities, creating an "illusion of understanding" and highlighting the critical need for unbiased, out-of-distribution evaluation methodologies that actively penalize shortcut learning and guide algorithm design towards more robust, causally-sound, and truly intelligent representations.
+Our work aims to call attention to the long-overlooked issue of the benchmark shortcuts, and shed light on how to efficiently and effectively reduce the non-visual shortcuts inherent in existing benchmarks.
+
+
+\subsection{Toward Unbiased Multimodal Evaluation}\label{sec:related_work_unbiased_multimodal_eval}
+
+A significant body of research from 2018 to 2021 has examined the issue of language priors and biases in the Visual Question Answering (VQA) task, largely focusing on developing debiasing strategies through training-time interventions.
+These include techniques such as adversarial regularization~\cite{agrawal2018don}, feedback-based objective functions~\cite{liang2021lpf}, counterfactual data augmentation~\cite{niu2021counterfactual}, and unimodal bias suppression~\cite{cadene2019rubi,collell2018acquiring,liang2021lpf}. Many of these approaches operated under the assumption that language bias stems primarily from spurious correlations in the training data and can thus be mitigated through architectural or objective-function-level changes. However, as VQA systems increasingly incorporate large language models (LLMs), this framing becomes outdated. Language priors now stem not only from dataset artifacts but also from the inherent world knowledge encoded in LLMs, which contributes significantly to their generalization and robustness. Weakening or suppressing the language modality indiscriminately may hinder overall system performance. Consequently, we argue for a reframing of the debiasing conversation: instead of purely training-focused solutions, there must be higher-level design considerations involving architecture, tokenizer choice, training objectives, and most critically, evaluation protocol. Recent work~\cite{yuan2021language,cho2023generative} has begun to reexamine these foundations, but the field still lacks a systematic approach to "debiased" or balanced evaluation. This is a crucial first step if we are to understand the nuanced roles of language and vision in modern VQA systems.
+
+% \paragraph{Multimodal benchmarks for vision-language models (vision-centric evaluation).}
+% \begin{itemize}
+%     \item \href{https://arxiv.org/abs/1505.00468}{VQA: Visual Question Answering}---The first large-scale open-ended VQA dataset on real images, introduced as a benchmark to evaluate visual understanding through QA, which has since become a standard task for vision-language models.
+%     \item \href{https://arxiv.org/abs/1612.06890}{CLEVR: A Diagnostic Dataset for Compositional Language and Elementary Visual Reasoning}---A synthetic image QA benchmark with minimal bias and detailed annotations, designed to test models' true visual reasoning abilities (counting, comparisons, spatial reasoning) without allowing trivial language or prior-based shortcuts.
+%     \item \href{https://arxiv.org/abs/1902.09506}{GQA: A New Dataset for Real-World Visual Reasoning and Compositional Question Answering}---A large VQA dataset built from real images (using scene graphs) to provide compositional questions with controlled answer distributions and new evaluation metrics (consistency, grounding), explicitly addressing bias and requiring genuine image understanding.
+%     \item \href{https://arxiv.org/abs/1811.10830}{From Recognition to Cognition: Visual Commonsense Reasoning (VCR)}---A cognition-level vision-language benchmark (290k QA pairs from 110k movie scenes) that requires answering complex commonsense questions about images and providing textual rationales. Created via adversarial matching to minimize biases, VCR tests high-level inference beyond object recognition and revealed a large gap between human and model performance.
+%     \item \href{https://arxiv.org/abs/1704.04497}{TGIF-QA: Toward Spatio-Temporal Reasoning in Visual Question Answering}---A video-QA dataset of 165K QA pairs on short GIF videos, introducing tasks like repetition count and action sequence questions that require temporal reasoning. It extends VQA into the time dimension, demanding that models understand dynamic visual content rather than a single static image.
+%     \item \href{https://arxiv.org/abs/1809.01696}{TVQA: Localized, Compositional Video Question Answering}---A large-scale video question answering benchmark (152K QA pairs from 21K TV show clips) where questions are compositional and models must jointly comprehend the video frames, timeline (localizing moments), and subtitle dialog. TVQA exemplifies multimodal reasoning by requiring synchronized understanding of visual scenes and language in context.
+% \end{itemize}
+
+% \paragraph{Shortcut learning and dataset bias in multimodal settings.}
+% \begin{itemize}
+%     \item \href{https://arxiv.org/abs/2004.07780}{Shortcut Learning in Deep Neural Networks}---A influential overview of how deep models often exploit spurious correlations or "shortcuts" in data to achieve high benchmark performance without true task understanding. It highlights examples across vision and language tasks and calls for improved interpretation and evaluation to detect when models are leveraging unintended cues.
+%     \item \href{https://arxiv.org/abs/2104.03149}{Beyond Question-Based Biases: Assessing Multimodal Shortcut Learning in VQA}---An analysis showing that Visual QA models not only exploit language biases but also multimodal shortcuts (e.g. correlating specific image regions with words). It mines trivial question+image patterns in the VQA dataset and introduces VQA-CounterExamples (VQA-CE), a diagnostic set of "breaking" cases where those shortcuts fail, demonstrating that even state-of-the-art models struggle on these bias-critical cases.
+%     \item \href{https://arxiv.org/abs/2403.18346}{Quantifying and Mitigating Unimodal Biases in Multimodal Large Language Models: A Causal Perspective}---A recent study of modern vision-language LLMs (e.g. GPT-4V) revealing that they still often rely on single-modality cues (answering from just the question or image). It uses a causal framework to measure vision vs. language bias in VQA, and introduces a challenging evaluation dataset ("MORE") to stress-test models' reliance on unimodal shortcuts, providing insight into bias reduction for next-generation multimodal models.
+%     \item \href{https://arxiv.org/abs/2005.04790}{The Hateful Memes Challenge: Detecting Hate Speech in Multimodal Memes}---Although a classification task, this benchmark vividly demonstrates multimodal shortcut issues. It was constructed with "benign confounders" so that the hateful content is only clear when combining image and text (each modality alone is misleading). Models trained on unimodal biases perform poorly, underscoring the need for true image-text understanding (the challenge saw ~20\% accuracy gap between best models and humans).
+% \end{itemize}
+
+% \paragraph{Benchmark debiasing techniques and auditing tools for robust evaluation.}
+% \begin{itemize}
+%     \item \href{https://arxiv.org/abs/1712.00377}{Don't Just Assume; Look and Answer: Overcoming Priors for VQA}---Introduced the VQA-CP benchmark, which resplits the VQA dataset so that question-type priors differ between training and test. This revealed drastic drops in accuracy for models relying on language priors. The paper also proposed the GVQA model with an architecture explicitly designed to prevent cheating by disentangling visual concept recognition from answer space selection, thereby improving robustness to dataset bias.
+%     \item \href{https://arxiv.org/abs/1906.10169}{RUBi: Reducing Unimodal Biases in Visual Question Answering}---Proposed a model-agnostic training strategy to combat VQA biases by adding a question-only branch that captures language-based guess patterns. During training, RUBi down-weights the loss on examples where the question-only branch is confident, forcing the main model to utilize the image. This approach significantly improved performance on VQA-CP, demonstrating a practical way to reduce shortcut learning in VQA models.
+%     \item \href{https://arxiv.org/abs/2204.03162}{Winoground: Probing Vision and Language Models for Visio-Linguistic Compositionality}---An auditing dataset of 400 carefully constructed image-caption pairs that tests whether models truly understand fine-grained image-text alignment. Each case presents two images and two captions containing the same words (in different order); a truly compositional model must correctly match them. State-of-the-art models in 2022 struggled at chance on Winoground, exposing a lack of true visio-linguistic understanding despite high performance on easier benchmarks.
+%     \item \href{https://arxiv.org/abs/2307.06281}{MMBench: Is Your Multi-modal Model an All-around Player?}---A recent comprehensive benchmark that evaluates a broad range of vision-language abilities in modern multimodal models. MMBench consists of nearly 3,000 carefully curated multiple-choice questions covering skills from object recognition and counting to OCR and commonsense reasoning (in both English and Chinese). It uses a rigorous evaluation protocol (including a "CircularEval" for answer normalization) to provide a fine-grained, robust assessment and comparison of multimodal large language models beyond traditional biased benchmarks.
+% \end{itemize}
+
+
+\section{Implementation Details}\label{app:exp_details}
+
+\subsection{VSI-Train-10k Generation}
+To create the in-distribution training set as VSI-Bench~\cite{yang2024think}, we follow its benchmark curation pipeline. First, we extract object numbers, object bounding boxes, and room sizes from ScanNet~\cite{dai2017scannet}, ScanNet++~\cite{yeshwanth2023scannet++}, and arkitScenes~\cite{dehghan2021arkitscenes}. Then, we use the exact same question templates from VSI-Bench to create a large-scale initial question-answer pair set for seven rule-based question types, excluding route planning. Finally, we randomly sample 10K questions from this initial set, setting a maximum of 20 questions per question type per scene.
+
+\subsection{Details of \methodDebiasLong{}}
+
+% \paragraph{\methodDebiasLong{} (\methodDebias{}) Algorithm Details.}
+The \methodDebias{} algorithm, presented in \cref{alg:ibp}, operationalizes this iterative debiasing philosophy. It begins with the full dataset $\mathcal{D}$ and progressively refines it. In each iteration, current bias scores $\{\,s_i\}_{x_i \in \mathcal{D}}$ are computed for all remaining samples using the $\mathrm{ComputeSampleBiasScores}(\cdot)$ function (which encapsulates our \methodDiagnose{} methodology). Based on these scores, and respecting an overall removal budget $B$ and a per-iteration batch size $b$, a subset of samples $\mathcal{I}$ is selected for removal by the $\mathrm{SelectBatch}(\cdot)$ function. This selection can employ various strategies to target different types of biases effectively---from direct removal of the highest $s(x)$ scoring samples, to weighted sampling for numerical tasks, or group-aware balancing for categorical imbalances, always using $s(x)$ as the primary guiding metric.
+% effectively, always using $s(x)$ as the primary guiding metric:
+% \begin{itemize}[noitemsep,topsep=0pt,parsep=0pt,partopsep=0pt,leftmargin=1.5em]
+%     \item \textbf{Top-$k$ Removal:} Remove the $k$ samples with the highest $s(x)$ scores. This directly targets the samples deemed most exploitable.
+%     \item \textbf{Weighted Removal:} For tasks with numerical answers where hard truncation might create unnatural distributional gaps, remove $k$ samples via weighted sampling, where a sample's removal probability is proportional to its $s(x)$ score.
+%     \item \textbf{Group-Aware Removal:} To address class imbalance in discrete answer spaces (e.g., specific answer choices, object counts), prioritize removal from over-represented answer groups. Within these groups, use $s(x)$ scores to select the $k$ (or fewer, if a group becomes balanced or $k$ exceeds group size) most non-visually solvable samples.
+% \end{itemize}
+% \todo{A table in the Appendix (e.g., \cref{app:vsi_debiasing_details}) should map VSI-Bench question types to these selection mechanisms, clarifying how $s(x)$ is the primary guide for $\mathrm{SelectBatch}(\cdot)$. Ellis's note about possibly just testing Top-k for generality is relevant here.}
+The process repeats until the budget $B$ is exhausted or an early-stopping criterion, such as the maximum remaining bias score $\max_i s_i$ falling below a threshold $\tau$, is met.
+
+% algorithm2e style
+
+
+The \methodDebias{} procedure is primarily governed by two global parameters: the total removal budget $B$ and the batch size $b$. The budget $B$ dictates the maximum proportion or number of samples that will be removed, controlling the trade-off between bias reduction and dataset size/coverage. The batch size $b$ influences the granularity of the iterative process; smaller values of $b$ allow for more frequent re-diagnosis and thus a more adaptive debiasing (at the cost of increased computation), while larger $b$ values approach a single-pass filtering.
+% \todo{Refer to sensitivity analysis section/figure for choices of B and b, e.g., §X.X or Fig Y.}
+The early-stopping criteria, based on either the maximum residual bias score $\tau$ or, optionally, near-chance \methodDiagnose{} accuracy (as discussed in \cref{subsec:tst_methodology}), provide data-driven termination points. These ensure that filtering does not continue unnecessarily once a desired level of debiasing is achieved, even if the full budget $B$ has not been exhausted.
+
+
+% \subsection{VSI-Robust}
+% \label{app:vsi_debiasing_details}
+% \todo{@ellis}
+
+% \subsection{Analysis on Iterative \emph{v.s.} Single}
+% \label{app:ablation_iterative_vs_single}
+
+% \subsection{Ablation Study on Choice of $b$}
+
+% \subsection{Detailed IBP Running Time}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% \newpage
+% \section*{NeurIPS Paper Checklist}
+% Policy 5: "Paper Checklist: No checklist is required for Position Papers."
+
+
+\end{document}
+
