@@ -10,6 +10,25 @@ from ezcolorlog import root_logger as logger
 
 
 # =============================================================================
+# GLOBAL MODEL ---------------------------------------------------------------
+# =============================================================================
+
+
+# TODO: not finished, clean this up
+class CVBModel(QType):
+    name = "cvb"
+    format = "mc"
+
+    feature_cols = []
+
+    def select_rows(self, df: pd.DataFrame) -> pd.DataFrame:
+        return df
+
+    def add_features(self, df: pd.DataFrame) -> pd.DataFrame:
+        return df
+
+
+# =============================================================================
 # MULTIPLE CHOICE QUESTION MODELS ---------------------------------------------
 # =============================================================================
 
