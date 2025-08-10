@@ -212,6 +212,107 @@ def run_llama_factory_training(config_path: str, cuda_visible_devices: Optional[
             os.unlink(config_path)
 
 
+class BaselineLLMPredictor:
+    """
+    Baseline LLM predictor.
+    """
+
+    def __init__(
+        self,
+        model_name: str = "google/gemma-2-2b-it",
+        batch_size: int = 4,
+        max_seq_length: int = 512,
+        temperature: float = 0.0,  # Use deterministic generation
+        max_tokens: int = 10,  # Short answers for TsT
+    ):
+        self.model_name = model_name
+        self.batch_size = batch_size
+        self.max_seq_length = max_seq_length
+        self.temperature = temperature
+        self.max_tokens = max_tokens
+
+        # Model components
+        self.tokenizer = None
+        self.model = None
+        self.llm = None
+
+        # Sampling params for VLLM
+        self.sampling_params = SamplingParams(
+            temperature=temperature,
+            max_tokens=max_tokens,
+            top_p=1.0,
+        )
+
+        self._load_base_model()
+
+    def _load_base_model(self):
+        """Load the base model and tokenizer."""
+        logger.info(f"Loading base model: {self.model_name}")
+
+        self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
+
+        # Use VLLM for efficient inference
+        self.llm = LLM(
+            model=self.model_name,
+            max_model_len=self.max_seq_length,
+            gpu_memory_utilization=0.8,
+        )
+
+    def predict(self, instructions: List[str]) -> List[str]:
+        """
+        Generate predictions for a list of instructions.
+        """
+        if not instructions:
+            return []
+
+        # Format prompts using chat template if available
+        if self.tokenizer.chat_template is not None:
+            prompts = [
+                self.tokenizer.apply_chat_template(
+                    [{"role": "user", "content": instruction}],
+                    tokenize=False,
+                    add_generation_prompt=True,
+                )
+                for instruction in instructions
+            ]
+        else:
+            prompts = instructions
+
+        # Generate in batches
+        all_predictions = []
+
+        for i in range(0, len(prompts), self.batch_size):
+            batch_prompts = prompts[i : i + self.batch_size]
+
+            # Generate responses
+            outputs = self.llm.generate(
+                batch_prompts,
+                self.sampling_params,
+                use_tqdm=False,
+            )
+
+            # Extract generated text
+            batch_predictions = []
+            for output in outputs:
+                generated_text = output.outputs[0].text.strip()
+                # Take only the first token/word for classification tasks
+                first_token = generated_text.split()[0] if generated_text.split() else generated_text
+                batch_predictions.append(first_token)
+
+            all_predictions.extend(batch_predictions)
+
+        return all_predictions
+
+    def reset(self):
+        """Reset the model state and free GPU memory."""
+        if self.llm is not None:
+            del self.llm
+            self.llm = None
+
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+
+
 class LLMPredictor:
     """
     LLM predictor that can load base models and LoRA adapters for inference.

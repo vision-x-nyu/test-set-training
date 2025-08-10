@@ -16,6 +16,7 @@ from .llm_utils import (
     generate_llama_factory_config,
     run_llama_factory_training,
     LLMPredictor,
+    BaselineLLMPredictor,
 )
 
 
@@ -356,16 +357,27 @@ def evaluate_bias_model_llm(
             f"[WARNING] {model.name} is numerical, with no gt_idx column. Overriding target column to 'ground_truth'"
         )
 
-    # Initialize LLM predictor
-    llm_predictor = LLMPredictor(
+    # TODO: remove this after fixing evaluation
+    baseline_llm_predictor = BaselineLLMPredictor(
         model_name=llm_config["model_name"],
         batch_size=llm_config["batch_size"],
         max_seq_length=llm_config["max_seq_length"],
     )
 
     # Get zero-shot baseline first
-    zero_shot_acc = _evaluate_zero_shot_baseline(llm_predictor, qdf, target_col, model.format)
+    zero_shot_acc = _evaluate_zero_shot_baseline(baseline_llm_predictor, qdf, target_col, model.format)
+    logger.info(f"Zero-shot baseline accuracy: {zero_shot_acc:.2%}")
 
+    # cleanup the base model after getting the zero-shot baseline
+    baseline_llm_predictor.reset()
+    del baseline_llm_predictor
+
+    # Initialize LLM predictor
+    llm_predictor = LLMPredictor(
+        model_name=llm_config["model_name"],
+        batch_size=llm_config["batch_size"],
+        max_seq_length=llm_config["max_seq_length"],
+    )
     repeat_pbar = tqdm(range(repeats), desc=f"[{model.name.upper()}] LLM Repeats", disable=repeats == 1)
 
     for repeat in repeat_pbar:
@@ -563,6 +575,7 @@ def _evaluate_zero_shot_baseline(
     """
     Evaluate zero-shot baseline performance.
     """
+    logger.info(f"Evaluating zero-shot baseline for {format_type} format")
     test_data = _convert_to_blind_qa_format(df, target_col, format_type)
     return _evaluate_llm_fold(predictor, test_data, format_type)
 
