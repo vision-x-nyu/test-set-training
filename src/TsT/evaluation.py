@@ -24,59 +24,6 @@ from .llm.data.models import TestInstance
 
 
 # =============================================================================
-# Legacy Adapter Classes (for backward compatibility)
-# =============================================================================
-
-
-class _LegacyPredictorAdapter:
-    """
-    Adapter to make VLLMPredictor compatible with legacy evaluation code.
-
-    This provides the old interface: predict(instructions: List[str]) -> List[str]
-    while using the new VLLMPredictor internally.
-    """
-
-    def __init__(
-        self, model_name: str = "google/gemma-2-2b-it", batch_size: int = 4, max_seq_length: int = 512, **kwargs
-    ):
-        config = VLLMPredictorConfig(
-            model_name=model_name, batch_size=batch_size, max_seq_length=max_seq_length, **kwargs
-        )
-        self.predictor = VLLMPredictor(config)
-
-    def predict(self, instructions: List[str]) -> List[str]:
-        """Legacy interface: predict from list of instructions"""
-        # Convert to TestInstance format
-        test_instances = [
-            TestInstance(
-                instruction=instruction,
-                instance_id=f"legacy_{i}",
-                ground_truth="",  # Not needed for prediction
-            )
-            for i, instruction in enumerate(instructions)
-        ]
-
-        # Get predictions using new interface
-        results = self.predictor.predict(test_instances)
-
-        # Extract just the prediction strings
-        return [result.prediction for result in results]
-
-    def reset(self):
-        """Reset the underlying predictor"""
-        self.predictor.reset()
-
-    def load_adapter(self, adapter_path: str):
-        """Load adapter for fine-tuned inference"""
-        self.predictor.load_adapter(adapter_path)
-
-
-# Aliases for backward compatibility
-BaselineLLMPredictor = _LegacyPredictorAdapter
-LLMPredictor = _LegacyPredictorAdapter
-
-
-# =============================================================================
 # HELPERS ----------------------------------------------------------------------
 # =============================================================================
 
@@ -309,11 +256,14 @@ def evaluate_bias_model_llm(
         )
 
     # Initialize LLM predictor
-    llm_predictor = LLMPredictor(
+    llm_config_obj = VLLMPredictorConfig(
         model_name=llm_config["model_name"],
         batch_size=llm_config["batch_size"],
         max_seq_length=llm_config["max_seq_length"],
+        apply_chat_template=False,  # Disable for compatibility with Gemma and other models
     )
+    llm_predictor = VLLMPredictor(llm_config_obj)
+
     # Get zero-shot baseline first
     zero_shot_acc = _evaluate_zero_shot_baseline(llm_predictor, qdf, target_col, model.format)
     logger.info(f"Zero-shot baseline accuracy: {zero_shot_acc:.2%}")
@@ -518,19 +468,33 @@ def _evaluate_zero_shot_baseline(predictor, df: pd.DataFrame, target_col: str, f
     return _evaluate_llm_fold(predictor, test_data, format_type)
 
 
-def _evaluate_llm_fold(predictor: "LLMPredictor", test_data: List[Dict[str, str]], format_type: str) -> float:
+def _evaluate_llm_fold(predictor: VLLMPredictor, test_data: List[Dict[str, str]], format_type: str) -> float:
     """
     Evaluate LLM on test data and return accuracy.
     """
     instructions = [item["instruction"] for item in test_data]
     ground_truth = [item["response"] for item in test_data]
 
-    # Generate predictions
-    predictions = predictor.predict(instructions)
+    # Convert to TestInstance format for the new API
+    test_instances = [
+        TestInstance(
+            instruction=instruction,
+            instance_id=f"eval_{i}",
+            ground_truth=gt,
+        )
+        for i, (instruction, gt) in enumerate(zip(instructions, ground_truth))
+    ]
+
+    # TODO: make an evaluation function that takes LLMPredictionResult objects and returns a score
+    # HACK [temporary]: manually score here
+    # Generate predictions using new interface
+    prediction_results = predictor.predict(test_instances)
+    predictions = [result.prediction for result in prediction_results]
 
     # print the first prediction and ground truth
-    logger.info(f"First prediction: {predictions[0]}")
-    logger.info(f"First ground truth: {ground_truth[0]}")
+    if predictions and ground_truth:
+        logger.info(f"First prediction: {predictions[0]}")
+        logger.info(f"First ground truth: {ground_truth[0]}")
 
     # Calculate accuracy
     if format_type == "mc":
