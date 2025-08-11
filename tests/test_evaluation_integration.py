@@ -10,8 +10,8 @@ import pandas as pd
 import numpy as np
 
 from TsT.evaluation import run_evaluation
-from TsT.core.cross_validation import run_cross_validation
-from TsT.core.evaluators import RandomForestEvaluator
+from TsT.core.cross_validation import UnifiedCrossValidator, CrossValidationConfig
+from TsT.core.evaluators import RandomForestFoldEvaluator
 
 
 class SimpleTestModel:
@@ -118,31 +118,31 @@ class TestUnifiedFrameworkIntegration:
         assert 0.0 <= score <= 1.0
 
     def test_cross_validation_with_evaluator(self):
-        """Test cross-validation with RandomForestEvaluator directly"""
+        """Test cross-validation with UnifiedCrossValidator directly"""
         # Setup
         model = SimpleTestModel()
-        evaluator = RandomForestEvaluator()
+        evaluator = RandomForestFoldEvaluator()
         df = create_learnable_data(40, 4)
 
+        # Create cross-validator
+        config = CrossValidationConfig(n_splits=2, random_state=42, verbose=False, repeats=1, show_progress=False)
+        cv = UnifiedCrossValidator(config)
+
         # Run CV
-        mean_score, std_score, count = run_cross_validation(
+        result = cv.evaluate_model(
             model=model,
             evaluator=evaluator,
             df=df,
-            n_splits=2,
-            random_state=42,
-            verbose=False,
-            repeats=1,
             target_col="gt_idx",
         )
 
         # Verify results
-        assert isinstance(mean_score, float)
-        assert isinstance(std_score, float)
-        assert isinstance(count, int)
-        assert 0.0 <= mean_score <= 1.0
-        assert std_score >= 0.0
-        assert count == 40
+        assert isinstance(result.overall_mean, float)
+        assert isinstance(result.overall_std, float)
+        assert isinstance(result.total_count, int)
+        assert 0.0 <= result.overall_mean <= 1.0
+        assert result.overall_std >= 0.0
+        assert result.total_count == 40
 
     def test_deterministic_results(self):
         """Test that same parameters produce same results"""

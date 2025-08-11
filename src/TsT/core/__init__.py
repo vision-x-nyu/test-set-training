@@ -7,7 +7,6 @@ model types (Random Forest, LLM, etc.) to work with a unified evaluation system.
 
 from .protocols import BiasModel, FeatureBasedBiasModel, ModelEvaluator
 from .cross_validation import (
-    run_cross_validation,
     UnifiedCrossValidator,
     CrossValidationConfig,
     FoldEvaluator,
@@ -23,12 +22,10 @@ from .evaluators import (
 )
 
 __all__ = [
-    # Legacy interfaces
+    # Protocol interfaces
     "BiasModel",
     "FeatureBasedBiasModel",
     "ModelEvaluator",
-    "run_cross_validation",
-    "RandomForestEvaluator",
     # Unified evaluation framework
     "UnifiedCrossValidator",
     "CrossValidationConfig",
@@ -38,6 +35,7 @@ __all__ = [
     "RepeatResult",
     "EvaluationResult",
     # Model-specific evaluators and post-processors
+    "RandomForestEvaluator",
     "RandomForestFoldEvaluator",
     "RandomForestPostProcessor",
     "LLMFoldEvaluator",

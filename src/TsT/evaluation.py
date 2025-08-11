@@ -24,38 +24,7 @@ from .llm_utils import (
 
 
 # =============================================================================
-# 1.  TEMPORARY LLM EVALUATOR (will be replaced with production LLM system) ----
-# =============================================================================
-
-
-class TemporaryLLMEvaluator:
-    """Temporary LLM evaluator - will be replaced with production LLM system"""
-
-    def __init__(self, llm_config: Dict):
-        self.llm_config = llm_config
-
-    def evaluate_model(
-        self,
-        model: BiasModel,
-        df: pd.DataFrame,
-        target_col: str,
-        n_splits: int,
-        random_state: int,
-        verbose: bool,
-        repeats: int,
-    ):
-        """Temporary implementation that calls the old LLM evaluation"""
-        # Cast to FeatureBasedBiasModel for legacy compatibility
-        if isinstance(model, FeatureBasedBiasModel):
-            return evaluate_bias_model_llm(
-                model, df, n_splits, random_state, verbose, repeats, target_col, self.llm_config
-            )
-        else:
-            raise ValueError(f"Legacy LLM evaluation requires FeatureBasedBiasModel, got {type(model)}")
-
-
-# =============================================================================
-# 2.  HELPERS ------------------------------------------------------------------
+# HELPERS ----------------------------------------------------------------------
 # =============================================================================
 
 
@@ -145,110 +114,8 @@ def weighted_mean_std(scores: np.ndarray, counts: np.ndarray) -> tuple[float, fl
 
 
 # =============================================================================
-# 4.  COMMON EVALUATION LOOP --------------------------------------------------
+# UNIFIED EVALUATION -----------------------------------------------------------
 # =============================================================================
-
-
-def evaluate_bias_model(
-    model: FeatureBasedBiasModel,
-    df: pd.DataFrame,
-    n_splits: int = 5,
-    random_state: int = 42,
-    verbose: bool = True,
-    repeats: int = 1,
-    target_col: str = "ground_truth",
-):
-    qdf = model.select_rows(df)
-    all_scores = []
-
-    if model.target_col_override is not None and model.target_col_override != target_col:
-        logger.warning(
-            f"[WARNING] {model.name} has an override target column '{model.target_col_override}'. Replacing '{target_col}'."
-        )
-        target_col = model.target_col_override
-    if model.task == "reg" and target_col == "gt_idx":
-        # no gt_idx for regression tasks
-        target_col = "ground_truth"
-        logger.warning(
-            f"[WARNING] {model.name} is numerical, with no gt_idx column. Overriding target column to 'ground_truth'"
-        )
-
-    # Show progress bar over repeats
-    repeat_pbar = tqdm(range(repeats), desc=f"[{model.name.upper()}] Repeats", disable=repeats == 1)
-
-    for repeat in repeat_pbar:
-        current_seed = random_state + repeat
-
-        # Use appropriate splitter based on task type
-        if model.task == "reg":
-            splitter = KFold(n_splits=n_splits, shuffle=True, random_state=current_seed)
-            split_args = (qdf,)
-        else:  # classification task
-            splitter = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=current_seed)
-            split_args = (qdf, qdf[target_col])
-
-        scores: List[float] = []
-
-        fold_pbar = tqdm(
-            enumerate(splitter.split(*split_args), 1),
-            desc=f"[{model.name.upper()}] Folds",
-            total=n_splits,
-            disable=repeats > 1,
-        )
-        for fold, (tr_idx, te_idx) in fold_pbar:
-            tr, te = qdf.iloc[tr_idx].copy(), qdf.iloc[te_idx].copy()
-
-            model.fit_feature_maps(tr)
-            tr = model.add_features(tr)
-            te = model.add_features(te)
-
-            X_tr, X_te = tr[model.feature_cols].copy(), te[model.feature_cols].copy()
-            encode_categoricals(X_tr, X_te)
-            y_tr, y_te = tr[target_col], te[target_col]
-
-            est = _make_estimator(model.task, current_seed)
-            est.fit(X_tr, y_tr)
-            scores.append(_score(est, X_te, y_te, model.metric))
-            fold_pbar.set_postfix({f"fold_{model.metric}": f"{np.mean(scores):.2%}"})
-
-        all_scores.append(scores)
-        if repeats > 1:
-            current_avg = np.mean(scores)
-            repeat_pbar.set_postfix({f"avg_{model.metric}": f"{current_avg:.2%}"})
-
-    # Calculate mean and std across all repeats
-    mean_scores = [np.mean(scores) for scores in all_scores]
-    mean_acc = float(np.mean(mean_scores))
-    std_acc = float(np.std(mean_scores))
-    count = len(qdf)
-
-    if verbose:
-        logger.info(
-            f"\n[{model.name.upper()}] Overall {model.metric.upper()}: {mean_acc:.2%} ± {std_acc:.2%} (n_splits={n_splits}, repeats={repeats})"
-        )
-        if repeats == 1:
-            logger.info(f"[{model.name.upper()}] Fold {model.metric.upper()}s: {[f'{s:.2%}' for s in all_scores[0]]}")
-        else:
-            logger.info(f"[{model.name.upper()}] Repeat {model.metric.upper()}s: {[f'{s:.2%}' for s in mean_scores]}")
-
-    # full‑data importances ---------------------------------------------------
-    model.fit_feature_maps(qdf)  # all rows
-    full_df = model.add_features(qdf.copy())
-    X_full = full_df[model.feature_cols].copy()
-    encode_categoricals(X_full, X_full.copy())
-    y_full = full_df[target_col]
-
-    est_full = _make_estimator(model.task, random_state)
-    est_full.fit(X_full, y_full)
-    fi = (
-        pd.DataFrame({"feature": model.feature_cols, "importance": est_full.feature_importances_})
-        .sort_values("importance", ascending=False)
-        .reset_index(drop=True)
-    )
-    if verbose:
-        logger.info(f"\n[{model.name.upper()}] Feature importances:")
-        logger.info(fi.head(15))
-    return mean_acc, std_acc, fi, count
 
 
 def run_evaluation(
