@@ -5,6 +5,7 @@ These tests ensure the new fold evaluators and post-processors work correctly
 with the unified evaluation framework and produce expected results.
 """
 
+import pytest
 import pandas as pd
 import numpy as np
 from unittest.mock import Mock, patch
@@ -258,13 +259,11 @@ class TestLLMFoldEvaluator:
         assert evaluator.llm_config == llm_config
         assert evaluator.trainable_predictor is None
 
-    @patch("TsT.core.llm_evaluators.TemporaryLLMEvaluator")
-    def test_evaluation_with_legacy_system(self, mock_temp_evaluator_class):
+    @patch("TsT.evaluation.evaluate_bias_model_llm")
+    def test_evaluation_with_legacy_system(self, mock_evaluate_llm):
         """Test LLM evaluation using legacy system"""
-        # Setup mock
-        mock_temp_evaluator = Mock()
-        mock_temp_evaluator.evaluate_fold.return_value = 0.85
-        mock_temp_evaluator_class.return_value = mock_temp_evaluator
+        # Setup mock to return (mean_score, std_score, feature_importances, count)
+        mock_evaluate_llm.return_value = (0.85, 0.1, None, 20)
 
         llm_config = {"model_name": "test/model"}
         evaluator = LLMFoldEvaluator(llm_config)
@@ -290,9 +289,8 @@ class TestLLMFoldEvaluator:
         assert result.metadata["training_size"] == 15
         assert result.metadata["model_name"] == "test/model"
 
-        # Verify legacy evaluator was called
-        mock_temp_evaluator_class.assert_called_once_with(llm_config)
-        mock_temp_evaluator.evaluate_fold.assert_called_once()
+        # Verify legacy function was called
+        mock_evaluate_llm.assert_called_once()
 
     def test_config_handling(self):
         """Test LLM config handling"""
@@ -358,7 +356,7 @@ class TestLLMPostProcessor:
         assert processed_result.model_metadata["total_samples"] == 50
 
     def test_without_zero_shot_baseline(self):
-        """Test processing without zero-shot baseline"""
+        """Test processing without zero-shot baseline raises NotImplementedError"""
         llm_config = {"model_name": "test/model"}
         processor = LLMPostProcessor(llm_config, zero_shot_baseline=None)
 
@@ -366,17 +364,9 @@ class TestLLMPostProcessor:
         df = create_test_data(30, 2)
         evaluation_result = self.create_mock_evaluation_result()
 
-        processed_result = processor.process_results(model, df, "gt_idx", evaluation_result)
-
-        # Verify handling of None baseline
-        assert processed_result.model_metadata["zero_shot_baseline"] is None
-        assert processed_result.model_metadata["improvement"] == 0.0
-
-        # Feature importances should still be created
-        importances = processed_result.feature_importances["importance"].values
-        assert importances[0] == 0.75  # LLM score
-        assert importances[1] == 0.0  # No baseline
-        assert importances[2] == 0.0  # No improvement
+        # Should raise NotImplementedError when zero-shot baseline is None
+        with pytest.raises(NotImplementedError, match="Zero-shot baseline is required"):
+            processor.process_results(model, df, "gt_idx", evaluation_result)
 
     def test_metadata_preservation(self):
         """Test that existing metadata is preserved"""
@@ -453,11 +443,10 @@ class TestEvaluatorIntegration:
         train_df = create_test_data(20, 2)
         test_df = create_test_data(5, 2)
 
-        # Mock the temporary LLM evaluator
-        with patch("TsT.core.llm_evaluators.TemporaryLLMEvaluator") as mock_evaluator_class:
-            mock_temp_evaluator = Mock()
-            mock_temp_evaluator.evaluate_fold.return_value = 0.8
-            mock_evaluator_class.return_value = mock_temp_evaluator
+        # Mock the legacy LLM evaluation function
+        with patch("TsT.evaluation.evaluate_bias_model_llm") as mock_evaluate_llm:
+            # Setup mock to return (mean_score, std_score, feature_importances, count)
+            mock_evaluate_llm.return_value = (0.8, 0.1, None, 20)
 
             # Run fold evaluation
             fold_result = evaluator.evaluate_fold(

@@ -160,17 +160,43 @@ class LLMFoldEvaluator(FoldEvaluator):
         fold_id: int,
         seed: int,
     ) -> FoldResult:
-        """Evaluate LLM on a single fold"""
-        # For now, implement a placeholder that uses the legacy LLM evaluation
-        # This will be replaced with production LLM infrastructure
-        from .llm_evaluators import TemporaryLLMEvaluator
+        """Evaluate LLM on a single fold using legacy evaluation function"""
+        # Import here to avoid circular imports
+        from ..evaluation import evaluate_bias_model_llm
+        from typing import cast
+        from .protocols import FeatureBasedBiasModel
 
-        temp_evaluator = TemporaryLLMEvaluator(self.llm_config)
-        score = temp_evaluator.evaluate_fold(model, train_df, test_df, target_col, fold_id, seed)
+        # Create a temporary combined DataFrame for the legacy function
+        train_df_copy = train_df.copy()
+        train_df_copy["split"] = "train"
+        test_df_copy = test_df.copy()
+        test_df_copy["split"] = "test"
+        combined_df = pd.concat([train_df_copy, test_df_copy], ignore_index=True)
+
+        # Call the legacy function directly
+        if hasattr(model, "feature_cols"):  # Check if it has feature engineering capabilities
+            feature_model = cast(FeatureBasedBiasModel, model)
+            mean_score, _, _, _ = evaluate_bias_model_llm(
+                model=feature_model,
+                df=combined_df,
+                n_splits=1,  # Use pre-split data
+                random_state=seed,
+                verbose=False,
+                repeats=1,
+                target_col=target_col,
+                llm_config=self.llm_config,
+            )
+        else:
+            # Non-feature-based models not supported for LLM evaluation
+            raise NotImplementedError(
+                f"LLM evaluation currently requires FeatureBasedBiasModel with feature engineering capabilities. "
+                f"Model {model.name} (type: {type(model).__name__}) does not have feature_cols attribute."
+            )
+            # TODO: implement a text-based model?
 
         return FoldResult(
             fold_id=fold_id,
-            score=score,
+            score=mean_score,
             fold_size=len(test_df),
             metadata={
                 "training_size": len(train_df),
@@ -196,13 +222,19 @@ class LLMPostProcessor(PostProcessor):
     ) -> EvaluationResult:
         """Add LLM-specific metadata"""
         # Calculate improvement over zero-shot
-        improvement = evaluation_result.overall_mean - self.zero_shot_baseline if self.zero_shot_baseline else 0.0
+        if self.zero_shot_baseline is None:
+            raise NotImplementedError(
+                "Zero-shot baseline is required for LLM post-processing. "
+                "This should be provided when creating LLMPostProcessor."
+            )
+
+        improvement = evaluation_result.overall_mean - self.zero_shot_baseline
 
         # Mock feature importances for compatibility
         feature_importances = pd.DataFrame(
             {
                 "feature": ["llm_finetuning", "zero_shot_baseline", "improvement"],
-                "importance": [evaluation_result.overall_mean, self.zero_shot_baseline or 0.0, improvement],
+                "importance": [evaluation_result.overall_mean, self.zero_shot_baseline, improvement],
             }
         )
 

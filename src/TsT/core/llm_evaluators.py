@@ -8,7 +8,7 @@ the existing evaluation pipeline.
 
 import tempfile
 from pathlib import Path
-from typing import Dict, Any, Optional, Literal
+from typing import Optional, Literal
 import pandas as pd
 
 from .protocols import ModelEvaluator, BiasModel
@@ -121,90 +121,21 @@ class LLMEvaluator(ModelEvaluator):
         return correct / total if total > 0 else 0.0
 
 
-class TemporaryLLMEvaluator(ModelEvaluator):
-    """
-    Temporary LLM evaluator for backward compatibility.
-
-    This bridges the old evaluate_bias_model_llm function until the full
-    LLM infrastructure is ready. It maintains the existing LLM functionality
-    during the transition to production LLM infrastructure.
-    """
-
-    def __init__(self, llm_config: Dict[str, Any]):
-        """
-        Initialize temporary LLM evaluator.
-
-        Args:
-            llm_config: Configuration dictionary for LLM evaluation
-        """
-        self.llm_config = llm_config
-
-    def evaluate_fold(
-        self, model: BiasModel, train_df: pd.DataFrame, test_df: pd.DataFrame, target_col: str, fold_num: int, seed: int
-    ) -> float:
-        """
-        Evaluate using the legacy LLM evaluation function.
-
-        This is a temporary bridge that calls the existing evaluate_bias_model_llm
-        logic until the full production LLM system is integrated.
-        """
-        # Import here to avoid circular imports
-        from ..evaluation import evaluate_bias_model_llm
-
-        # Create a temporary combined DataFrame for the legacy function
-        train_df_copy = train_df.copy()
-        train_df_copy["split"] = "train"
-        test_df_copy = test_df.copy()
-        test_df_copy["split"] = "test"
-
-        combined_df = pd.concat([train_df_copy, test_df_copy], ignore_index=True)
-
-        # Call the legacy function with n_splits=1 to use our pre-split data
-        if hasattr(model, "feature_cols"):  # Check if it has feature engineering capabilities
-            from typing import cast
-            from .protocols import FeatureBasedBiasModel
-
-            feature_model = cast(FeatureBasedBiasModel, model)
-            mean_score, _, _, _ = evaluate_bias_model_llm(
-                model=feature_model,
-                df=combined_df,
-                n_splits=1,  # Use pre-split data
-                random_state=seed,
-                verbose=False,
-                repeats=1,
-                target_col=target_col,
-                llm_config=self.llm_config,
-            )
-        else:
-            # For non-feature-based models, return a placeholder score
-            mean_score = 0.5
-
-        return mean_score
-
-
 def create_llm_evaluator(
     trainable_predictor: Optional[TrainableLLMPredictor] = None,
-    llm_config: Optional[Dict[str, Any]] = None,
-    use_legacy: bool = False,
 ) -> ModelEvaluator:
     """
-    Factory function to create appropriate LLM evaluator.
+    Factory function to create LLM evaluator.
 
     Args:
-        trainable_predictor: Full trainable predictor (for production system)
-        llm_config: Configuration for legacy LLM evaluation
-        use_legacy: Whether to use the legacy evaluator
+        trainable_predictor: Full trainable predictor for production system
 
     Returns:
-        Appropriate LLM evaluator instance
+        LLM evaluator instance
+
+    Raises:
+        ValueError: If trainable_predictor is None (production LLM system required)
     """
-    if use_legacy or trainable_predictor is None:
-        if llm_config is None:
-            llm_config = {
-                "model_name": "google/gemma-2-2b-it",
-                "epochs": 1,
-                "batch_size": 4,
-            }
-        return TemporaryLLMEvaluator(llm_config)
-    else:
-        return LLMEvaluator(trainable_predictor)
+    if trainable_predictor is None:
+        raise ValueError("Production LLM system required. Use LLMFoldEvaluator directly for legacy evaluation.")
+    return LLMEvaluator(trainable_predictor)
