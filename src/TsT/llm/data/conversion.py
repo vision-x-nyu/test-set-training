@@ -7,7 +7,7 @@ used in the TsT framework and LLM training pipelines.
 
 import pandas as pd
 from typing import List, Literal, Dict
-from .models import TstTrainingDatum, TstTestInstance
+from .models import TrainingDatum, TestInstance
 
 
 def convert_to_tst_training_format(
@@ -16,7 +16,7 @@ def convert_to_tst_training_format(
     format_type: Literal["mc", "num"],
     instruction_template: str = "Answer the following question: {question}",
     response_template: str = "The answer is {answer}.",
-) -> List[TstTrainingDatum]:
+) -> List[TrainingDatum]:
     """
     Convert DataFrame to TsT training format for LLM fine-tuning.
 
@@ -28,7 +28,7 @@ def convert_to_tst_training_format(
         response_template: Template for formatting responses
 
     Returns:
-        List of TstTrainingDatum objects
+        List of TrainingDatum objects
     """
     training_data = []
 
@@ -56,7 +56,7 @@ def convert_to_tst_training_format(
             response = response_template.format(answer=answer)
 
         training_data.append(
-            TstTrainingDatum(
+            TrainingDatum(
                 instruction=instruction,
                 response=response,
                 metadata={
@@ -76,7 +76,7 @@ def convert_to_test_instances(
     target_col: str,
     instruction_template: str = "Answer the following question: {question}",
     id_prefix: str = "test",
-) -> List[TstTestInstance]:
+) -> List[TestInstance]:
     """
     Convert DataFrame to test instances for LLM inference.
 
@@ -87,7 +87,7 @@ def convert_to_test_instances(
         id_prefix: Prefix for instance IDs
 
     Returns:
-        List of TstTestInstance objects
+        List of TestInstance objects
     """
     test_instances = []
 
@@ -107,9 +107,7 @@ def convert_to_test_instances(
         instance_id = f"{id_prefix}_{idx}"
         ground_truth = str(row[target_col])
 
-        test_instances.append(
-            TstTestInstance(instruction=instruction, instance_id=instance_id, ground_truth=ground_truth)
-        )
+        test_instances.append(TestInstance(instruction=instruction, instance_id=instance_id, ground_truth=ground_truth))
 
     return test_instances
 
@@ -140,7 +138,7 @@ def format_for_chat_template(
 
 def convert_benchmark_to_llm_format(
     benchmark_name: str, df: pd.DataFrame, target_col: str, format_type: Literal["mc", "num"]
-) -> tuple[List[TstTrainingDatum], str, str]:
+) -> tuple[List[TrainingDatum], str, str]:
     """
     Convert benchmark-specific data to LLM format with appropriate templates.
 

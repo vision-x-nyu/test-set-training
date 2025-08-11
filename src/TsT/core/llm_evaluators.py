@@ -81,7 +81,7 @@ class LLMEvaluator(ModelEvaluator):
 
         Args:
             predictions: List of LLMPredictionResult objects
-            test_instances: List of TstTestInstance objects
+            test_instances: List of TestInstance objects
             format_type: "mc" for multiple choice, "num" for numerical
 
         Returns:

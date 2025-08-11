@@ -26,8 +26,8 @@ Example usage:
 
 # Data models
 from .data.models import (
-    TstTrainingDatum,
-    TstTestInstance,
+    TrainingDatum,
+    TestInstance,
     LLMPredictionResult,
     LoRAAdapterInfo,
     LLMEvaluationMetrics,
@@ -175,8 +175,8 @@ def create_auto_predictor(
 # Export all important classes and functions
 __all__ = [
     # Data models
-    "TstTrainingDatum",
-    "TstTestInstance",
+    "TrainingDatum",
+    "TestInstance",
     "LLMPredictionResult",
     "LoRAAdapterInfo",
     "LLMEvaluationMetrics",

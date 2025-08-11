@@ -19,8 +19,8 @@ src/TsT/llm/
 ### 2. Core Components Implemented
 
 #### 🤖 **Data Models** (`data/models.py`)
-- **`TstTrainingDatum`**: Type-safe training data with instruction/response pairs
-- **`TstTestInstance`**: Test instances for inference
+- **`TrainingDatum`**: Type-safe training data with instruction/response pairs
+- **`TestInstance`**: Test instances for inference
 - **`LLMPredictionResult`**: Structured prediction outputs
 - **`LoRAAdapterInfo`**: Metadata about trained adapters
 - All models use Pydantic for validation and serialization

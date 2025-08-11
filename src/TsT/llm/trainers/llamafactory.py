@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import List, Dict, Any, Optional
 
 from .base import BaseLLMTrainer, ProgressCallback
-from ..data.models import TstTrainingDatum, LoRAAdapterInfo
+from ..data.models import TrainingDatum, LoRAAdapterInfo
 from ...llm_utils import format_records_for_llama_factory_sft, run_llama_factory_training
 
 
@@ -59,7 +59,7 @@ class LlamaFactoryTrainer(BaseLLMTrainer):
         super().__init__(progress_callback)
         self.config = config
 
-    def train(self, training_data: List[TstTrainingDatum], output_dir: Path) -> LoRAAdapterInfo:
+    def train(self, training_data: List[TrainingDatum], output_dir: Path) -> LoRAAdapterInfo:
         """Train LoRA adapter using LlamaFactory"""
         # Validate training data
         self.validate_training_data(training_data)

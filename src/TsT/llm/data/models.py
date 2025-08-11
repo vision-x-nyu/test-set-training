@@ -10,7 +10,7 @@ from typing import Dict, Optional, Any
 from pathlib import Path
 
 
-class TstTrainingDatum(BaseModel):
+class TrainingDatum(BaseModel):
     """Training data for TsT LLM fine-tuning"""
 
     instruction: str = Field(..., description="The instruction/question for the model")
@@ -18,7 +18,7 @@ class TstTrainingDatum(BaseModel):
     metadata: Optional[Dict[str, Any]] = Field(None, description="Optional metadata for tracking")
 
 
-class TstTestInstance(BaseModel):
+class TestInstance(BaseModel):
     """Test instance for TsT LLM inference"""
 
     instruction: str = Field(..., description="The instruction/question for the model")

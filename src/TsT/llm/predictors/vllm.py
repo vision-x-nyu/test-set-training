@@ -14,7 +14,7 @@ from vllm import LLM, SamplingParams
 from vllm.lora.request import LoRARequest
 
 from .base import BaseLLMPredictor
-from ..data.models import TstTestInstance, LLMPredictionResult
+from ..data.models import TestInstance, LLMPredictionResult
 
 
 @dataclass
@@ -95,7 +95,7 @@ class VLLMPredictor(BaseLLMPredictor):
             self.lora_request = LoRARequest(
                 lora_name=f"tst_adapter_{adapter_path_obj.name}",
                 lora_int_id=1,  # Use ID 1 for our adapter
-                lora_local_path=adapter_path,
+                lora_path=adapter_path,
             )
 
             self._set_adapter_path(adapter_path)
@@ -105,7 +105,7 @@ class VLLMPredictor(BaseLLMPredictor):
             self._set_adapter_path(None)
             raise RuntimeError(f"Failed to load adapter from {adapter_path}: {e}")
 
-    def predict(self, instances: List[TstTestInstance]) -> List[LLMPredictionResult]:
+    def predict(self, instances: List[TestInstance]) -> List[LLMPredictionResult]:
         """Generate predictions using vLLM"""
         if not self.is_loaded:
             raise RuntimeError("Model not loaded")

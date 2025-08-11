@@ -7,14 +7,14 @@ following DataEnvGym patterns for clean abstraction and composability.
 
 from abc import ABC, abstractmethod
 from typing import List, Optional
-from ..data.models import TstTestInstance, LLMPredictionResult
+from ..data.models import TestInstance, LLMPredictionResult
 
 
 class LLMPredictorInterface(ABC):
     """Abstract interface for LLM predictors"""
 
     @abstractmethod
-    def predict(self, instances: List[TstTestInstance]) -> List[LLMPredictionResult]:
+    def predict(self, instances: List[TestInstance]) -> List[LLMPredictionResult]:
         """
         Generate predictions for test instances.
 
@@ -89,13 +89,13 @@ class BaseLLMPredictor(LLMPredictorInterface):
         """Set the loaded state (for use by subclasses)"""
         self._is_loaded = loaded
 
-    def _validate_instances(self, instances: List[TstTestInstance]) -> None:
+    def _validate_instances(self, instances: List[TestInstance]) -> None:
         """Validate input instances before prediction"""
         if not instances:
             raise ValueError("No instances provided for prediction")
 
-        if not all(isinstance(inst, TstTestInstance) for inst in instances):
-            raise TypeError("All instances must be TstTestInstance objects")
+        if not all(isinstance(inst, TestInstance) for inst in instances):
+            raise TypeError("All instances must be TestInstance objects")
 
         # Check for duplicate instance IDs
         instance_ids = [inst.instance_id for inst in instances]
@@ -104,7 +104,7 @@ class BaseLLMPredictor(LLMPredictorInterface):
 
     def _create_prediction_result(
         self,
-        instance: TstTestInstance,
+        instance: TestInstance,
         prediction: str,
         confidence: Optional[float] = None,
         raw_output: Optional[str] = None,

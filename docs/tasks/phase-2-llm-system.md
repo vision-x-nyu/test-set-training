@@ -58,13 +58,13 @@ from pydantic import BaseModel, Field
 from typing import List, Dict, Optional
 from pathlib import Path
 
-class TstTrainingDatum(BaseModel):
+class TrainingDatum(BaseModel):
     """Training data for TsT LLM fine-tuning"""
     instruction: str
     response: str
     metadata: Optional[Dict] = None
 
-class TstTestInstance(BaseModel):
+class TestInstance(BaseModel):
     """Test instance for TsT LLM inference"""
     instruction: str
     instance_id: str
@@ -92,13 +92,13 @@ class LoRAAdapterInfo(BaseModel):
 ```python
 from abc import ABC, abstractmethod
 from typing import List, Optional
-from ..data.models import TstTestInstance, LLMPredictionResult
+from ..data.models import TestInstance, LLMPredictionResult
 
 class LLMPredictorInterface(ABC):
     """Abstract interface for LLM predictors"""
     
     @abstractmethod
-    def predict(self, instances: List[TstTestInstance]) -> List[LLMPredictionResult]:
+    def predict(self, instances: List[TestInstance]) -> List[LLMPredictionResult]:
         """Generate predictions for test instances"""
         pass
     
@@ -116,7 +116,7 @@ class LLMTrainerInterface(ABC):
     """Abstract interface for LLM trainers"""
     
     @abstractmethod
-    def train(self, training_data: List[TstTrainingDatum], output_dir: Path) -> LoRAAdapterInfo:
+    def train(self, training_data: List[TrainingDatum], output_dir: Path) -> LoRAAdapterInfo:
         """Train LoRA adapter and return adapter info"""
         pass
 ```
@@ -134,7 +134,7 @@ from vllm import LLM, SamplingParams
 from vllm.lora.request import LoRARequest
 
 from .base import LLMPredictorInterface
-from ..data.models import TstTestInstance, LLMPredictionResult
+from ..data.models import TestInstance, LLMPredictionResult
 
 @dataclass
 class VLLMPredictorConfig:
@@ -186,7 +186,7 @@ class VLLMPredictor(LLMPredictorInterface):
             lora_local_path=adapter_path,
         )
     
-    def predict(self, instances: List[TstTestInstance]) -> List[LLMPredictionResult]:
+    def predict(self, instances: List[TestInstance]) -> List[LLMPredictionResult]:
         """Generate predictions using vLLM"""
         if self.llm is None or self.tokenizer is None:
             raise RuntimeError("Model not loaded")
@@ -255,7 +255,7 @@ from typing_extensions import Self
 
 from .vllm import VLLMPredictor, VLLMPredictorConfig
 from .base import LLMPredictorInterface
-from ..data.models import TstTestInstance, LLMPredictionResult
+from ..data.models import TestInstance, LLMPredictionResult
 from ..utils.io import PydanticJSONLinesWriter, PydanticJSONLinesReader
 
 @ray.remote(num_gpus=1)
@@ -273,7 +273,7 @@ class RayVLLMWorker:
     def predict_batch(self, input_path: str, output_path: str):
         """Process a batch of instances from file"""
         # Read instances
-        reader = PydanticJSONLinesReader(input_path, TstTestInstance)
+        reader = PydanticJSONLinesReader(input_path, TestInstance)
         instances = list(reader())
         
         # Generate predictions
@@ -314,7 +314,7 @@ class RayVLLMPredictor(LLMPredictorInterface):
             for worker in self.workers
         ])
     
-    def predict(self, instances: List[TstTestInstance]) -> List[LLMPredictionResult]:
+    def predict(self, instances: List[TestInstance]) -> List[LLMPredictionResult]:
         """Generate predictions using parallel workers"""
         self._create_workers()
         
@@ -379,7 +379,7 @@ from pathlib import Path
 from typing import List, Dict, Optional
 
 from .base import LLMTrainerInterface
-from ..data.models import TstTrainingDatum, LoRAAdapterInfo
+from ..data.models import TrainingDatum, LoRAAdapterInfo
 from ..utils.llamafactory import (
     format_records_for_llama_factory_sft,
     run_llama_factory_training
@@ -403,7 +403,7 @@ class LlamaFactoryTrainer(LLMTrainerInterface):
     def __init__(self, config: LlamaFactoryConfig):
         self.config = config
     
-    def train(self, training_data: List[TstTrainingDatum], output_dir: Path) -> LoRAAdapterInfo:
+    def train(self, training_data: List[TrainingDatum], output_dir: Path) -> LoRAAdapterInfo:
         """Train LoRA adapter using LlamaFactory"""
         output_dir.mkdir(parents=True, exist_ok=True)
         
@@ -498,7 +498,7 @@ from typing import List
 
 from ..predictors.base import LLMPredictorInterface
 from ..trainers.base import LLMTrainerInterface
-from ..data.models import TstTrainingDatum, TstTestInstance, LLMPredictionResult
+from ..data.models import TrainingDatum, TestInstance, LLMPredictionResult
 
 @dataclass
 class TrainableLLMPredictorConfig:
@@ -520,7 +520,7 @@ class TrainableLLMPredictor:
         self.config = config or TrainableLLMPredictorConfig()
         self.current_adapter_path: Optional[str] = None
     
-    def train(self, training_data: List[TstTrainingDatum], output_dir: Path) -> None:
+    def train(self, training_data: List[TrainingDatum], output_dir: Path) -> None:
         """Train LoRA adapter and load it for inference"""
         # Free GPU memory from inference
         self.predictor.reset()
@@ -532,7 +532,7 @@ class TrainableLLMPredictor:
         self.current_adapter_path = str(adapter_info.adapter_path)
         self.predictor.load_adapter(self.current_adapter_path)
     
-    def predict(self, instances: List[TstTestInstance]) -> List[LLMPredictionResult]:
+    def predict(self, instances: List[TestInstance]) -> List[LLMPredictionResult]:
         """Generate predictions using current adapter"""
         return self.predictor.predict(instances)
     

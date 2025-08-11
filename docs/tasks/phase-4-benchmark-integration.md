@@ -101,13 +101,13 @@ class BenchmarkInterface(Protocol):
 from typing import List, Dict
 import pandas as pd
 from ..core.interfaces import BenchmarkInterface, TextDataFormatter
-from .models import TstTrainingDatum, TstTestInstance
+from .models import TrainingDatum, TestInstance
 
 def convert_to_training_data(
     benchmark: BenchmarkInterface,
     df: pd.DataFrame,
     target_col: str,
-) -> List[TstTrainingDatum]:
+) -> List[TrainingDatum]:
     """
     Generic conversion to training data using benchmark's formatter.
     """
@@ -115,7 +115,7 @@ def convert_to_training_data(
     formatted_data = formatter.format_for_training(df, target_col)
     
     return [
-        TstTrainingDatum(
+        TrainingDatum(
             instruction=item["instruction"],
             response=item["response"],
             metadata={"benchmark": benchmark.name, "format": benchmark.format}
@@ -127,7 +127,7 @@ def convert_to_test_instances(
     benchmark: BenchmarkInterface,
     df: pd.DataFrame,
     target_col: str,
-) -> List[TstTestInstance]:
+) -> List[TestInstance]:
     """
     Generic conversion to test instances using benchmark's formatter.
     """
@@ -136,7 +136,7 @@ def convert_to_test_instances(
     ground_truths = formatter.get_ground_truth(df, target_col)
     
     return [
-        TstTestInstance(
+        TestInstance(
             instruction=instruction,
             instance_id=f"{benchmark.name}_{i}",
             ground_truth=ground_truth,

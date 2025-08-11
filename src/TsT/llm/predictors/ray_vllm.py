@@ -14,7 +14,7 @@ from typing_extensions import Self
 
 from .vllm import VLLMPredictor, VLLMPredictorConfig
 from .base import BaseLLMPredictor
-from ..data.models import TstTestInstance, LLMPredictionResult
+from ..data.models import TestInstance, LLMPredictionResult
 from ..utils.io import PydanticJSONLinesWriter, PydanticJSONLinesReader
 
 
@@ -56,7 +56,7 @@ class RayVLLMWorker:
         Process a batch of instances from file.
 
         Args:
-            input_path: Path to JSONL file with TstTestInstance objects
+            input_path: Path to JSONL file with TestInstance objects
             output_path: Path to write LLMPredictionResult objects
 
         Returns:
@@ -64,7 +64,7 @@ class RayVLLMWorker:
         """
         try:
             # Read instances from file
-            reader = PydanticJSONLinesReader(input_path, TstTestInstance)
+            reader = PydanticJSONLinesReader(input_path, TestInstance)
             instances = list(reader())
 
             if not instances:
@@ -155,7 +155,7 @@ class RayVLLMPredictor(BaseLLMPredictor):
 
         self._set_adapter_path(adapter_path)
 
-    def predict(self, instances: List[TstTestInstance]) -> List[LLMPredictionResult]:
+    def predict(self, instances: List[TestInstance]) -> List[LLMPredictionResult]:
         """Generate predictions using parallel workers"""
         if not instances:
             return []

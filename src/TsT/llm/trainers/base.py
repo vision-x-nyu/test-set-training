@@ -8,14 +8,14 @@ following DataEnvGym patterns for clean separation of training concerns.
 from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import List, Optional, Dict
-from ..data.models import TstTrainingDatum, LoRAAdapterInfo, TrainingProgress
+from ..data.models import TrainingDatum, LoRAAdapterInfo, TrainingProgress
 
 
 class LLMTrainerInterface(ABC):
     """Abstract interface for LLM trainers"""
 
     @abstractmethod
-    def train(self, training_data: List[TstTrainingDatum], output_dir: Path) -> LoRAAdapterInfo:
+    def train(self, training_data: List[TrainingDatum], output_dir: Path) -> LoRAAdapterInfo:
         """
         Train LoRA adapter and return adapter info.
 
@@ -29,7 +29,7 @@ class LLMTrainerInterface(ABC):
         pass
 
     @abstractmethod
-    def validate_training_data(self, training_data: List[TstTrainingDatum]) -> bool:
+    def validate_training_data(self, training_data: List[TrainingDatum]) -> bool:
         """
         Validate that training data is suitable for training.
 
@@ -99,7 +99,7 @@ class BaseLLMTrainer(LLMTrainerInterface):
         """Stop training if currently in progress"""
         self._should_stop = True
 
-    def validate_training_data(self, training_data: List[TstTrainingDatum]) -> bool:
+    def validate_training_data(self, training_data: List[TrainingDatum]) -> bool:
         """
         Validate that training data is suitable for training.
 

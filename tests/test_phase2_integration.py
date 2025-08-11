@@ -15,8 +15,8 @@ from TsT.llm import (
     create_vllm_predictor,
     create_llamafactory_trainer,
     create_trainable_predictor,
-    TstTrainingDatum,
-    TstTestInstance,
+    TrainingDatum,
+    TestInstance,
     LLMPredictionResult,
 )
 from TsT.core.llm_evaluators import create_llm_evaluator
@@ -28,13 +28,13 @@ class TestPhase2BasicFunctionality:
     def test_data_models(self):
         """Test Pydantic data models work correctly"""
         # Test training datum
-        training_datum = TstTrainingDatum(instruction="What is 2 + 2?", response="4", metadata={"test": True})
+        training_datum = TrainingDatum(instruction="What is 2 + 2?", response="4", metadata={"test": True})
         assert training_datum.instruction == "What is 2 + 2?"
         assert training_datum.response == "4"
         assert training_datum.metadata["test"] is True
 
         # Test test instance
-        test_instance = TstTestInstance(instruction="What is 3 + 3?", instance_id="test_1", ground_truth="6")
+        test_instance = TestInstance(instruction="What is 3 + 3?", instance_id="test_1", ground_truth="6")
         assert test_instance.instruction == "What is 3 + 3?"
         assert test_instance.instance_id == "test_1"
         assert test_instance.ground_truth == "6"
@@ -127,11 +127,11 @@ class TestPhase2FullIntegration:
 
         # Create sample data
         training_data = [
-            TstTrainingDatum(instruction="What is 1+1?", response="2"),
-            TstTrainingDatum(instruction="What is 2+2?", response="4"),
+            TrainingDatum(instruction="What is 1+1?", response="2"),
+            TrainingDatum(instruction="What is 2+2?", response="4"),
         ]
 
-        test_instances = [TstTestInstance(instruction="What is 3+3?", instance_id="test_1", ground_truth="6")]
+        test_instances = [TestInstance(instruction="What is 3+3?", instance_id="test_1", ground_truth="6")]
 
         # Create trainable predictor
         predictor = create_vllm_predictor()
@@ -178,8 +178,8 @@ class TestPhase2MockIntegration:
 
         # Create sample training data (need at least 2 examples)
         training_data = [
-            TstTrainingDatum(instruction="Test question 1", response="Test answer 1"),
-            TstTrainingDatum(instruction="Test question 2", response="Test answer 2"),
+            TrainingDatum(instruction="Test question 1", response="Test answer 1"),
+            TrainingDatum(instruction="Test question 2", response="Test answer 2"),
         ]
 
         # Test training

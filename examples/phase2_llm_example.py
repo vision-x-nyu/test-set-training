@@ -174,12 +174,12 @@ def example_io_utilities():
     print("\n=== I/O Utilities Example ===")
 
     from TsT.llm.utils.io import write_jsonl, read_jsonl
-    from TsT.llm.data.models import TstTrainingDatum
+    from TsT.llm.data.models import TrainingDatum
 
     # Create sample training data
     training_data = [
-        TstTrainingDatum(instruction="What is 2+2?", response="4", metadata={"example": True}),
-        TstTrainingDatum(instruction="What is the capital of France?", response="Paris"),
+        TrainingDatum(instruction="What is 2+2?", response="4", metadata={"example": True}),
+        TrainingDatum(instruction="What is the capital of France?", response="Paris"),
     ]
 
     # Write to temporary file
@@ -189,7 +189,7 @@ def example_io_utilities():
     write_jsonl(training_data, temp_path)
 
     # Read back
-    loaded_data = read_jsonl(temp_path, TstTrainingDatum)
+    loaded_data = read_jsonl(temp_path, TrainingDatum)
 
     print("✅ Type-safe JSONL I/O")
     print(f"   Written: {len(training_data)} items")

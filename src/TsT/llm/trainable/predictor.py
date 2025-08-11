@@ -12,7 +12,7 @@ from typing import List, Optional
 
 from ..predictors.base import LLMPredictorInterface
 from ..trainers.base import LLMTrainerInterface
-from ..data.models import TstTrainingDatum, TstTestInstance, LLMPredictionResult, LoRAAdapterInfo
+from ..data.models import TrainingDatum, TestInstance, LLMPredictionResult, LoRAAdapterInfo
 
 
 @dataclass
@@ -64,7 +64,7 @@ class TrainableLLMPredictor:
         self.current_adapter_path: Optional[str] = None
         self._last_training_info: Optional[LoRAAdapterInfo] = None
 
-    def train(self, training_data: List[TstTrainingDatum], output_dir: Path) -> LoRAAdapterInfo:
+    def train(self, training_data: List[TrainingDatum], output_dir: Path) -> LoRAAdapterInfo:
         """
         Train LoRA adapter and optionally load it for inference.
 
@@ -104,7 +104,7 @@ class TrainableLLMPredictor:
                 self.predictor.reset()
             raise RuntimeError(f"Training failed: {e}")
 
-    def predict(self, instances: List[TstTestInstance]) -> List[LLMPredictionResult]:
+    def predict(self, instances: List[TestInstance]) -> List[LLMPredictionResult]:
         """
         Generate predictions using current adapter.
 
