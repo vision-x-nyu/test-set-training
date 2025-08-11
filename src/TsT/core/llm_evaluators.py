@@ -8,7 +8,7 @@ the existing evaluation pipeline.
 
 import tempfile
 from pathlib import Path
-from typing import Optional, Literal
+from typing import Literal
 import pandas as pd
 
 from .protocols import ModelEvaluator, BiasModel
@@ -119,23 +119,3 @@ class LLMEvaluator(ModelEvaluator):
                 total += 1
 
         return correct / total if total > 0 else 0.0
-
-
-def create_llm_evaluator(
-    trainable_predictor: Optional[TrainableLLMPredictor] = None,
-) -> ModelEvaluator:
-    """
-    Factory function to create LLM evaluator.
-
-    Args:
-        trainable_predictor: Full trainable predictor for production system
-
-    Returns:
-        LLM evaluator instance
-
-    Raises:
-        ValueError: If trainable_predictor is None (production LLM system required)
-    """
-    if trainable_predictor is None:
-        raise ValueError("Production LLM system required. Use LLMFoldEvaluator directly for legacy evaluation.")
-    return LLMEvaluator(trainable_predictor)

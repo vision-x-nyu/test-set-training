@@ -18,7 +18,7 @@ from TsT.llm import (
     create_auto_predictor,
     get_gpu_count,
 )
-from TsT.core.llm_evaluators import create_llm_evaluator
+from TsT.core.evaluators import LLMFoldEvaluator
 
 
 def create_sample_data():
@@ -109,22 +109,22 @@ def example_evaluation_integration():
     model = SampleBiasModel()  # noqa: F841
     df = create_sample_data()  # noqa: F841
 
-    # Option 1: Use legacy LLM evaluator (for backward compatibility)
-    legacy_evaluator = create_llm_evaluator(
-        use_legacy=True,
-        llm_config={
+    # Use LLM fold evaluator for LLM evaluation
+    llm_evaluator = LLMFoldEvaluator(
+        {
             "model_name": "google/gemma-2-2b-it",
             "epochs": 1,
             "batch_size": 4,
-        },
+        }
     )
 
-    print("✅ Created legacy LLM evaluator")
-    print(f"   Type: {type(legacy_evaluator).__name__}")
+    print("✅ Created LLM fold evaluator")
+    print(f"   Type: {type(llm_evaluator).__name__}")
 
-    # Option 2: Use new Phase 2 LLM evaluator (when ready for full GPU training)
+    # Option 2: Use production LLM evaluator (when ready for full GPU training)
     # trainable = example_single_gpu_usage()
-    # llm_evaluator = create_llm_evaluator(trainable_predictor=trainable)
+    # from TsT.core.llm_evaluators import LLMEvaluator
+    # llm_evaluator = LLMEvaluator(trainable)
 
     # Example of running cross-validation (commented out to avoid actual training)
     # print("\n🔄 Running cross-validation...")

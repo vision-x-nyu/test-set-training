@@ -19,7 +19,7 @@ from TsT.llm import (
     TestInstance,
     LLMPredictionResult,
 )
-from TsT.core.llm_evaluators import create_llm_evaluator
+from TsT.core.evaluators import LLMFoldEvaluator
 
 
 class TestLLMComponents:
@@ -191,12 +191,12 @@ class TestLLMTrainingWithMocks:
             assert adapter_info.training_size == 2
             assert adapter_info.model_name == "google/gemma-2-2b-it"
 
-    def test_legacy_llm_evaluator(self):
-        """Test that legacy LLM evaluator works for backward compatibility"""
-        evaluator = create_llm_evaluator(use_legacy=True)
+    def test_llm_fold_evaluator(self):
+        """Test that LLM fold evaluator works for LLM evaluation"""
+        evaluator = LLMFoldEvaluator({"model_name": "test/model"})
 
         assert evaluator is not None
-        # The legacy evaluator should exist and be callable
+        # The LLM fold evaluator should exist and be callable
         assert hasattr(evaluator, "evaluate_fold")
 
 
