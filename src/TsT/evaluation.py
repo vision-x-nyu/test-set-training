@@ -171,10 +171,10 @@ def run_evaluation(
         evaluator = RandomForestFoldEvaluator()
         post_processor = RandomForestPostProcessor()
     elif mode == "llm":
-        # Get zero-shot baseline first (using placeholder for now)
-        zero_shot_baseline = (
-            _get_zero_shot_baseline(models[0], df_full, target_col, llm_config or {}) if models else 0.25
-        )
+        # Get zero-shot baseline first
+        if not models:
+            raise ValueError("No models provided for LLM evaluation")
+        zero_shot_baseline = _get_zero_shot_baseline(models[0], df_full, target_col, llm_config or {})
         evaluator = LLMFoldEvaluator(llm_config or {})
         post_processor = LLMPostProcessor(llm_config or {}, zero_shot_baseline)
     else:
@@ -509,10 +509,9 @@ def _evaluate_llm_fold(predictor: "LLMPredictor", test_data: List[Dict[str, str]
 def _get_zero_shot_baseline(model: BiasModel, df: pd.DataFrame, target_col: str, llm_config: Dict) -> float:
     """Get zero-shot baseline for LLM evaluation"""
     # TODO: inference + evaluate the model on the full testset before any training
-
-    # For now, return a placeholder value
-    # This will be properly implemented when the production LLM infrastructure is complete
-    return 0.25  # Placeholder: random chance for multiple choice
+    raise NotImplementedError(
+        "Zero-shot baseline evaluation not yet implemented. This requires implementing actual LLM zero-shot inference."
+    )
 
 
 def _create_error_result(model: BiasModel, error_msg: str) -> EvaluationResult:
