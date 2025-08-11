@@ -11,6 +11,9 @@ from sklearn.preprocessing import LabelEncoder
 from ezcolorlog import root_logger as logger
 
 from .protocols import QType
+from .core.protocols import BiasModel
+from .core.cross_validation import run_cross_validation
+from .core.evaluators import RandomForestEvaluator
 from .llm_utils import (
     format_records_for_llama_factory_sft,
     generate_llama_factory_config,
@@ -21,7 +24,32 @@ from .llm_utils import (
 
 
 # =============================================================================
-# 1.  HELPERS ------------------------------------------------------------------
+# 1.  TEMPORARY LLM EVALUATOR (Phase 2 will replace this) --------------------
+# =============================================================================
+
+
+class TemporaryLLMEvaluator:
+    """Temporary LLM evaluator - will be replaced in Phase 2"""
+
+    def __init__(self, llm_config: Dict):
+        self.llm_config = llm_config
+
+    def evaluate_model(
+        self,
+        model: BiasModel,
+        df: pd.DataFrame,
+        target_col: str,
+        n_splits: int,
+        random_state: int,
+        verbose: bool,
+        repeats: int,
+    ):
+        """Temporary implementation that calls the old LLM evaluation"""
+        return evaluate_bias_model_llm(model, df, n_splits, random_state, verbose, repeats, target_col, self.llm_config)
+
+
+# =============================================================================
+# 2.  HELPERS ------------------------------------------------------------------
 # =============================================================================
 
 
@@ -60,6 +88,33 @@ def _score(est, X, y, metric="acc"):
         return mean_relative_accuracy(y_pred, y.values.astype(float))
     else:
         raise ValueError(f"Unknown metric: {metric}")
+
+
+def _generate_feature_importances(model: QType, df: pd.DataFrame, target_col: str, random_state: int) -> pd.DataFrame:
+    """Generate feature importances for Random Forest models"""
+    # Train on full dataset for feature importances
+    qdf = model.select_rows(df)
+    model.fit_feature_maps(qdf)
+    full_df = model.add_features(qdf)
+    X_full = full_df[model.feature_cols].copy()
+    encode_categoricals(X_full, X_full.copy())
+    y_full = full_df[target_col]
+
+    estimator = _make_estimator(model.task, random_state)
+    estimator.fit(X_full, y_full)
+
+    feature_importances = (
+        pd.DataFrame({"feature": model.feature_cols, "importance": estimator.feature_importances_})
+        .sort_values("importance", ascending=False)
+        .reset_index(drop=True)
+    )
+
+    return feature_importances
+
+
+def _generate_llm_feature_importances(mean_score: float) -> pd.DataFrame:
+    """Generate mock feature importances for LLM models for compatibility"""
+    return pd.DataFrame({"feature": ["llm_finetuning", "improvement"], "importance": [mean_score, mean_score]})
 
 
 def weighted_mean_std(scores: np.ndarray, counts: np.ndarray) -> tuple[float, float]:
@@ -189,7 +244,7 @@ def evaluate_bias_model(
 
 
 def run_evaluation(
-    models: List[QType],
+    models: List[BiasModel],
     df_full: pd.DataFrame,
     n_splits: int = 5,
     random_state: int = 42,
@@ -203,8 +258,11 @@ def run_evaluation(
     """
     Run evaluation for all models and return a summary table of results.
 
+    Now uses unified evaluation framework that supports both RF and LLM models
+    through the BiasModel protocol and ModelEvaluator interface.
+
     Args:
-        models: List of QType models to evaluate.
+        models: List of BiasModel models to evaluate (RF or LLM).
         df_full: The full dataframe containing all data.
         n_splits: Number of cross-validation splits
         random_state: Random seed for reproducibility
@@ -226,53 +284,56 @@ def run_evaluation(
         if not models:
             raise ValueError(f"Unknown question types: {question_types}")
 
-    for m in models:
-        logger.info(f"\n================  {m.name.upper()}  ================")
+    for model in models:
+        logger.info(f"\n================  {model.name.upper()}  ================")
         try:
             if mode == "rf":
-                mean_score, std_score, fi, count = evaluate_bias_model(
-                    m,
-                    df_full,
+                # Use new unified framework for RF evaluation
+                evaluator = RandomForestEvaluator()
+                mean_score, std_score, count = run_cross_validation(
+                    model=model,
+                    evaluator=evaluator,
+                    df=df_full,
                     n_splits=n_splits,
                     random_state=random_state,
                     verbose=verbose,
                     repeats=repeats,
                     target_col=target_col,
                 )
+                # Generate feature importances for RF
+                feature_importances = _generate_feature_importances(model, df_full, target_col, random_state)
+
             elif mode == "llm":
-                mean_score, std_score, fi, count = evaluate_bias_model_llm(
-                    m,
-                    df_full,
-                    n_splits=n_splits,
-                    random_state=random_state,
-                    verbose=verbose,
-                    repeats=repeats,
-                    target_col=target_col,
-                    llm_config=llm_config or {},
+                # Temporary: use old LLM evaluation until Phase 2
+                llm_evaluator = TemporaryLLMEvaluator(llm_config or {})
+                mean_score, std_score, feature_importances, count = llm_evaluator.evaluate_model(
+                    model, df_full, target_col, n_splits, random_state, verbose, repeats
                 )
+                feature_importances = _generate_llm_feature_importances(mean_score)
             else:
                 raise ValueError(f"Unknown mode: {mode}")
+
             weighted_score = mean_score * count
             all_results.append(
                 {
-                    "Model": m.name,
-                    "Format": m.format.upper(),
-                    "Metric": m.metric.upper(),
+                    "Model": model.name,
+                    "Format": model.format.upper(),
+                    "Metric": model.metric.upper(),
                     "Score": mean_score,
                     "± Std": std_score,
-                    "Feature Importances": fi,
+                    "Feature Importances": feature_importances,
                     "Count": count,
                     "Weighted Score": weighted_score,
                     "Error": None,
                 }
             )
         except Exception as e:
-            logger.warning(f"[WARNING] Evaluation failed for model {m.name}: {e}")
+            logger.warning(f"[WARNING] Evaluation failed for model {model.name}: {e}")
             all_results.append(
                 {
-                    "Model": m.name,
-                    "Format": getattr(m, "format", "N/A").upper() if hasattr(m, "format") else "N/A",
-                    "Metric": getattr(m, "metric", "N/A").upper() if hasattr(m, "metric") else "N/A",
+                    "Model": model.name,
+                    "Format": getattr(model, "format", "N/A").upper() if hasattr(model, "format") else "N/A",
+                    "Metric": getattr(model, "metric", "N/A").upper() if hasattr(model, "metric") else "N/A",
                     "Score": 0,
                     "± Std": 0,
                     "Feature Importances": None,

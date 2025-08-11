@@ -1,14 +1,18 @@
-from typing import Protocol, List, Literal, Optional
+from typing import Protocol, List, Literal
 import pandas as pd
 
+from .core.protocols import BiasModel
 
-class QType(Protocol):
-    name: str
+
+class QType(BiasModel, Protocol):
+    """
+    Protocol for feature-based bias detection models (e.g., Random Forest).
+
+    Extends BiasModel with feature engineering capabilities required for
+    traditional ML approaches.
+    """
+
     feature_cols: List[str]
-    format: Literal["mc", "num"]
-    target_col_override: Optional[str] = None
-
-    def select_rows(self, df: pd.DataFrame) -> pd.DataFrame: ...
 
     def fit_feature_maps(self, train_df: pd.DataFrame) -> None:
         """Collect any statistics derived from *train* only (for leakage‑free CV)."""
