@@ -1,0 +1,10 @@
+---
+description: anytime code needs to be run, run via `uv`
+alwaysApply: false
+---
+please use `uv` to run all code and tests with the proper environment. examples:
+- `uv run script.py`
+- `uv run pytest tests/`
+- `uv run python -c "import <package>"`
+
+new packages can be added to the environment by running `uv add <package>`.
