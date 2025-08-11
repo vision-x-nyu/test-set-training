@@ -13,7 +13,7 @@ from typing import List, Dict, Any, Optional
 
 from .base import BaseLLMTrainer, ProgressCallback
 from ..data.models import TrainingDatum, LoRAAdapterInfo
-from ...llm_utils import format_records_for_llama_factory_sft, run_llama_factory_training
+from ..utils.llamafactory import format_records_for_llama_factory_sft, run_llama_factory_training
 
 
 @dataclass

@@ -14,13 +14,66 @@ from .core.protocols import BiasModel, FeatureBasedBiasModel
 from .core.cross_validation import UnifiedCrossValidator, CrossValidationConfig
 from .core.evaluators import RandomForestFoldEvaluator, RandomForestPostProcessor, LLMFoldEvaluator, LLMPostProcessor
 from .core.results import EvaluationResult
-from .llm_utils import (
+from .llm.utils.llamafactory import (
     format_records_for_llama_factory_sft,
     generate_llama_factory_config,
     run_llama_factory_training,
-    LLMPredictor,
-    BaselineLLMPredictor,
 )
+from .llm.predictors.vllm import VLLMPredictor, VLLMPredictorConfig
+from .llm.data.models import TestInstance
+
+
+# =============================================================================
+# Legacy Adapter Classes (for backward compatibility)
+# =============================================================================
+
+
+class _LegacyPredictorAdapter:
+    """
+    Adapter to make VLLMPredictor compatible with legacy evaluation code.
+
+    This provides the old interface: predict(instructions: List[str]) -> List[str]
+    while using the new VLLMPredictor internally.
+    """
+
+    def __init__(
+        self, model_name: str = "google/gemma-2-2b-it", batch_size: int = 4, max_seq_length: int = 512, **kwargs
+    ):
+        config = VLLMPredictorConfig(
+            model_name=model_name, batch_size=batch_size, max_seq_length=max_seq_length, **kwargs
+        )
+        self.predictor = VLLMPredictor(config)
+
+    def predict(self, instructions: List[str]) -> List[str]:
+        """Legacy interface: predict from list of instructions"""
+        # Convert to TestInstance format
+        test_instances = [
+            TestInstance(
+                instruction=instruction,
+                instance_id=f"legacy_{i}",
+                ground_truth="",  # Not needed for prediction
+            )
+            for i, instruction in enumerate(instructions)
+        ]
+
+        # Get predictions using new interface
+        results = self.predictor.predict(test_instances)
+
+        # Extract just the prediction strings
+        return [result.prediction for result in results]
+
+    def reset(self):
+        """Reset the underlying predictor"""
+        self.predictor.reset()
+
+    def load_adapter(self, adapter_path: str):
+        """Load adapter for fine-tuned inference"""
+        self.predictor.load_adapter(adapter_path)
+
+
+# Aliases for backward compatibility
+BaselineLLMPredictor = _LegacyPredictorAdapter
+LLMPredictor = _LegacyPredictorAdapter
 
 
 # =============================================================================
