@@ -308,29 +308,18 @@ def evaluate_bias_model_llm(
             f"[WARNING] {model.name} is numerical, with no gt_idx column. Overriding target column to 'ground_truth'"
         )
 
-    # TODO: remove this after fixing evaluation
-    baseline_llm_predictor = BaselineLLMPredictor(
-        model_name=llm_config["model_name"],
-        batch_size=llm_config["batch_size"],
-        max_seq_length=llm_config["max_seq_length"],
-    )
-
-    # Get zero-shot baseline first
-    zero_shot_acc = _evaluate_zero_shot_baseline(baseline_llm_predictor, qdf, target_col, model.format)
-    logger.info(f"Zero-shot baseline accuracy: {zero_shot_acc:.2%}")
-
-    # cleanup the base model after getting the zero-shot baseline
-    baseline_llm_predictor.reset()
-    del baseline_llm_predictor
-
     # Initialize LLM predictor
     llm_predictor = LLMPredictor(
         model_name=llm_config["model_name"],
         batch_size=llm_config["batch_size"],
         max_seq_length=llm_config["max_seq_length"],
     )
-    repeat_pbar = tqdm(range(repeats), desc=f"[{model.name.upper()}] LLM Repeats", disable=repeats == 1)
+    # Get zero-shot baseline first
+    zero_shot_acc = _evaluate_zero_shot_baseline(llm_predictor, qdf, target_col, model.format)
+    logger.info(f"Zero-shot baseline accuracy: {zero_shot_acc:.2%}")
+    llm_predictor.reset()  # cleanup the base model after getting the zero-shot baseline
 
+    repeat_pbar = tqdm(range(repeats), desc=f"[{model.name.upper()}] LLM Repeats", disable=repeats == 1)
     for repeat in repeat_pbar:
         current_seed = random_state + repeat
 
