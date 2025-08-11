@@ -7,7 +7,7 @@ import numpy as np
 
 from sentence_transformers import SentenceTransformer, util
 
-from ...protocols import QType
+from ...core.protocols import FeatureBasedBiasModel
 from ...utils import fuzzy_cleanup_numeric
 
 
@@ -125,7 +125,7 @@ FEATURE_COLS = [
 ]
 
 
-class VideoMMEModel(QType):
+class VideoMMEModel(FeatureBasedBiasModel):
     name = "video_mme"
     format = "mc"
 
@@ -329,7 +329,7 @@ class VideoMMEModelSubsetCombo(VideoMMEModel):
 
 
 # TODO: not sure if this is used?
-class LLMVideoMMEModel(QType):
+class LLMVideoMMEModel(FeatureBasedBiasModel):
     name = "video_mme"
     format = "mc"
 

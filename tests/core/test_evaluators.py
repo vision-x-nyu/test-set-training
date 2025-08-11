@@ -13,8 +13,8 @@ from unittest.mock import Mock, patch
 from TsT.core.evaluators import RandomForestEvaluator
 
 
-class MockQTypeModel:
-    """Mock QType model for testing RandomForestEvaluator"""
+class MockFeatureBasedBiasModel:
+    """Mock FeatureBasedBiasModel model for testing RandomForestEvaluator"""
 
     def __init__(self):
         self.name = "test_model"
@@ -67,7 +67,7 @@ class TestRandomForestEvaluator:
         """Test basic RF evaluation for classification"""
         # Setup
         evaluator = RandomForestEvaluator()
-        model = MockQTypeModel()
+        model = MockFeatureBasedBiasModel()
 
         # Create simple linearly separable data
         train_df = create_synthetic_data(80, 2)
@@ -88,7 +88,7 @@ class TestRandomForestEvaluator:
         """Test RF evaluation for regression task"""
         # Setup
         evaluator = RandomForestEvaluator()
-        model = MockQTypeModel()
+        model = MockFeatureBasedBiasModel()
         model.task = "reg"
         model.metric = "mra"
 
@@ -119,7 +119,7 @@ class TestRandomForestEvaluator:
 
         # Setup test
         evaluator = RandomForestEvaluator()
-        model = MockQTypeModel()
+        model = MockFeatureBasedBiasModel()
         train_df = create_synthetic_data(30, 2)
         test_df = create_synthetic_data(10, 2)
 
@@ -138,7 +138,7 @@ class TestRandomForestEvaluator:
     def test_feature_engineering_pipeline(self):
         """Test that feature engineering pipeline is called correctly"""
         evaluator = RandomForestEvaluator()
-        model = MockQTypeModel()
+        model = MockFeatureBasedBiasModel()
 
         train_df = create_synthetic_data(20, 2)
         test_df = create_synthetic_data(5, 2)
@@ -159,7 +159,7 @@ class TestRandomForestEvaluator:
     def test_deterministic_results(self):
         """Test that same seed produces same results"""
         evaluator = RandomForestEvaluator()
-        model = MockQTypeModel()
+        model = MockFeatureBasedBiasModel()
 
         train_df = create_synthetic_data(40, 2)
         test_df = create_synthetic_data(10, 2)
@@ -184,7 +184,7 @@ class TestRandomForestEvaluator:
     def test_different_seeds_different_results(self):
         """Test that different seeds produce different results"""
         evaluator = RandomForestEvaluator()
-        model = MockQTypeModel()
+        model = MockFeatureBasedBiasModel()
 
         # Use different data for different seeds to ensure different results
         train_df1 = create_synthetic_data(40, 2)
@@ -218,7 +218,7 @@ class TestRandomForestEvaluator:
     def test_empty_feature_columns(self):
         """Test handling of model with no feature columns"""
         evaluator = RandomForestEvaluator()
-        model = MockQTypeModel()
+        model = MockFeatureBasedBiasModel()
         model.feature_cols = []  # No features
 
         train_df = create_synthetic_data(20, 2)
@@ -233,7 +233,7 @@ class TestRandomForestEvaluator:
     def test_missing_target_column(self):
         """Test handling of missing target column"""
         evaluator = RandomForestEvaluator()
-        model = MockQTypeModel()
+        model = MockFeatureBasedBiasModel()
 
         train_df = create_synthetic_data(20, 2)
         test_df = create_synthetic_data(5, 2)

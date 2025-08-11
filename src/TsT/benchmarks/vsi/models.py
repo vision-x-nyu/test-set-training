@@ -8,7 +8,7 @@ from collections import Counter
 from sklearn.preprocessing import minmax_scale
 from scipy.stats import lognorm
 
-from ...protocols import QType
+from ...core.protocols import FeatureBasedBiasModel
 
 
 # =============================================================================
@@ -17,7 +17,7 @@ from ...protocols import QType
 
 
 # OBJECT COUNTING
-class ObjCountModel(QType):
+class ObjCountModel(FeatureBasedBiasModel):
     name = "object_counting"
     format = "num"
 
@@ -106,7 +106,7 @@ class ObjCountModel(QType):
 
 
 # OBJECT ABS DISTANCE
-class ObjAbsDistModel(QType):
+class ObjAbsDistModel(FeatureBasedBiasModel):
     name = "object_abs_distance"
     format = "num"
 
@@ -236,7 +236,7 @@ class ObjAbsDistModel(QType):
 
 
 # OBJECT SIZE ESTIMATION
-class ObjSizeEstModel(QType):
+class ObjSizeEstModel(FeatureBasedBiasModel):
     name = "object_size_estimation"
     format = "num"
 
@@ -334,7 +334,7 @@ class ObjSizeEstModel(QType):
 
 
 # ROOM SIZE ESTIMATION
-class RoomSizeEstModel(QType):
+class RoomSizeEstModel(FeatureBasedBiasModel):
     name = "room_size_estimation"
     format = "num"
 
@@ -413,7 +413,7 @@ class RoomSizeEstModel(QType):
 
 
 # OBJECT RELATIVE DISTANCE
-class RelDistanceModel(QType):
+class RelDistanceModel(FeatureBasedBiasModel):
     name = "object_rel_distance"
     format = "mc"
 
@@ -491,7 +491,7 @@ class RelDistanceModel(QType):
 
 
 # RELATIVE DIRECTION
-class RelDirModel(QType):
+class RelDirModel(FeatureBasedBiasModel):
     name = "object_rel_direction"
     format = "mc"
 
@@ -636,7 +636,7 @@ class RelDirModel(QType):
 
 
 # ROUTE PLANNING
-class RoutePlanningModel(QType):
+class RoutePlanningModel(FeatureBasedBiasModel):
     name = "route_planning"
     format = "mc"
 
@@ -757,7 +757,7 @@ class RoutePlanningModel(QType):
 
 
 # OBJECT APPEARANCE ORDER
-class ObjOrderModel(QType):
+class ObjOrderModel(FeatureBasedBiasModel):
     name = "obj_appearance_order"
     format = "mc"
     target_col_override = "gt_idx"

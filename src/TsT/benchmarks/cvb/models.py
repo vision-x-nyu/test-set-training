@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 from sklearn.preprocessing import minmax_scale
 
-from ...protocols import QType
+from ...core.protocols import FeatureBasedBiasModel
 from ezcolorlog import root_logger as logger
 
 
@@ -15,7 +15,7 @@ from ezcolorlog import root_logger as logger
 
 
 # TODO: not finished, clean this up
-class CVBModel(QType):
+class CVBModel(FeatureBasedBiasModel):
     name = "cvb"
     format = "mc"
 
@@ -34,7 +34,7 @@ class CVBModel(QType):
 
 
 # 2D Count
-class Count2DModel(QType):
+class Count2DModel(FeatureBasedBiasModel):
     name = "count_2d"
     format = "mc"
 
@@ -180,7 +180,7 @@ class Count2DModel(QType):
 
 
 # 2D Relation
-class Relation2DModel(QType):
+class Relation2DModel(FeatureBasedBiasModel):
     name = "relation_2d"
     format = "mc"
 
@@ -333,7 +333,7 @@ class Relation2DModel(QType):
 
 
 # 3D Depth
-class Depth3DModel(QType):
+class Depth3DModel(FeatureBasedBiasModel):
     name = "depth_3d"
     format = "mc"
 
@@ -409,7 +409,7 @@ class Depth3DModel(QType):
 
 
 # 3D Distance
-class Distance3DModel(QType):
+class Distance3DModel(FeatureBasedBiasModel):
     name = "distance_3d"
     format = "mc"
 

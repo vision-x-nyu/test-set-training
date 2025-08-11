@@ -1,11 +1,13 @@
 """
-Base protocols for bias detection models and evaluators.
+All protocols for bias detection models and evaluators.
 
-This module defines the fundamental interfaces that all bias detection models
-and evaluation strategies must implement to work with the unified evaluation framework.
+This module defines the complete interface hierarchy for the TsT evaluation framework:
+- BiasModel: Generic interface for any bias detection model
+- FeatureBasedBiasModel: Specific interface for traditional ML models with feature engineering
+- ModelEvaluator: Abstract base for evaluation strategies
 """
 
-from typing import Protocol, Literal, Optional, runtime_checkable
+from typing import Protocol, Literal, Optional, List, runtime_checkable
 from abc import ABC, abstractmethod
 import pandas as pd
 
@@ -31,6 +33,44 @@ class BiasModel(Protocol):
     def metric(self) -> Literal["acc", "mra"]:
         """Accuracy or mean relative accuracy"""
         ...
+
+
+@runtime_checkable
+class FeatureBasedBiasModel(BiasModel, Protocol):
+    """
+    Protocol for feature-based bias detection models (e.g., Random Forest).
+
+    Extends BiasModel with feature engineering capabilities required for
+    traditional ML approaches. This is what was previously called 'QType'.
+    """
+
+    feature_cols: List[str]
+
+    def fit_feature_maps(self, train_df: pd.DataFrame) -> None:
+        """Collect any statistics derived from *train* only (for leakage‑free CV)."""
+        ...
+
+    def add_features(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Return a **copy** of `df` with question‑specific feature columns added."""
+        ...
+
+    @property
+    def task(self) -> Literal["clf", "reg"]:
+        if self.format == "mc":
+            return "clf"
+        elif self.format == "num":
+            return "reg"
+        else:
+            raise ValueError(f"Unknown format: {self.format}")
+
+    @property
+    def metric(self) -> Literal["acc", "mra"]:
+        if self.format == "mc":
+            return "acc"
+        elif self.format == "num":
+            return "mra"
+        else:
+            raise ValueError(f"Unknown format: {self.format}")
 
 
 class ModelEvaluator(ABC):

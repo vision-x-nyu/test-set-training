@@ -10,8 +10,7 @@ from sklearn.model_selection import StratifiedKFold, KFold
 from sklearn.preprocessing import LabelEncoder
 from ezcolorlog import root_logger as logger
 
-from .protocols import QType
-from .core.protocols import BiasModel
+from .core.protocols import BiasModel, FeatureBasedBiasModel
 from .core.cross_validation import run_cross_validation
 from .core.evaluators import RandomForestEvaluator
 from .llm_utils import (
@@ -90,7 +89,9 @@ def _score(est, X, y, metric="acc"):
         raise ValueError(f"Unknown metric: {metric}")
 
 
-def _generate_feature_importances(model: QType, df: pd.DataFrame, target_col: str, random_state: int) -> pd.DataFrame:
+def _generate_feature_importances(
+    model: FeatureBasedBiasModel, df: pd.DataFrame, target_col: str, random_state: int
+) -> pd.DataFrame:
     """Generate feature importances for Random Forest models"""
     # Train on full dataset for feature importances
     qdf = model.select_rows(df)
@@ -142,7 +143,7 @@ def weighted_mean_std(scores: np.ndarray, counts: np.ndarray) -> tuple[float, fl
 
 
 def evaluate_bias_model(
-    model: QType,
+    model: FeatureBasedBiasModel,
     df: pd.DataFrame,
     n_splits: int = 5,
     random_state: int = 42,
@@ -376,7 +377,7 @@ def run_evaluation(
 
 
 def evaluate_bias_model_llm(
-    model: QType,
+    model: FeatureBasedBiasModel,
     df: pd.DataFrame,
     n_splits: int = 5,
     random_state: int = 42,

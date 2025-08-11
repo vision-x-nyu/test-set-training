@@ -10,7 +10,7 @@ import pandas as pd
 from typing import get_type_hints
 
 from TsT.core.protocols import BiasModel, ModelEvaluator
-from TsT.protocols import QType
+from TsT.core.protocols import FeatureBasedBiasModel
 
 
 class TestBiasModelProtocol:
@@ -36,46 +36,46 @@ class TestBiasModelProtocol:
             assert method in protocol_methods, f"BiasModel should define {method}"
 
 
-class TestQTypeInheritance:
-    """Test that QType correctly inherits from BiasModel"""
+class TestFeatureBasedBiasModelInheritance:
+    """Test that FeatureBasedBiasModel correctly inherits from BiasModel"""
 
     def test_qtype_implements_bias_model(self):
-        """Test that QType implements BiasModel protocol"""
+        """Test that FeatureBasedBiasModel implements BiasModel protocol"""
         # Note: Cannot use issubclass() with Protocols that have non-method members
-        # Instead test that QType has all BiasModel functionality
+        # Instead test that FeatureBasedBiasModel has all BiasModel functionality
         from typing import get_type_hints
 
         bias_model_hints = get_type_hints(BiasModel)
-        qtype_hints = get_type_hints(QType)
+        qtype_hints = get_type_hints(FeatureBasedBiasModel)
 
-        # QType should have all BiasModel attributes
+        # FeatureBasedBiasModel should have all BiasModel attributes
         for attr in bias_model_hints:
-            assert attr in qtype_hints, f"QType should have {attr} attribute"
+            assert attr in qtype_hints, f"FeatureBasedBiasModel should have {attr} attribute"
 
     def test_qtype_has_bias_model_methods(self):
-        """Test that QType has all BiasModel methods"""
-        # QType should have all BiasModel methods
+        """Test that FeatureBasedBiasModel has all BiasModel methods"""
+        # FeatureBasedBiasModel should have all BiasModel methods
         bias_model_methods = [name for name in dir(BiasModel) if not name.startswith("_")]
-        qtype_methods = [name for name in dir(QType) if not name.startswith("_")]
+        qtype_methods = [name for name in dir(FeatureBasedBiasModel) if not name.startswith("_")]
 
         for method in bias_model_methods:
-            assert method in qtype_methods, f"QType should have {method} method"
+            assert method in qtype_methods, f"FeatureBasedBiasModel should have {method} method"
 
     def test_qtype_has_additional_methods(self):
-        """Test that QType has its additional feature-based methods"""
-        qtype_methods = [name for name in dir(QType) if not name.startswith("_")]
+        """Test that FeatureBasedBiasModel has its additional feature-based methods"""
+        qtype_methods = [name for name in dir(FeatureBasedBiasModel) if not name.startswith("_")]
 
-        # QType should have these additional methods for feature engineering
+        # FeatureBasedBiasModel should have these additional methods for feature engineering
         # Note: feature_cols is an attribute annotation, not a method
         additional_methods = ["fit_feature_maps", "add_features"]
         for method in additional_methods:
-            assert method in qtype_methods, f"QType should have {method}"
+            assert method in qtype_methods, f"FeatureBasedBiasModel should have {method}"
 
         # Check that feature_cols is annotated
         from typing import get_type_hints
 
-        hints = get_type_hints(QType)
-        assert "feature_cols" in hints, "QType should have feature_cols annotation"
+        hints = get_type_hints(FeatureBasedBiasModel)
+        assert "feature_cols" in hints, "FeatureBasedBiasModel should have feature_cols annotation"
 
 
 class MockModel:
@@ -214,7 +214,7 @@ class TestRealModelCompliance:
             pytest.skip("Video-MME benchmark not available")
 
     def test_video_mme_qtype_compliance(self):
-        """Test that Video-MME models still work as QType"""
+        """Test that Video-MME models still work as FeatureBasedBiasModel"""
         try:
             from TsT.benchmarks.video_mme import get_models
 
@@ -224,13 +224,13 @@ class TestRealModelCompliance:
 
             model = models[0]
 
-            # Test QType interface (should still work)
-            def check_qtype_interface(qtype_model: QType):
+            # Test FeatureBasedBiasModel interface (should still work)
+            def check_qtype_interface(qtype_model: FeatureBasedBiasModel):
                 # BiasModel attributes
                 assert hasattr(qtype_model, "name")
                 assert hasattr(qtype_model, "format")
 
-                # QType-specific attributes
+                # FeatureBasedBiasModel-specific attributes
                 assert hasattr(qtype_model, "feature_cols")
 
                 # Methods

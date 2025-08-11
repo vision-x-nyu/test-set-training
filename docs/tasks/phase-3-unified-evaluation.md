@@ -316,7 +316,7 @@ class RandomForestFoldEvaluator(FoldEvaluator):
     
     def evaluate_fold(
         self,
-        model: QType,  # Feature-based model
+        model: FeatureBasedBiasModel,  # Feature-based model
         train_df: pd.DataFrame,
         test_df: pd.DataFrame,
         target_col: str,
@@ -351,7 +351,7 @@ class RandomForestPostProcessor(PostProcessor):
     
     def process_results(
         self,
-        model: QType,
+        model: FeatureBasedBiasModel,
         df: pd.DataFrame,
         target_col: str,
         evaluation_result: EvaluationResult,

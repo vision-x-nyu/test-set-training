@@ -1,6 +1,6 @@
 import pandas as pd
 from functools import lru_cache
-from ...protocols import QType
+from ...core.protocols import FeatureBasedBiasModel
 
 
 @lru_cache(maxsize=1)
@@ -56,7 +56,7 @@ FEATURE_COLS = [
 ]
 
 
-class MMMUMCModel(QType):
+class MMMUMCModel(FeatureBasedBiasModel):
     name = "mmmu"
     format = "mc"
 

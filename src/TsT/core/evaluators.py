@@ -6,12 +6,8 @@ logic for different model types while working with the unified cross-validation 
 """
 
 import pandas as pd
-from typing import TYPE_CHECKING
 
-from .protocols import ModelEvaluator
-
-if TYPE_CHECKING:
-    from ..protocols import QType
+from .protocols import ModelEvaluator, FeatureBasedBiasModel
 
 
 class RandomForestEvaluator(ModelEvaluator):
@@ -19,7 +15,7 @@ class RandomForestEvaluator(ModelEvaluator):
 
     def evaluate_fold(
         self,
-        model: "QType",  # Feature-based model
+        model: FeatureBasedBiasModel,  # Feature-based model
         train_df: pd.DataFrame,
         test_df: pd.DataFrame,
         target_col: str,

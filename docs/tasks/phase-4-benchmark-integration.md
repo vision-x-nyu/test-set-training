@@ -74,7 +74,7 @@ class TextDataFormatter(Protocol):
 class BenchmarkInterface(Protocol):
     """Extended interface for benchmarks that support text formatting"""
     
-    # Existing QType methods
+    # Existing FeatureBasedBiasModel methods
     name: str
     format: Literal["mc", "num"]
     target_col_override: Optional[str]
@@ -254,7 +254,7 @@ class VideoMMETextFormatter(TextDataFormatter):
 from ...core.interfaces import TextDataFormatter, BenchmarkInterface
 from .text_formatter import VideoMMETextFormatter
 
-class VideoMMEModel(BenchmarkInterface):  # Changed from QType
+class VideoMMEModel(BenchmarkInterface):  # Changed from FeatureBasedBiasModel
     name = "video_mme"
     format = "mc"
     feature_cols = FEATURE_COLS  # Keep for RF compatibility
@@ -263,7 +263,7 @@ class VideoMMEModel(BenchmarkInterface):  # Changed from QType
         # Existing initialization...
         self._text_formatter = VideoMMETextFormatter()
     
-    # Existing QType methods remain unchanged...
+    # Existing FeatureBasedBiasModel methods remain unchanged...
     def select_rows(self, df: pd.DataFrame) -> pd.DataFrame: ...
     def fit_feature_maps(self, train_df: pd.DataFrame) -> None: ...
     def add_features(self, df: pd.DataFrame) -> pd.DataFrame: ...
@@ -516,7 +516,7 @@ Each follows the same pattern:
 
 ## Breaking Changes
 
-- Models must implement `BenchmarkInterface` instead of just `QType`
+- Models must implement `BenchmarkInterface` instead of just `FeatureBasedBiasModel`
 - LLM evaluation requires models to provide text formatters
 - `_convert_to_blind_qa_format()` function is removed
 
