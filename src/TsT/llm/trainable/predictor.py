@@ -38,7 +38,7 @@ class TrainableLLMPredictor:
     Key design principles:
     1. Composition over inheritance
     2. Clear separation of training and inference concerns
-    3. Proper GPU memory management between phases
+    3. Proper GPU memory management between training and inference
     4. Stateless design for k-fold compatibility
     """
 

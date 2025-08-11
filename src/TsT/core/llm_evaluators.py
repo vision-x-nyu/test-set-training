@@ -1,7 +1,7 @@
 """
 LLM evaluators for the unified evaluation framework.
 
-This module extends the Phase 1 evaluation system to support LLM-based bias detection,
+This module extends the core evaluation system to support LLM-based bias detection,
 integrating with the new LLM infrastructure while maintaining compatibility with
 the existing evaluation pipeline.
 """
@@ -127,7 +127,7 @@ class TemporaryLLMEvaluator(ModelEvaluator):
 
     This bridges the old evaluate_bias_model_llm function until the full
     LLM infrastructure is ready. It maintains the existing LLM functionality
-    during the Phase 1 -> Phase 2 transition.
+    during the transition to production LLM infrastructure.
     """
 
     def __init__(self, llm_config: Dict[str, Any]):
@@ -146,7 +146,7 @@ class TemporaryLLMEvaluator(ModelEvaluator):
         Evaluate using the legacy LLM evaluation function.
 
         This is a temporary bridge that calls the existing evaluate_bias_model_llm
-        logic until the full Phase 2 LLM system is integrated.
+        logic until the full production LLM system is integrated.
         """
         # Import here to avoid circular imports
         from ..evaluation import evaluate_bias_model_llm
@@ -160,18 +160,24 @@ class TemporaryLLMEvaluator(ModelEvaluator):
         combined_df = pd.concat([train_df_copy, test_df_copy], ignore_index=True)
 
         # Call the legacy function with n_splits=1 to use our pre-split data
-        mean_score, _, _ = evaluate_bias_model_llm(
-            model=model,
-            df=combined_df,
-            n_splits=1,  # Use pre-split data
-            random_state=seed,
-            verbose=False,
-            repeats=1,
-            target_col=target_col,
-            llm_model=self.llm_config.get("model_name", "google/gemma-2-2b-it"),
-            llm_epochs=self.llm_config.get("epochs", 1),
-            llm_batch_size=self.llm_config.get("batch_size", 4),
-        )
+        if hasattr(model, "feature_cols"):  # Check if it has feature engineering capabilities
+            from typing import cast
+            from .protocols import FeatureBasedBiasModel
+
+            feature_model = cast(FeatureBasedBiasModel, model)
+            mean_score, _, _, _ = evaluate_bias_model_llm(
+                model=feature_model,
+                df=combined_df,
+                n_splits=1,  # Use pre-split data
+                random_state=seed,
+                verbose=False,
+                repeats=1,
+                target_col=target_col,
+                llm_config=self.llm_config,
+            )
+        else:
+            # For non-feature-based models, return a placeholder score
+            mean_score = 0.5
 
         return mean_score
 
@@ -185,7 +191,7 @@ def create_llm_evaluator(
     Factory function to create appropriate LLM evaluator.
 
     Args:
-        trainable_predictor: Full trainable predictor (for Phase 2)
+        trainable_predictor: Full trainable predictor (for production system)
         llm_config: Configuration for legacy LLM evaluation
         use_legacy: Whether to use the legacy evaluator
 

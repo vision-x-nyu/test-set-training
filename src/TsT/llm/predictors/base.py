@@ -42,7 +42,7 @@ class LLMPredictorInterface(ABC):
         Reset model state and free GPU memory.
 
         This is critical for k-fold training where we need to free memory
-        between training and inference phases.
+        between training and inference operations.
         """
         pass
 

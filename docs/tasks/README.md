@@ -38,6 +38,15 @@ To begin implementation:
 - **Production Ready**: Multi-GPU support, memory management, type safety
 - **DataEnvGym Patterns**: Follow proven architectural patterns
 
+## Important Naming Convention
+
+**⚠️ Critical**: "Phase" terminology is for internal development docs only. It should NEVER appear in actual code, comments, docstrings, variable names, or test cases. Users reading the code should see logical, descriptive names that explain functionality, not development phase references.
+
+- ✅ **Good**: `UnifiedCrossValidator`, `evaluate_model()`, `# Temporary LLM evaluator`
+- ❌ **Bad**: `Phase3CrossValidator`, `run_phase_3_evaluation()`, `# Phase 2 will replace this`
+
+This ensures the codebase remains understandable to users who have no knowledge of our internal development phases.
+
 ## Success Criteria
 
 - **Performance**: 3-5x speedup from multi-GPU inference

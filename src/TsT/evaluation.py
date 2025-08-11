@@ -11,8 +11,9 @@ from sklearn.preprocessing import LabelEncoder
 from ezcolorlog import root_logger as logger
 
 from .core.protocols import BiasModel, FeatureBasedBiasModel
-from .core.cross_validation import run_cross_validation
-from .core.evaluators import RandomForestEvaluator
+from .core.cross_validation import UnifiedCrossValidator, CrossValidationConfig
+from .core.evaluators import RandomForestFoldEvaluator, RandomForestPostProcessor, LLMFoldEvaluator, LLMPostProcessor
+from .core.results import EvaluationResult
 from .llm_utils import (
     format_records_for_llama_factory_sft,
     generate_llama_factory_config,
@@ -23,12 +24,12 @@ from .llm_utils import (
 
 
 # =============================================================================
-# 1.  TEMPORARY LLM EVALUATOR (Phase 2 will replace this) --------------------
+# 1.  TEMPORARY LLM EVALUATOR (will be replaced with production LLM system) ----
 # =============================================================================
 
 
 class TemporaryLLMEvaluator:
-    """Temporary LLM evaluator - will be replaced in Phase 2"""
+    """Temporary LLM evaluator - will be replaced with production LLM system"""
 
     def __init__(self, llm_config: Dict):
         self.llm_config = llm_config
@@ -44,7 +45,13 @@ class TemporaryLLMEvaluator:
         repeats: int,
     ):
         """Temporary implementation that calls the old LLM evaluation"""
-        return evaluate_bias_model_llm(model, df, n_splits, random_state, verbose, repeats, target_col, self.llm_config)
+        # Cast to FeatureBasedBiasModel for legacy compatibility
+        if isinstance(model, FeatureBasedBiasModel):
+            return evaluate_bias_model_llm(
+                model, df, n_splits, random_state, verbose, repeats, target_col, self.llm_config
+            )
+        else:
+            raise ValueError(f"Legacy LLM evaluation requires FeatureBasedBiasModel, got {type(model)}")
 
 
 # =============================================================================
@@ -259,8 +266,8 @@ def run_evaluation(
     """
     Run evaluation for all models and return a summary table of results.
 
-    Now uses unified evaluation framework that supports both RF and LLM models
-    through the BiasModel protocol and ModelEvaluator interface.
+    Supports both Random Forest and LLM-based bias detection with consistent
+    cross-validation and detailed result reporting.
 
     Args:
         models: List of BiasModel models to evaluate (RF or LLM).
@@ -277,101 +284,63 @@ def run_evaluation(
     Returns:
         DataFrame with model results including mean score and standard deviation
     """
-    all_results = []
-
     # Filter models if question_types is specified
     if question_types is not None:
         models = [m for m in models if m.name in question_types]
         if not models:
             raise ValueError(f"Unknown question types: {question_types}")
 
+    # Create cross-validator
+    cv_config = CrossValidationConfig(
+        n_splits=n_splits,
+        random_state=random_state,
+        repeats=repeats,
+        verbose=verbose,
+    )
+    cross_validator = UnifiedCrossValidator(cv_config)
+
+    # Create evaluator and post-processor based on mode
+    if mode == "rf":
+        evaluator = RandomForestFoldEvaluator()
+        post_processor = RandomForestPostProcessor()
+    elif mode == "llm":
+        # Get zero-shot baseline first (using placeholder for now)
+        zero_shot_baseline = (
+            _get_zero_shot_baseline(models[0], df_full, target_col, llm_config or {}) if models else 0.25
+        )
+        evaluator = LLMFoldEvaluator(llm_config or {})
+        post_processor = LLMPostProcessor(llm_config or {}, zero_shot_baseline)
+    else:
+        raise ValueError(f"Unknown mode: {mode}")
+
+    # Evaluate all models
+    results: List[EvaluationResult] = []
     for model in models:
         logger.info(f"\n================  {model.name.upper()}  ================")
         try:
-            if mode == "rf":
-                # Use new unified framework for RF evaluation
-                evaluator = RandomForestEvaluator()
-                mean_score, std_score, count = run_cross_validation(
-                    model=model,
-                    evaluator=evaluator,
-                    df=df_full,
-                    n_splits=n_splits,
-                    random_state=random_state,
-                    verbose=verbose,
-                    repeats=repeats,
-                    target_col=target_col,
-                )
-                # Generate feature importances for RF
-                feature_importances = _generate_feature_importances(model, df_full, target_col, random_state)
-
-            elif mode == "llm":
-                # Temporary: use old LLM evaluation until Phase 2
-                llm_evaluator = TemporaryLLMEvaluator(llm_config or {})
-                mean_score, std_score, feature_importances, count = llm_evaluator.evaluate_model(
-                    model, df_full, target_col, n_splits, random_state, verbose, repeats
-                )
-                feature_importances = _generate_llm_feature_importances(mean_score)
-            else:
-                raise ValueError(f"Unknown mode: {mode}")
-
-            weighted_score = mean_score * count
-            all_results.append(
-                {
-                    "Model": model.name,
-                    "Format": model.format.upper(),
-                    "Metric": model.metric.upper(),
-                    "Score": mean_score,
-                    "± Std": std_score,
-                    "Feature Importances": feature_importances,
-                    "Count": count,
-                    "Weighted Score": weighted_score,
-                    "Error": None,
-                }
+            result = cross_validator.evaluate_model(
+                model=model,
+                evaluator=evaluator,
+                df=df_full,
+                target_col=target_col,
+                post_processor=post_processor,
             )
+            results.append(result)
         except Exception as e:
-            logger.warning(f"[WARNING] Evaluation failed for model {model.name}: {e}")
-            all_results.append(
-                {
-                    "Model": model.name,
-                    "Format": getattr(model, "format", "N/A").upper() if hasattr(model, "format") else "N/A",
-                    "Metric": getattr(model, "metric", "N/A").upper() if hasattr(model, "metric") else "N/A",
-                    "Score": 0,
-                    "± Std": 0,
-                    "Feature Importances": None,
-                    "Count": 0,
-                    "Weighted Score": 0,
-                    "Error": str(e),
-                }
-            )
+            logger.error(f"Evaluation failed for {model.name}: {e}")
+            # Create error result
+            results.append(_create_error_result(model, str(e)))
 
-    # Create summary table
-    summary = pd.DataFrame(all_results)
-    summary = summary.sort_values("Score", ascending=False)
+    # Convert to summary DataFrame
+    summary_data = [r.to_summary_dict() for r in results]
+    summary = pd.DataFrame(summary_data)
 
-    # Calculate overall average score
-    overall_avg = summary["Score"].mean()
-    overall_std = summary["Score"].std()
-    total_count = summary["Count"].sum()
+    # Sort by score (need to convert percentage strings back to float for sorting)
+    summary["_sort_score"] = summary["Score"].str.rstrip("%").astype(float) / 100
+    summary = summary.sort_values("_sort_score", ascending=False).drop("_sort_score", axis=1)
 
-    # Weighted mean and std calculation (use raw values before formatting)
-    weighted_avg, weighted_std = weighted_mean_std(summary["Score"].values, summary["Count"].values)
-
-    # Format the scores as percentages (after all calculations)
-    summary["Score"] = summary["Score"].map("{:.1%}".format)
-    summary["± Std"] = summary["± Std"].map("{:.1%}".format)
-
-    # Print pretty table
-    table_summary = "\n" * 3 + "=" * 80 + "\n"
-    table_summary += "EVALUATION SUMMARY\n"
-    table_summary += "=" * 80 + "\n"
-    table_summary += summary[["Model", "Format", "Metric", "Score", "± Std", "Count"]].to_string(index=False) + "\n"
-    table_summary += "=" * 80 + "\n"
-    table_summary += f"OVERALL AVERAGE SCORE: {overall_avg:.1%} ± {overall_std:.1%}\n"
-    table_summary += (
-        f"WEIGHTED AVERAGE SCORE: {weighted_avg:.1%} ± {weighted_std:.1%} (total examples: {total_count})\n"
-    )
-    table_summary += "=" * 80 + "\n"
-    logger.info(table_summary)
+    # Calculate and log overall statistics
+    _log_overall_statistics(summary, results)
 
     return summary
 
@@ -631,9 +600,7 @@ def _train_llm_fold(train_data: List[Dict[str, str]], temp_path: Path, llm_confi
     return str(output_dir)
 
 
-def _evaluate_zero_shot_baseline(
-    predictor: "LLMPredictor", df: pd.DataFrame, target_col: str, format_type: str
-) -> float:
+def _evaluate_zero_shot_baseline(predictor, df: pd.DataFrame, target_col: str, format_type: str) -> float:
     """
     Evaluate zero-shot baseline performance.
     """
@@ -665,3 +632,66 @@ def _evaluate_llm_fold(predictor: "LLMPredictor", test_data: List[Dict[str, str]
         correct = sum(1 for pred, gt in zip(predictions, ground_truth) if pred.strip() == gt.strip())
 
     return correct / len(test_data) if test_data else 0.0
+
+
+# =============================================================================
+# EVALUATION HELPER FUNCTIONS ------------------------------------------------
+# =============================================================================
+
+
+def _get_zero_shot_baseline(model: BiasModel, df: pd.DataFrame, target_col: str, llm_config: Dict) -> float:
+    """Get zero-shot baseline for LLM evaluation"""
+    # TODO: inference + evaluate the model on the full testset before any training
+
+    # For now, return a placeholder value
+    # This will be properly implemented when the production LLM infrastructure is complete
+    return 0.25  # Placeholder: random chance for multiple choice
+
+
+def _create_error_result(model: BiasModel, error_msg: str) -> EvaluationResult:
+    """Create error result for failed evaluations"""
+    from .core.results import EvaluationResult, RepeatResult, FoldResult
+
+    # Create dummy fold and repeat results
+    error_fold = FoldResult(fold_id=1, score=0.0, fold_size=0, metadata={"error": error_msg})
+    error_repeat = RepeatResult.from_fold_results(0, [error_fold])
+
+    return EvaluationResult.from_repeat_results(
+        model_name=model.name,
+        model_format=getattr(model, "format", "unknown"),
+        metric_name=getattr(model, "metric", "unknown"),
+        repeat_results=[error_repeat],
+        model_metadata={"error": error_msg},
+    )
+
+
+def _log_overall_statistics(summary: pd.DataFrame, results: List[EvaluationResult]):
+    """Log overall evaluation statistics"""
+    if summary.empty:
+        logger.warning("No evaluation results to summarize")
+        return
+
+    # Convert percentage strings back to float for calculations
+    scores = summary["Score"].str.rstrip("%").astype(float) / 100
+    counts = summary["Count"]
+
+    # Calculate overall statistics
+    overall_avg = scores.mean()
+    overall_std = scores.std()
+    total_count = counts.sum()
+
+    # Weighted mean and std calculation
+    weighted_avg, weighted_std = weighted_mean_std(scores.values, counts.values)
+
+    # Print pretty table
+    table_summary = "\n" * 3 + "=" * 80 + "\n"
+    table_summary += "UNIFIED EVALUATION SUMMARY\n"
+    table_summary += "=" * 80 + "\n"
+    table_summary += summary[["Model", "Format", "Metric", "Score", "± Std", "Count"]].to_string(index=False) + "\n"
+    table_summary += "=" * 80 + "\n"
+    table_summary += f"OVERALL AVERAGE SCORE: {overall_avg:.1%} ± {overall_std:.1%}\n"
+    table_summary += (
+        f"WEIGHTED AVERAGE SCORE: {weighted_avg:.1%} ± {weighted_std:.1%} (total examples: {total_count})\n"
+    )
+    table_summary += "=" * 80 + "\n"
+    logger.info(table_summary)
