@@ -1,11 +1,12 @@
 import pandas as pd
-import spacy
 from functools import lru_cache
 from ...protocols import QType
 
 
 @lru_cache(maxsize=1)
 def get_nlp():
+    import spacy
+
     return spacy.load("en_core_web_sm")
 
 

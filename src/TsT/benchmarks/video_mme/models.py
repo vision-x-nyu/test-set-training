@@ -2,7 +2,6 @@ from typing import Dict
 from functools import lru_cache
 
 import pandas as pd
-import spacy
 from joblib import Memory
 import numpy as np
 
@@ -17,6 +16,8 @@ memory = Memory(location=".cache", compress=True, verbose=0)
 
 @lru_cache(maxsize=1)
 def get_nlp():
+    import spacy
+
     return spacy.load("en_core_web_sm")
 
 
