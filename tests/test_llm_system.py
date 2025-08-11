@@ -1,8 +1,8 @@
 """
-Integration tests for Phase 2 LLM system.
+Integration tests for the TsT LLM system.
 
 This module tests the complete LLM infrastructure including predictors, trainers,
-and integration with the evaluation framework.
+data models, and integration with the evaluation framework.
 """
 
 import pytest
@@ -22,8 +22,8 @@ from TsT.llm import (
 from TsT.core.llm_evaluators import create_llm_evaluator
 
 
-class TestPhase2BasicFunctionality:
-    """Test basic functionality of Phase 2 components"""
+class TestLLMComponents:
+    """Test basic functionality of LLM components"""
 
     def test_data_models(self):
         """Test Pydantic data models work correctly"""
@@ -87,8 +87,8 @@ class TestPhase2BasicFunctionality:
         assert trainable.trainer is trainer
 
 
-class TestPhase2DataConversion:
-    """Test data conversion utilities"""
+class TestLLMDataConversion:
+    """Test LLM data conversion utilities"""
 
     def test_benchmark_data_conversion(self):
         """Test conversion from benchmark data to LLM format"""
@@ -114,8 +114,8 @@ class TestPhase2DataConversion:
 
 
 @pytest.mark.skip(reason="Requires GPU and model downloads")
-class TestPhase2FullIntegration:
-    """Full integration tests that require GPU resources"""
+class TestLLMFullTrainingPipeline:
+    """Full end-to-end training pipeline tests that require GPU resources"""
 
     def test_end_to_end_training_and_inference(self):
         """Test complete training and inference pipeline"""
@@ -148,15 +148,15 @@ class TestPhase2FullIntegration:
             assert predictions[0].instance_id == "test_1"
 
 
-class TestPhase2MockIntegration:
-    """Test integration with mocked components"""
+class TestLLMTrainingWithMocks:
+    """Test LLM training pipeline with mocked dependencies"""
 
     @patch("pathlib.Path.exists")
     @patch("TsT.llm.trainers.llamafactory.run_llama_factory_training")
     @patch("TsT.llm.predictors.vllm.LLM")
     @patch("TsT.llm.predictors.vllm.AutoTokenizer")
-    def test_mock_training_pipeline(self, mock_tokenizer, mock_llm, mock_training, mock_path_exists):
-        """Test training pipeline with mocked components"""
+    def test_llamafactory_training_with_mocks(self, mock_tokenizer, mock_llm, mock_training, mock_path_exists):
+        """Test LlamaFactory training pipeline with mocked dependencies"""
         # Setup mocks
         mock_tokenizer_instance = Mock()
         mock_tokenizer.from_pretrained.return_value = mock_tokenizer_instance

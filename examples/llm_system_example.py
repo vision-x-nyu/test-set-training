@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-Example usage of Phase 2 LLM system for bias detection.
+Example usage of TsT LLM system for bias detection.
 
-This script demonstrates how to use the new LLM infrastructure with the
+This script demonstrates how to use the LLM infrastructure with the
 unified evaluation framework for bias detection in multimodal benchmarks.
 """
 
@@ -202,7 +202,7 @@ def example_io_utilities():
 
 def main():
     """Run all examples"""
-    print("🚀 TsT Phase 2 LLM System Examples")
+    print("🚀 TsT LLM System Examples")
     print("=" * 50)
 
     try:
