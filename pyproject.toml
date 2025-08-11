@@ -24,6 +24,9 @@ dependencies = [
     "flash-attn>=2.8.2",
     "ezcolorlog>=1.0.3",
     "sh>=2.2.2",
+    "ray[default]>=2.48.0",
+    "pydantic>=2.10.6",
+    "typing-extensions>=4.14.0",
 ]
 
 [tool.uv]
