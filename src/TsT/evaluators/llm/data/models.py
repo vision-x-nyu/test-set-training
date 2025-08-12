@@ -21,9 +21,10 @@ class TrainingDatum(BaseModel):
 class TestInstance(BaseModel):
     """Test instance for TsT LLM inference"""
 
-    instruction: str = Field(..., description="The instruction/question for the model")
     instance_id: str = Field(..., description="Unique identifier for this instance")
+    instruction: str = Field(..., description="The instruction/question for the model")
     ground_truth: str = Field(..., description="The correct answer for evaluation")
+    metadata: Optional[Dict[str, Any]] = Field(None, description="Optional metadata for tracking")
 
 
 class LLMPredictionResult(BaseModel):

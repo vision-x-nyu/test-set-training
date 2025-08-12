@@ -144,7 +144,7 @@ def example_data_conversion():
     """Example: Data conversion utilities"""
     print("\n=== Data Conversion Example ===")
 
-    from TsT.evaluators.llm.data.conversion import convert_to_blind_training_format, convert_to_test_instances
+    from TsT.evaluators.llm.data.conversion import convert_to_blind_training_format, convert_to_blind_test_instances
 
     # Create sample benchmark data
     df = create_sample_data()
@@ -157,9 +157,10 @@ def example_data_conversion():
     )
 
     # Convert to test instances
-    test_instances = convert_to_test_instances(
+    test_instances = convert_to_blind_test_instances(
         df=df[5:10],  # Use next 5 rows
         target_col="gt_idx",
+        format_type="mc",
     )
 
     print("✅ Converted benchmark data")

@@ -6,16 +6,74 @@ used in the TsT framework and LLM training pipelines.
 """
 
 import pandas as pd
-from typing import List, Literal, Dict, Optional
+from typing import List, Literal, Dict, Optional, Any
 from .models import TrainingDatum, TestInstance
+
+
+def get_blind_qa(
+    record: Dict[str, Any],
+    target_col: str,
+    format_type: Literal["mc", "num", "oe"],
+    instruction_template: str = "Answer the following question: {question}",
+    post_prompt: str = "Answer with the option's letter from the given choices directly.",
+    response_template: str = "{answer}",
+):
+    """
+    Convert a single record to blind QA format.
+    """
+
+    assert "{question}" in instruction_template, (
+        f"instruction_template must contain {{question}}, got {instruction_template}"
+    )
+    assert "{answer}" in response_template, f"response_template must contain {{answer}}, got {response_template}"
+
+    # Extract question text - try different common column names
+    question_text = None
+    for col in ["question", "text", "instruction", "query"]:
+        if col in record and pd.notna(record[col]):
+            question_text = str(record[col])
+            break
+
+    if question_text is None:
+        raise ValueError("No question text found in the row")
+
+    # get instruction and answer
+    target = record[target_col]
+    match format_type:
+        case "mc":
+            # Include answer choices in the question
+            if "choices" in record:
+                choices_text = " ".join([f"({chr(65 + i)}) {choice}" for i, choice in enumerate(record["choices"])])
+                question_text = f"{question_text} Choices: {choices_text}"
+            elif "options" in record:
+                choices_text = "\n".join(record["options"])
+                question_text = f"{question_text} Options:\n{choices_text}"
+
+            if target_col == "gt_idx" and isinstance(target, int):
+                # Convert index to letter
+                answer = chr(65 + int(target))
+            else:
+                answer = str(target)
+        case "num" | "oe":
+            answer = str(target)
+        case _:
+            raise ValueError(f"Invalid format type: {format_type}")
+
+    instruction = instruction_template.format(question=question_text)
+    instruction += "\n" + post_prompt if post_prompt else ""
+
+    response = response_template.format(answer=answer)
+
+    return instruction, response, answer
 
 
 def convert_to_blind_training_format(
     df: pd.DataFrame,
     target_col: str,
-    format_type: Literal["mc", "num"],
+    format_type: Literal["mc", "num", "oe"],
     instruction_template: str = "Answer the following question: {question}",
-    response_template: str = "The answer is {answer}.",
+    post_prompt: str = "Answer with the option's letter from the given choices directly.",
+    response_template: str = "{answer}",
 ) -> List[TrainingDatum]:
     """
     Convert DataFrame to TsT training format for LLM fine-tuning.
@@ -33,27 +91,9 @@ def convert_to_blind_training_format(
     training_data = []
 
     for idx, row in df.iterrows():
-        # Extract question text - try different common column names
-        question_text = None
-        for col in ["question", "text", "instruction", "query"]:
-            if col in row and pd.notna(row[col]):
-                question_text = str(row[col])
-                break
-
-        if question_text is None:
-            # Fall back to using all non-target columns as context
-            context_cols = [col for col in df.columns if col != target_col]
-            question_text = " ".join([f"{col}: {row[col]}" for col in context_cols if pd.notna(row[col])])
-
-        # Format instruction
-        instruction = instruction_template.format(question=question_text)
-
-        # Format response based on type
-        answer = str(row[target_col])
-        if format_type == "mc":
-            response = response_template.format(answer=answer)
-        else:  # numerical
-            response = response_template.format(answer=answer)
+        instruction, response, answer = get_blind_qa(
+            row, target_col, format_type, instruction_template, post_prompt, response_template
+        )
 
         training_data.append(
             TrainingDatum(
@@ -71,10 +111,13 @@ def convert_to_blind_training_format(
     return training_data
 
 
-def convert_to_test_instances(
+def convert_to_blind_test_instances(
     df: pd.DataFrame,
     target_col: str,
+    format_type: Literal["mc", "num", "oe"],
     instruction_template: str = "Answer the following question: {question}",
+    post_prompt: str = "Answer with the option's letter from the given choices directly.",
+    response_template: str = "{answer}",
     id_prefix: str = "test",
 ) -> List[TestInstance]:
     """
@@ -92,22 +135,25 @@ def convert_to_test_instances(
     test_instances = []
 
     for idx, row in df.iterrows():
-        # Extract question text
-        question_text = None
-        for col in ["question", "text", "instruction", "query"]:
-            if col in row and pd.notna(row[col]):
-                question_text = str(row[col])
-                break
+        instruction, response, answer = get_blind_qa(
+            row, target_col, format_type, instruction_template, post_prompt, response_template
+        )
 
-        if question_text is None:
-            context_cols = [col for col in df.columns if col != target_col]
-            question_text = " ".join([f"{col}: {row[col]}" for col in context_cols if pd.notna(row[col])])
-
-        instruction = instruction_template.format(question=question_text)
         instance_id = f"{id_prefix}_{idx}"
-        ground_truth = str(row[target_col])
 
-        test_instances.append(TestInstance(instruction=instruction, instance_id=instance_id, ground_truth=ground_truth))
+        test_instances.append(
+            TestInstance(
+                instance_id=instance_id,
+                instruction=instruction,
+                ground_truth=response,
+                metadata={
+                    "row_id": idx,
+                    "format_type": format_type,
+                    "target_col": target_col,
+                    "original_answer": answer,
+                },
+            )
+        )
 
     return test_instances
 

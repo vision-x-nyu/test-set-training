@@ -108,10 +108,22 @@ class TestLLMDataConversion:
         training_data = convert_to_blind_training_format(df=df, target_col="gt_idx", format_type="mc")
 
         assert len(training_data) == 2
-        assert training_data[0].instruction == "Answer the following question: What is the color?"
-        assert training_data[0].response == "The answer is A."
-        assert training_data[1].instruction == "Answer the following question: How many objects?"
-        assert training_data[1].response == "The answer is B."
+        assert (
+            training_data[0].instruction
+            == """Answer the following question: What is the color? Options:
+A: Red
+B: Blue
+Answer with the option's letter from the given choices directly."""
+        )
+        assert training_data[0].response == "A"
+        assert (
+            training_data[1].instruction
+            == """Answer the following question: How many objects? Options:
+A: 1
+B: 2
+Answer with the option's letter from the given choices directly."""
+        )
+        assert training_data[1].response == "B"
 
 
 @pytest.mark.skip(reason="Requires GPU and model downloads")

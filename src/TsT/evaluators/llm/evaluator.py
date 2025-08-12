@@ -14,7 +14,8 @@ from ezcolorlog import root_logger as logger
 
 from ...core.protocols import ModelEvaluator, BiasModel
 from ...core.results import FoldResult, EvaluationResult
-from ..llm.data.models import TestInstance
+from ..llm.data.models import TestInstance, TrainingDatum
+from ..llm.data.conversion import convert_to_blind_training_format, convert_to_blind_test_instances
 from ..llm.predictors.vllm import VLLMPredictor, VLLMPredictorConfig
 from ..llm.utils.llamafactory import (
     format_records_for_llama_factory_sft,
@@ -27,66 +28,7 @@ def score_llm():
     raise NotImplementedError("LLM scoring not implemented")
 
 
-def convert_to_blind_qa_format(df: pd.DataFrame, target_col: str, format_type: str) -> List[Dict[str, str]]:
-    """
-    Convert dataframe to blind QA format for LLM training.
-    Removes all visual information, keeping only text-based questions and answers.
-    """
-    training_data = []
-
-    for _, row in df.iterrows():
-        # TODO: make this configurable
-        # Extract question text - this varies by benchmark
-        if "question" in row:
-            question = row["question"]
-        elif "instruction" in row:
-            question = row["instruction"]
-        elif "prompt" in row:
-            question = row["prompt"]
-        else:
-            # Fallback: look for any text column that might contain the question
-            text_cols = [col for col in row.index if isinstance(row[col], str) and len(str(row[col])) > 10]
-            question = row[text_cols[0]] if text_cols else str(row.iloc[0])
-
-        post_prompt = "Answer with the option's letter from the given choices directly."
-
-        # Format based on question type
-        if format_type == "mc":  # Multiple choice
-            # Include answer choices in the question
-            # TODO: make this configurable
-            if "choices" in row:
-                choices_text = " ".join([f"({chr(65 + i)}) {choice}" for i, choice in enumerate(row["choices"])])
-                instruction = f"{question} Choices: {choices_text}"
-            elif "options" in row:
-                choices_text = "\n".join(row["options"])
-                instruction = f"{question} Options:\n{choices_text}"
-            else:
-                instruction = question
-
-            instruction = f"{instruction}\n{post_prompt}"
-
-            # Get the correct answer
-            if target_col == "gt_idx":
-                # Convert index to letter
-                answer = chr(65 + int(row[target_col]))
-            else:
-                answer = str(row[target_col])
-
-        else:  # Numerical or open-ended
-            instruction = question
-            answer = str(row[target_col])
-
-        training_data.append(
-            {
-                "instruction": instruction,
-                "response": answer,
-            }
-        )
-
-    return training_data
-
-
-def train_llm(train_data: List[Dict[str, str]], temp_path: Path, llm_config: Dict, fold: int, seed: int) -> str:
+def train_llm(train_data: List[TrainingDatum], temp_path: Path, llm_config: Dict, fold: int, seed: int) -> str:
     """
     Train LLM on a single fold using LLaMA-Factory.
     Returns path to the trained adapter.
@@ -94,9 +36,12 @@ def train_llm(train_data: List[Dict[str, str]], temp_path: Path, llm_config: Dic
     dataset_dir = temp_path / "dataset"
     output_dir = temp_path / "output" / f"fold_{fold}"
 
+    # Convert TrainingDatum objects to dict format for LlamaFactory
+    train_data_dicts = [{"instruction": datum.instruction, "response": datum.response} for datum in train_data]
+
     # Format data for LLaMA-Factory
     sft_spec, dataset_path = format_records_for_llama_factory_sft(
-        train_data,
+        train_data_dicts,
         str(dataset_dir),
         instruction_key="instruction",
         response_key="response",
@@ -135,37 +80,35 @@ def evaluate_llm_zero_shot(predictor: VLLMPredictor, df: pd.DataFrame, target_co
     Evaluate zero-shot baseline performance.
     """
     logger.info(f"Evaluating zero-shot baseline for {format_type} format")
-    test_data = convert_to_blind_qa_format(df, target_col, format_type)
-    return evaluate_llm(predictor, test_data, format_type)
+
+    # Convert to TestInstance objects directly
+    test_instances = convert_to_blind_test_instances(
+        df=df,
+        target_col=target_col,
+        format_type=format_type,
+        instruction_template="Answer the following question: {question}",
+        id_prefix="zero_shot",
+    )
+
+    return evaluate_llm(predictor, test_instances, format_type)
 
 
-def evaluate_llm(predictor: VLLMPredictor, test_data: List[Dict[str, str]], format_type: str) -> float:
+def evaluate_llm(predictor: VLLMPredictor, test_instances: List[TestInstance], format_type: str) -> float:
     """
     Evaluate LLM on test data and return accuracy.
     """
-    instructions = [item["instruction"] for item in test_data]
-    ground_truth = [item["response"] for item in test_data]
-
-    # Convert to TestInstance format for the new API
-    test_instances = [
-        TestInstance(
-            instruction=instruction,
-            instance_id=f"eval_{i}",
-            ground_truth=gt,
-        )
-        for i, (instruction, gt) in enumerate(zip(instructions, ground_truth))
-    ]
-
-    # TODO: make an evaluation function that takes LLMPredictionResult objects and returns a score
-    # HACK [temporary]: manually score here
-    # Generate predictions using new interface
+    # No need to convert - already TestInstance objects!
     prediction_results = predictor.predict(test_instances)
     predictions = [result.prediction for result in prediction_results]
+    ground_truth = [instance.ground_truth for instance in test_instances]
 
     # print the first prediction and ground truth
     if predictions and ground_truth:
         logger.info(f"First prediction: {predictions[0]}")
         logger.info(f"First ground truth: {ground_truth[0]}")
+
+    # TODO: make an evaluation function that takes LLMPredictionResult objects and returns a score
+    # HACK [temporary]: manually score here
 
     # Calculate accuracy
     if format_type == "mc":
@@ -175,7 +118,7 @@ def evaluate_llm(predictor: VLLMPredictor, test_data: List[Dict[str, str]], form
         # For numerical, use relative accuracy or exact match
         correct = sum(1 for pred, gt in zip(predictions, ground_truth) if pred.strip() == gt.strip())
 
-    return correct / len(test_data) if test_data else 0.0
+    return correct / len(test_instances) if test_instances else 0.0
 
 
 class LLMEvaluator(ModelEvaluator):
@@ -242,9 +185,17 @@ class LLMEvaluator(ModelEvaluator):
     ) -> FoldResult:
         """Train + Evaluate LLM on a single fold"""
 
-        # Create training dataset in blind QA format
-        train_data = convert_to_blind_qa_format(train_df, target_col, self.model.format)
-        test_data = convert_to_blind_qa_format(test_df, target_col, self.model.format)
+        # Create training dataset using Pydantic models
+        train_data = convert_to_blind_training_format(train_df, target_col, self.model.format)
+
+        # Create test instances using Pydantic models
+        test_instances = convert_to_blind_test_instances(
+            df=test_df,
+            target_col=target_col,
+            format_type=self.model.format,
+            instruction_template="Answer the following question: {question}",
+            id_prefix=f"fold_{fold_id}",
+        )
 
         # Fine-tune LLM on training fold
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -255,7 +206,7 @@ class LLMEvaluator(ModelEvaluator):
 
             # eval on test fold
             self.predictor.load_adapter(adapter_path)  # load FTed adapter
-            fold_score = evaluate_llm(self.predictor, test_data, self.model.format)
+            fold_score = evaluate_llm(self.predictor, test_instances, self.model.format)
 
         return FoldResult(
             fold_id=fold_id,
