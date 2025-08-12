@@ -40,27 +40,30 @@ HF_HUB_ENABLE_HF_TRANSFER=1 huggingface-cli download --repo-type=dataset lmms-la
 
 ### Running Evaluations
 
-Use the unified script to run evaluations on any benchmark:
+Use the package CLI to run evaluations on any benchmark:
 
 ```bash
 # VSI-Bench
-uv run scripts/run_tst.py --benchmark vsi
+uv run python -m TsT --benchmark vsi
 
 # CV-Bench  
-uv run scripts/run_tst.py --benchmark cvb
+uv run python -m TsT --benchmark cvb
 
 # Video-MME
-uv run scripts/run_tst.py --benchmark video_mme
+uv run python -m TsT --benchmark video_mme
 ```
 
 #### Additional Options
 
 ```bash
 # With custom parameters
-uv run scripts/run_tst.py --benchmark video_mme --n_splits 10 --verbose --repeats 3
+uv run python -m TsT --benchmark video_mme --n_splits 10 --verbose --repeats 3
 
 # Evaluate specific question types only
-uv run scripts/run_tst.py --benchmark vsi --question_types "object_counting,object_size_estimation"
+uv run python -m TsT --benchmark vsi --question_types "object_counting,object_size_estimation"
+
+# LLM mode evaluation
+uv run python -m TsT --benchmark vsi --mode llm --llm_model "google/gemma-2-2b-it"
 ```
 
 ## IBP

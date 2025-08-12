@@ -1,9 +1,16 @@
+"""
+Command-line interface for Test-Set Training (TsT) evaluation.
+
+This module provides a CLI for running TsT evaluations on various benchmarks.
+Run with: python -m TsT [options]
+"""
+
 import argparse
 import importlib
 
 from ezcolorlog import root_logger as logger
-from TsT import run_evaluation
-from TsT.evaluators.llm.config import LLMRunConfig
+from .evaluation import run_evaluation
+from .evaluators.llm.config import LLMRunConfig
 
 
 def get_benchmark_module(benchmark_name: str):
@@ -12,10 +19,11 @@ def get_benchmark_module(benchmark_name: str):
         module = importlib.import_module(f"TsT.benchmarks.{benchmark_name}")
         return module
     except ImportError:
-        raise ValueError(f"Unknown benchmark: {benchmark_name}. Available benchmarks: vsi, cvb, video_mme")
+        raise ValueError(f"Unknown benchmark: {benchmark_name}. Available benchmarks: vsi, cvb, video_mme, mmmu")
 
 
-if __name__ == "__main__":
+def create_parser():
+    """Create and configure the argument parser."""
     parser = argparse.ArgumentParser(description="Run Test-Set Training evaluation on benchmarks")
     parser.add_argument(
         "--benchmark",
@@ -23,7 +31,7 @@ if __name__ == "__main__":
         type=str,
         required=True,
         choices=["vsi", "cvb", "video_mme", "mmmu"],
-        help="Benchmark to run (vsi, cvb, or video_mme)",
+        help="Benchmark to run (vsi, cvb, video_mme, or mmmu)",
     )
     parser.add_argument("--n_splits", "-k", type=int, default=5, help="Number of CV splits")
     parser.add_argument("--random_state", "-s", type=int, default=42, help="Random seed")
@@ -75,6 +83,12 @@ if __name__ == "__main__":
         default=1,
         help="Number of training epochs for LLM fine-tuning (default: 1)",
     )
+    return parser
+
+
+def main():
+    """Main CLI entry point."""
+    parser = create_parser()
     args = parser.parse_args()
 
     # Import the benchmark module
@@ -136,3 +150,7 @@ if __name__ == "__main__":
         mode=args.mode,
         llm_config=llm_config,
     )
+
+
+if __name__ == "__main__":
+    main()
