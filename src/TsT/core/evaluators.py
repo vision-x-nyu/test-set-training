@@ -6,15 +6,12 @@ logic for different model types while working with the unified cross-validation 
 """
 
 from typing import Dict, Any, Optional, List
-from tqdm import tqdm
 import tempfile
 from pathlib import Path
 
 import pandas as pd
-import numpy as np
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.preprocessing import LabelEncoder
-from sklearn.model_selection import KFold, StratifiedKFold
 from ezcolorlog import root_logger as logger
 
 
@@ -311,139 +308,6 @@ def evaluate_llm(predictor: VLLMPredictor, test_data: List[Dict[str, str]], form
         correct = sum(1 for pred, gt in zip(predictions, ground_truth) if pred.strip() == gt.strip())
 
     return correct / len(test_data) if test_data else 0.0
-
-
-# TODO: create a new bias model type for LLM evaluation
-def evaluate_bias_model_llm(
-    model: FeatureBasedBiasModel,
-    df: pd.DataFrame,
-    n_splits: int = 5,
-    random_state: int = 42,
-    verbose: bool = True,
-    repeats: int = 1,
-    target_col: str = "ground_truth",
-    llm_config: Optional[Dict] = None,
-):
-    """
-    Evaluate bias model using LLM fine-tuning instead of Random Forest.
-
-    This implements the TsT method with LLM fine-tuning as described in the task document.
-    Uses LoRA fine-tuning on k-fold splits to learn non-visual shortcuts.
-    """
-    if llm_config is None:
-        llm_config = {
-            "model_name": "google/gemma-2-2b-it",
-            "batch_size": 32,
-            "learning_rate": 2e-4,
-            "num_epochs": 5,
-            "lora_rank": 8,
-            "lora_alpha": 16,
-            "max_seq_length": 512,
-        }
-
-    qdf = model.select_rows(df)
-    all_scores = []
-    all_zero_shot_scores = []
-
-    # Initialize LLM predictor
-    llm_config_obj = VLLMPredictorConfig(
-        model_name=llm_config["model_name"],
-        batch_size=llm_config["batch_size"],
-        max_seq_length=llm_config["max_seq_length"],
-        apply_chat_template=False,  # Disable for compatibility with Gemma and other models
-    )
-    llm_predictor = VLLMPredictor(llm_config_obj)
-
-    # Get zero-shot baseline first
-    zero_shot_acc = evaluate_llm_zero_shot(llm_predictor, qdf, target_col, model.format)
-    logger.info(f"Zero-shot baseline accuracy: {zero_shot_acc:.2%}")
-    llm_predictor.reset()  # cleanup the base model after getting the zero-shot baseline
-
-    repeat_pbar = tqdm(range(repeats), desc=f"[{model.name.upper()}] LLM Repeats", disable=repeats == 1)
-    for repeat in repeat_pbar:
-        current_seed = random_state + repeat
-
-        # Use appropriate splitter based on task type
-        if model.task == "reg":
-            splitter = KFold(n_splits=n_splits, shuffle=True, random_state=current_seed)
-            split_args = (qdf,)
-        else:
-            splitter = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=current_seed)
-            split_args = (qdf, qdf[target_col])
-
-        scores = []
-        zero_shot_scores = []
-
-        fold_pbar = tqdm(
-            enumerate(splitter.split(*split_args), 1),
-            desc=f"[{model.name.upper()}] LLM Folds",
-            total=n_splits,
-            disable=repeats > 1,
-        )
-
-        for fold, (tr_idx, te_idx) in fold_pbar:
-            tr, te = qdf.iloc[tr_idx].copy(), qdf.iloc[te_idx].copy()
-
-            # Create training dataset in blind QA format
-            train_data = convert_to_blind_qa_format(tr, target_col, model.format)
-            test_data = convert_to_blind_qa_format(te, target_col, model.format)
-
-            # Fine-tune LLM on training fold
-            with tempfile.TemporaryDirectory() as temp_dir:
-                temp_path = Path(temp_dir)
-
-                # Fine-tune model
-                adapter_path = train_llm(train_data, temp_path, llm_config, fold, current_seed)
-
-                # Load fine-tuned adapter
-                llm_predictor.load_adapter(adapter_path)
-
-                # Evaluate on test fold
-                fold_score = evaluate_llm(llm_predictor, test_data, model.format)
-                scores.append(fold_score)
-
-                # Also track zero-shot for comparison
-                zero_shot_scores.append(zero_shot_acc)
-
-                fold_pbar.set_postfix(
-                    {"fold_acc": f"{np.mean(scores):.2%}", "vs_zero_shot": f"+{np.mean(scores) - zero_shot_acc:.2%}"}
-                )
-
-        all_scores.append(scores)
-        all_zero_shot_scores.append(zero_shot_scores)
-
-        if repeats > 1:
-            current_avg = np.mean(scores)
-            repeat_pbar.set_postfix({"avg_acc": f"{current_avg:.2%}"})
-
-    # Calculate statistics
-    mean_scores = [np.mean(scores) for scores in all_scores]
-    mean_acc = float(np.mean(mean_scores))
-    std_acc = float(np.std(mean_scores))
-    count = len(qdf)
-
-    # Calculate improvement over zero-shot
-    improvement = mean_acc - zero_shot_acc
-
-    if verbose:
-        logger.info(f"\n[{model.name.upper()}] LLM TsT Results:")
-        logger.info(f"Zero-shot baseline: {zero_shot_acc:.2%}")
-        logger.info(f"TsT-LoRA accuracy: {mean_acc:.2%} ± {std_acc:.2%}")
-        logger.info(f"Improvement: +{improvement:.2%}")
-        if repeats == 1:
-            logger.info(f"[{model.name.upper()}] Fold accuracies: {[f'{s:.2%}' for s in all_scores[0]]}")
-        else:
-            logger.info(f"[{model.name.upper()}] Repeat accuracies: {[f'{s:.2%}' for s in mean_scores]}")
-
-    # Create mock feature importances for compatibility
-    fi = pd.DataFrame(
-        {
-            "feature": ["llm_finetuning", "zero_shot_baseline", "improvement"],
-            "importance": [mean_acc, zero_shot_acc, improvement],
-        }
-    )
-
-    return mean_acc, std_acc, fi, count
 
 
 class LLMEvaluator(ModelEvaluator):
