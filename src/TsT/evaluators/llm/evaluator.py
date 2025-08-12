@@ -12,8 +12,8 @@ from pathlib import Path
 import pandas as pd
 from ezcolorlog import root_logger as logger
 
-from ..core.protocols import ModelEvaluator, BiasModel
-from ..core.results import FoldResult, EvaluationResult
+from ...core.protocols import ModelEvaluator, BiasModel
+from ...core.results import FoldResult, EvaluationResult
 from ..llm.data.models import TestInstance
 from ..llm.predictors.vllm import VLLMPredictor, VLLMPredictorConfig
 from ..llm.utils.llamafactory import (

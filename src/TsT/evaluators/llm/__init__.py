@@ -13,7 +13,7 @@ DataEnvGym patterns, including:
 Example usage:
 
     # Create single-GPU predictor
-    from TsT.llm import create_vllm_predictor, create_llamafactory_trainer, create_trainable_predictor
+    from TsT.evaluators.llm import create_vllm_predictor, create_llamafactory_trainer, create_trainable_predictor
 
     predictor = create_vllm_predictor("google/gemma-2-2b-it")
     trainer = create_llamafactory_trainer("google/gemma-2-2b-it")
@@ -72,6 +72,8 @@ from .utils.io import (
     write_jsonl,
     read_jsonl,
 )
+
+from .evaluator import LLMEvaluator
 
 
 def create_vllm_predictor(
@@ -216,4 +218,6 @@ __all__ = [
     "create_ray_vllm_predictor",
     "create_auto_predictor",
     "get_gpu_count",
+    # Evaluator
+    "LLMEvaluator",
 ]

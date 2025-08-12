@@ -11,7 +11,7 @@ import pandas as pd
 import tempfile
 
 # Import the TsT LLM components
-from TsT.llm import (
+from TsT.evaluators.llm import (
     create_vllm_predictor,
     create_llamafactory_trainer,
     create_trainable_predictor,
@@ -144,7 +144,7 @@ def example_data_conversion():
     """Example: Data conversion utilities"""
     print("\n=== Data Conversion Example ===")
 
-    from TsT.llm.data.conversion import convert_to_tst_training_format, convert_to_test_instances
+    from TsT.evaluators.llm.data.conversion import convert_to_tst_training_format, convert_to_test_instances
 
     # Create sample benchmark data
     df = create_sample_data()
@@ -173,8 +173,8 @@ def example_io_utilities():
     """Example: I/O utilities for type-safe JSONL operations"""
     print("\n=== I/O Utilities Example ===")
 
-    from TsT.llm.utils.io import write_jsonl, read_jsonl
-    from TsT.llm.data.models import TrainingDatum
+    from TsT.evaluators.llm.utils.io import write_jsonl, read_jsonl
+    from TsT.evaluators.llm.data.models import TrainingDatum
 
     # Create sample training data
     training_data = [

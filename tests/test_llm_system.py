@@ -11,7 +11,7 @@ import tempfile
 from pathlib import Path
 from unittest.mock import Mock, patch
 
-from TsT.llm import (
+from TsT.evaluators.llm import (
     create_vllm_predictor,
     create_llamafactory_trainer,
     create_trainable_predictor,
@@ -46,8 +46,8 @@ class TestLLMComponents:
         assert prediction.prediction == "6"
         assert prediction.confidence == 0.95
 
-    @patch("TsT.llm.predictors.vllm.LLM")
-    @patch("TsT.llm.predictors.vllm.AutoTokenizer")
+    @patch("TsT.evaluators.llm.predictors.vllm.LLM")
+    @patch("TsT.evaluators.llm.predictors.vllm.AutoTokenizer")
     def test_vllm_predictor_creation(self, mock_tokenizer, mock_llm):
         """Test that vLLM predictor can be created"""
         # Mock the tokenizer and LLM
@@ -70,8 +70,8 @@ class TestLLMComponents:
         assert trainer.config.learning_rate == 1e-4
         assert trainer.config.num_epochs == 1
 
-    @patch("TsT.llm.predictors.vllm.LLM")
-    @patch("TsT.llm.predictors.vllm.AutoTokenizer")
+    @patch("TsT.evaluators.llm.predictors.vllm.LLM")
+    @patch("TsT.evaluators.llm.predictors.vllm.AutoTokenizer")
     def test_trainable_predictor_creation(self, mock_tokenizer, mock_llm):
         """Test that trainable predictor can be created"""
         # Mock the LLM components
@@ -93,7 +93,7 @@ class TestLLMDataConversion:
 
     def test_benchmark_data_conversion(self):
         """Test conversion from benchmark data to LLM format"""
-        from TsT.llm.data.conversion import convert_to_tst_training_format
+        from TsT.evaluators.llm.data.conversion import convert_to_tst_training_format
 
         # Create sample benchmark data
         df = pd.DataFrame(
@@ -153,9 +153,9 @@ class TestLLMTrainingWithMocks:
     """Test LLM training pipeline with mocked dependencies"""
 
     @patch("pathlib.Path.exists")
-    @patch("TsT.llm.trainers.llamafactory.run_llama_factory_training")
-    @patch("TsT.llm.predictors.vllm.LLM")
-    @patch("TsT.llm.predictors.vllm.AutoTokenizer")
+    @patch("TsT.evaluators.llm.trainers.llamafactory.run_llama_factory_training")
+    @patch("TsT.evaluators.llm.predictors.vllm.LLM")
+    @patch("TsT.evaluators.llm.predictors.vllm.AutoTokenizer")
     def test_llamafactory_training_with_mocks(self, mock_tokenizer, mock_llm, mock_training, mock_path_exists):
         """Test LlamaFactory training pipeline with mocked dependencies"""
         # Setup mocks
@@ -171,7 +171,7 @@ class TestLLMTrainingWithMocks:
         trainer = create_llamafactory_trainer(num_epochs=1)
 
         # Create a trainable predictor that doesn't reset the predictor before training for this test
-        from TsT.llm.trainable.predictor import TrainableLLMPredictorConfig
+        from TsT.evaluators.llm.trainable.predictor import TrainableLLMPredictorConfig
 
         config = TrainableLLMPredictorConfig(reset_predictor_before_training=False)
         trainable = create_trainable_predictor(predictor, trainer)
@@ -204,8 +204,8 @@ class TestLLMTrainingWithMocks:
         test_df = pd.DataFrame({"question": ["What is 2+2?", "What is 3+3?"], "gt_idx": [0, 1]})
 
         # Mock the VLLMPredictor and evaluate_llm_zero_shot to avoid actual LLM calls
-        with patch("TsT.evaluators.llm.VLLMPredictor"):
-            with patch("TsT.evaluators.llm.evaluate_llm_zero_shot") as mock_eval:
+        with patch("TsT.evaluators.llm.evaluator.VLLMPredictor"):
+            with patch("TsT.evaluators.llm.evaluator.evaluate_llm_zero_shot") as mock_eval:
                 mock_eval.return_value = 0.5
 
                 evaluator = LLMEvaluator(
