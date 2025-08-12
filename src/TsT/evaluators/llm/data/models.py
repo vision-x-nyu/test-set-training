@@ -21,6 +21,9 @@ class TrainingDatum(BaseModel):
 class TestInstance(BaseModel):
     """Test instance for TsT LLM inference"""
 
+    # Prevent pytest from attempting to collect this class as a test
+    __test__ = False
+
     instance_id: str = Field(..., description="Unique identifier for this instance")
     instruction: str = Field(..., description="The instruction/question for the model")
     ground_truth: str = Field(..., description="The correct answer for evaluation")

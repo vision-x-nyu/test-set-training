@@ -160,8 +160,32 @@ def fuzzy_cleanup_numeric(pred: str) -> float:
 
 
 def mean_relative_accuracy(pred, target, start=0.5, end=0.95, step=0.05) -> float:
+    """Compute mean relative accuracy across thresholds.
+
+    Handles division-by-zero cases gracefully by defining:
+    - If target == 0 and pred == 0 -> relative error = 0
+    - If target == 0 and pred != 0 -> relative error = inf
+    """
     thresholds = np.linspace(start, end, int((end - start) / step) + 2)
-    rel_err = np.abs(pred - target) / target
+
+    # Convert inputs to numpy arrays (supports scalars and arrays) with broadcasting
+    pred_arr = np.asarray(pred, dtype=float)
+    target_arr = np.asarray(target, dtype=float)
+
+    pred_b, target_b = np.broadcast_arrays(pred_arr, target_arr)
+    diff = np.abs(pred_b - target_b)
+
+    # Initialize relative error as infinity by default
+    rel_err = np.full_like(diff, np.inf, dtype=float)
+
+    # Compute where target is non-zero
+    nonzero_mask = target_b != 0
+    rel_err[nonzero_mask] = diff[nonzero_mask] / np.abs(target_b[nonzero_mask])
+
+    # Define 0/0 as 0 relative error
+    zero_zero_mask = (~nonzero_mask) & (np.abs(pred_b) == 0)
+    rel_err[zero_zero_mask] = 0.0
+
     return float(np.mean([(rel_err < 1 - t).mean() for t in thresholds]))
 
 

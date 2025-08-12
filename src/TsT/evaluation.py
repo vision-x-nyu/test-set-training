@@ -93,7 +93,7 @@ def run_evaluation(
             )
             results.append(result)
         except Exception as e:
-            logger.error(f"Evaluation failed for {model.name}: {e}")
+            logger.error(f"Evaluation failed for {model.name}: {e}", exc_info=True)
             # Create error result
             results.append(_create_error_result(model, str(e)))
 

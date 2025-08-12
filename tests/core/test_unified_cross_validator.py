@@ -94,12 +94,22 @@ class MockModelEvaluator(ModelEvaluator):
 
 
 def create_test_data(n_samples=100, n_classes=4):
-    """Create test data for CV"""
+    """Create test data for CV.
+
+    Ensures each class has at least 2 samples to avoid stratification warnings
+    when using StratifiedKFold with n_splits=2.
+    """
     np.random.seed(42)
+
+    # Create class labels with near-uniform distribution ensuring minimum counts
+    labels = np.arange(n_classes)
+    repeats = int(np.ceil(n_samples / n_classes))
+    y = np.tile(labels, repeats)[:n_samples]
+    np.random.shuffle(y)
 
     data = {
         "id": range(n_samples),
-        "gt_idx": np.random.randint(0, n_classes, n_samples),
+        "gt_idx": y,
         "ground_truth": np.random.randn(n_samples),
         "feature_1": np.random.randn(n_samples),
         "feature_2": np.random.randn(n_samples),
