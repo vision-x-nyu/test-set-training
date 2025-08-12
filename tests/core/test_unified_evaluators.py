@@ -247,10 +247,10 @@ class TestLLMFoldEvaluator:
         # Mock all the LLM components
         with patch("TsT.evaluators.llm.evaluator.VLLMPredictor"):
             with patch("TsT.evaluators.llm.evaluator.evaluate_llm_zero_shot") as mock_zero_shot:
-                with patch("TsT.evaluators.llm.evaluator.train_llm") as mock_train_llm:
+                with patch("TsT.evaluators.llm.evaluator.TrainableLLMPredictor.train") as mock_train:
                     with patch("TsT.evaluators.llm.evaluator.evaluate_llm") as mock_evaluate_llm:
                         mock_zero_shot.return_value = 0.25
-                        mock_train_llm.return_value = "/tmp/adapter"
+                        mock_train.return_value = None
                         mock_evaluate_llm.return_value = 0.85
 
                         evaluator = LLMEvaluator(model, train_df, "gt_idx", llm_config)
@@ -423,10 +423,10 @@ class TestEvaluatorIntegration:
         # Mock all LLM components
         with patch("TsT.evaluators.llm.evaluator.VLLMPredictor"):
             with patch("TsT.evaluators.llm.evaluator.evaluate_llm_zero_shot") as mock_zero_shot:
-                with patch("TsT.evaluators.llm.evaluator.train_llm") as mock_train_llm:
+                with patch("TsT.evaluators.llm.evaluator.TrainableLLMPredictor.train") as mock_train:
                     with patch("TsT.evaluators.llm.evaluator.evaluate_llm") as mock_evaluate_llm:
                         mock_zero_shot.return_value = 0.25
-                        mock_train_llm.return_value = "/tmp/adapter"
+                        mock_train.return_value = None
                         mock_evaluate_llm.return_value = 0.8
 
                         evaluator = LLMEvaluator(model, train_df, "gt_idx", llm_config)

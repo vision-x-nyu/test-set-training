@@ -5,7 +5,7 @@ This module contains the LLMEvaluator and related utilities for
 training and evaluating LLM models on bias detection tasks.
 """
 
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, Optional, List, Literal
 import tempfile
 from pathlib import Path
 
@@ -14,68 +14,24 @@ from ezcolorlog import root_logger as logger
 
 from ...core.protocols import ModelEvaluator, BiasModel
 from ...core.results import FoldResult, EvaluationResult
-from ..llm.data.models import TestInstance, TrainingDatum
+from ..llm.data.models import TestInstance
 from ..llm.data.conversion import convert_to_blind_training_format, convert_to_blind_test_instances
 from ..llm.predictors.vllm import VLLMPredictor, VLLMPredictorConfig
-from ..llm.utils.llamafactory import (
-    format_records_for_llama_factory_sft,
-    generate_llama_factory_config,
-    run_llama_factory_training,
-)
+from ..llm.predictors.base import LLMPredictorInterface
+from ..llm.trainers.llamafactory import create_llamafactory_trainer
+from ..llm.trainable.predictor import TrainableLLMPredictor, TrainableLLMPredictorConfig
 
 
 def score_llm():
     raise NotImplementedError("LLM scoring not implemented")
 
 
-def train_llm(train_data: List[TrainingDatum], temp_path: Path, llm_config: Dict, fold: int, seed: int) -> str:
-    """
-    Train LLM on a single fold using LLaMA-Factory.
-    Returns path to the trained adapter.
-    """
-    dataset_dir = temp_path / "dataset"
-    output_dir = temp_path / "output" / f"fold_{fold}"
-
-    # Convert TrainingDatum objects to dict format for LlamaFactory
-    train_data_dicts = [{"instruction": datum.instruction, "response": datum.response} for datum in train_data]
-
-    # Format data for LLaMA-Factory
-    sft_spec, dataset_path = format_records_for_llama_factory_sft(
-        train_data_dicts,
-        str(dataset_dir),
-        instruction_key="instruction",
-        response_key="response",
-        overwrite=True,
-    )
-
-    # TODO: make this configurable
-    # Add template to LLM config
-    template = "gemma"
-    assert llm_config["model_name"] == "google/gemma-2-2b-it", "Only Gemma is supported for now"
-
-    # Generate training config
-    config_path = generate_llama_factory_config(
-        dataset_dir=str(dataset_dir),
-        dataset_name=sft_spec.dataset_name,
-        output_dir=str(output_dir),
-        model_name=llm_config["model_name"],
-        learning_rate=llm_config["learning_rate"],
-        num_epochs=llm_config["num_epochs"],
-        batch_size=llm_config["batch_size"],
-        lora_rank=llm_config["lora_rank"],
-        lora_alpha=llm_config["lora_alpha"],
-        max_seq_length=llm_config["max_seq_length"],
-        seed=seed,
-        template=template,
-    )
-
-    # Run training
-    run_llama_factory_training(config_path)
-
-    return str(output_dir)
-
-
-def evaluate_llm_zero_shot(predictor: VLLMPredictor, df: pd.DataFrame, target_col: str, format_type: str) -> float:
+def evaluate_llm_zero_shot(
+    predictor: LLMPredictorInterface,
+    df: pd.DataFrame,
+    target_col: str,
+    format_type: Literal["mc", "num", "oe"],
+) -> float:
     """
     Evaluate zero-shot baseline performance.
     """
@@ -93,7 +49,11 @@ def evaluate_llm_zero_shot(predictor: VLLMPredictor, df: pd.DataFrame, target_co
     return evaluate_llm(predictor, test_instances, format_type)
 
 
-def evaluate_llm(predictor: VLLMPredictor, test_instances: List[TestInstance], format_type: str) -> float:
+def evaluate_llm(
+    predictor: LLMPredictorInterface,
+    test_instances: List[TestInstance],
+    format_type: Literal["mc", "num", "oe"],
+) -> float:
     """
     Evaluate LLM on test data and return accuracy.
     """
@@ -158,7 +118,22 @@ class LLMEvaluator(ModelEvaluator):
         )
         self.predictor = VLLMPredictor(self.llm_config_obj)
 
-        # TODO: evaluate baseline performance here?
+        # Initialize LlamaFactory trainer and composed trainable predictor
+        self.trainer = create_llamafactory_trainer(
+            model_name=self.llm_config["model_name"],
+            learning_rate=self.llm_config["learning_rate"],
+            num_epochs=self.llm_config["num_epochs"],
+            batch_size=self.llm_config["batch_size"],
+            lora_rank=self.llm_config.get("lora_rank", 8),
+            max_seq_length=self.llm_config["max_seq_length"],
+            template=self.llm_config.get("template", "gemma"),
+        )
+        self.trainable = TrainableLLMPredictor(
+            predictor=self.predictor,
+            trainer=self.trainer,
+            config=TrainableLLMPredictorConfig(reset_predictor_before_training=True),
+        )
+
         self.zero_shot_baseline = self.evaluate_zero_shot_baseline()
 
     def evaluate_zero_shot_baseline(self) -> float:
@@ -201,11 +176,10 @@ class LLMEvaluator(ModelEvaluator):
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_path = Path(temp_dir)
 
-            # FT model on train fold
-            adapter_path = train_llm(train_data, temp_path, self.llm_config, fold_id, seed)
+            # Train adapter on the training fold (loads adapter into predictor)
+            _adapter_info = self.trainable.train(train_data, temp_path)
 
-            # eval on test fold
-            self.predictor.load_adapter(adapter_path)  # load FTed adapter
+            # Evaluate on test fold using the same predictor with loaded adapter
             fold_score = evaluate_llm(self.predictor, test_instances, self.model.format)
 
         return FoldResult(
