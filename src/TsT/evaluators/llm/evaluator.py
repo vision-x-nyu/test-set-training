@@ -59,9 +59,9 @@ def evaluate_llm(
     # Log first example for quick debugging
     if prediction_results and test_instances:
         logger.info(f"First ground truth:\t{test_instances[0].ground_truth}")
-        logger.info(f"  --> options:\t{test_instances[0].options}")
-        logger.info(f"First prediction:\t{prediction_results[0].prediction}")
-        logger.info(f"  --> Raw output:\t{prediction_results[0].raw_output}")
+        logger.info(f"  --> options:\t\t{test_instances[0].options}")
+        logger.info(f"First prediction:\t\t{prediction_results[0].prediction}")
+        logger.info(f"  --> Raw output:\t\t{prediction_results[0].raw_output}")
 
     # Compute per-instance scores then average
     scores = [score_llm(res, inst, format_type) for res, inst in zip(prediction_results, test_instances)]
