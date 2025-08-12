@@ -17,8 +17,6 @@ os.environ["VLLM_WORKER_MULTIPROC_METHOD"] = "spawn"
 import json
 import os
 import subprocess
-import tempfile
-import yaml
 import sh
 import sys
 from typing import Dict, List, Optional
@@ -110,70 +108,6 @@ def format_records_for_llama_factory_sft(
             f.write("\n")
 
     return supervised_finetuning_spec, records_output_path
-
-
-def generate_llama_factory_config(
-    dataset_dir: str,
-    dataset_name: str,
-    output_dir: str,
-    model_name: str = "google/gemma-2-2b-it",
-    learning_rate: float = 2e-4,
-    num_epochs: int = 1,
-    batch_size: int = 4,
-    lora_rank: int = 8,
-    lora_alpha: int = 16,
-    max_seq_length: int = 512,
-    seed: int = 42,
-    **kwargs,
-) -> str:
-    """
-    Generate a LLaMA-Factory configuration file for LoRA fine-tuning.
-    """
-    config = {
-        # Model
-        "model_name_or_path": model_name,
-        # Method
-        "stage": "sft",
-        "do_train": True,
-        "finetuning_type": "lora",
-        "lora_target": "all",
-        "lora_rank": lora_rank,
-        "lora_alpha": lora_alpha,
-        # Dataset
-        "dataset_dir": dataset_dir,
-        "dataset": dataset_name,
-        "cutoff_len": max_seq_length,
-        "overwrite_cache": True,
-        "preprocessing_num_workers": 4,
-        # Output
-        "output_dir": output_dir,
-        "logging_steps": 10,
-        "save_steps": 500,
-        "overwrite_output_dir": True,
-        "save_total_limit": 1,
-        # Training
-        "per_device_train_batch_size": batch_size,
-        "gradient_accumulation_steps": 1,
-        "learning_rate": learning_rate,
-        "num_train_epochs": num_epochs,
-        "lr_scheduler_type": "cosine",
-        "warmup_ratio": 0.1,
-        "fp16": True,
-        # Eval
-        "val_size": 0.1,
-        "per_device_eval_batch_size": batch_size,
-        # Other
-        "seed": seed,
-        # other overrides
-        **kwargs,
-    }
-
-    # Write config to temporary file
-    with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
-        yaml.dump(config, f, default_flow_style=False)
-        config_path = f.name
-
-    return config_path
 
 
 def run_llama_factory_training(config_path: str, cuda_visible_devices: Optional[List[int]] = None):
