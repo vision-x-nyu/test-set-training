@@ -3,6 +3,7 @@ import importlib
 
 from ezcolorlog import root_logger as logger
 from TsT import run_evaluation
+from TsT.evaluators.llm.config import LLMRunConfig
 
 
 def get_benchmark_module(benchmark_name: str):
@@ -101,16 +102,15 @@ if __name__ == "__main__":
     # Create LLM config if using LLM mode
     llm_config = None
     if args.mode == "llm":
-        llm_config = {
-            "model_name": args.llm_model,
-            "batch_size": args.llm_batch_size,
-            "learning_rate": 2e-4,
-            "num_epochs": args.llm_epochs,
-            "lora_rank": 8,
-            "lora_alpha": 16,
-            # "max_seq_length": 512,
-            "max_seq_length": 1024,
-        }
+        llm_config = LLMRunConfig(
+            model_name=args.llm_model,
+            batch_size=args.llm_batch_size,
+            learning_rate=2e-4,
+            num_epochs=args.llm_epochs,
+            lora_rank=8,
+            lora_alpha=16,
+            max_seq_length=1024,
+        )
 
     logger.info(f"Running {args.benchmark.upper()} benchmark...")
     logger.info(f"Mode: {args.mode.upper()}")

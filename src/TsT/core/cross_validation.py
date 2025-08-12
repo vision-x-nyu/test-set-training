@@ -7,7 +7,7 @@ any model type (RF, LLM, etc.) through the BiasModel protocol and ModelEvaluator
 
 import numpy as np
 import pandas as pd
-from typing import Optional, Dict, Literal
+from typing import Optional, Literal
 from dataclasses import dataclass
 from tqdm.auto import tqdm
 from sklearn.model_selection import StratifiedKFold, KFold
@@ -16,6 +16,7 @@ from ezcolorlog import root_logger as logger
 from .protocols import BiasModel, ModelEvaluator
 from .results import EvaluationResult, RepeatResult
 from ..evaluators import RandomForestEvaluator, LLMEvaluator
+from ..evaluators.llm.config import LLMRunConfig
 
 
 @dataclass
@@ -44,7 +45,7 @@ class UnifiedCrossValidator:
         df: pd.DataFrame,
         target_col: str = "ground_truth",
         mode: Literal["rf", "llm"] = "rf",
-        llm_config: Optional[Dict] = None,
+        llm_config: Optional[LLMRunConfig] = None,
     ) -> EvaluationResult:
         resolved_target_col = self.resolve_target_column(model, target_col)
         match mode:
@@ -62,7 +63,7 @@ class UnifiedCrossValidator:
         return self.run_cross_validation_repeats(model, evaluator, df, target_col)
 
     def cross_validate_llm(
-        self, model: BiasModel, df: pd.DataFrame, target_col: str, llm_config: Dict
+        self, model: BiasModel, df: pd.DataFrame, target_col: str, llm_config: LLMRunConfig
     ) -> EvaluationResult:
         evaluator = LLMEvaluator(model, df, target_col, llm_config)
         return self.run_cross_validation_repeats(model, evaluator, df, target_col)

@@ -1,4 +1,4 @@
-from typing import List, Dict, Union, Optional, Literal
+from typing import List, Union, Optional, Literal
 
 import pandas as pd
 from ezcolorlog import root_logger as logger
@@ -6,6 +6,7 @@ from ezcolorlog import root_logger as logger
 from .core.protocols import BiasModel
 from .core.cross_validation import UnifiedCrossValidator, CrossValidationConfig
 from .core.results import EvaluationResult
+from .evaluators.llm.config import LLMRunConfig
 from .utils import weighted_mean_std
 
 
@@ -24,7 +25,7 @@ def run_evaluation(
     question_types: Union[List[str], None] = None,
     target_col: str = "ground_truth",
     mode: Literal["rf", "llm"] = "rf",
-    llm_config: Optional[Dict] = None,
+    llm_config: Optional[LLMRunConfig] = None,
 ) -> pd.DataFrame:
     """
     Run evaluation for all models and return a summary table of results.
