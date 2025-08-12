@@ -17,7 +17,8 @@ class FoldResult:
 
     fold_id: int
     score: float
-    fold_size: int
+    train_size: int
+    test_size: int
     metadata: Dict[str, Any] = field(default_factory=dict)
 
 
@@ -32,7 +33,7 @@ class RepeatResult:
 
     @property
     def total_instances(self) -> int:
-        return sum(f.fold_size for f in self.fold_results)
+        return sum(f.test_size for f in self.fold_results)
 
     @classmethod
     def from_fold_results(cls, repeat_id: int, fold_results: List[FoldResult]) -> "RepeatResult":

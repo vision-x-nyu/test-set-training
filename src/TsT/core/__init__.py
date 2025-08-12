@@ -9,16 +9,11 @@ from .protocols import BiasModel, FeatureBasedBiasModel, ModelEvaluator
 from .cross_validation import (
     UnifiedCrossValidator,
     CrossValidationConfig,
-    FoldEvaluator,
-    PostProcessor,
 )
 from .results import FoldResult, RepeatResult, EvaluationResult
 from .evaluators import (
     RandomForestEvaluator,
-    RandomForestFoldEvaluator,
-    RandomForestPostProcessor,
-    LLMFoldEvaluator,
-    LLMPostProcessor,
+    LLMEvaluator,
 )
 
 __all__ = [
@@ -29,15 +24,10 @@ __all__ = [
     # Unified evaluation framework
     "UnifiedCrossValidator",
     "CrossValidationConfig",
-    "FoldEvaluator",
-    "PostProcessor",
     "FoldResult",
     "RepeatResult",
     "EvaluationResult",
     # Model-specific evaluators and post-processors
     "RandomForestEvaluator",
-    "RandomForestFoldEvaluator",
-    "RandomForestPostProcessor",
-    "LLMFoldEvaluator",
-    "LLMPostProcessor",
+    "LLMEvaluator",
 ]

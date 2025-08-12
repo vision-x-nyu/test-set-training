@@ -1,5 +1,6 @@
 from functools import lru_cache
 import re
+import numpy as np
 
 # https://github.com/ShailChoksi/text2digits
 from text2digits import text2digits
@@ -14,6 +15,7 @@ def fuzzy_cleanup(pred: str) -> str:
     return str(pred).strip().split(" ")[0].rstrip(".").strip().lower()
 
 
+# TODO: add tests
 def fuzzy_cleanup_numeric(pred: str) -> float:
     t2d = get_t2d()
     cleaned_pred = pred.strip().lower().rstrip(".").strip()
@@ -44,3 +46,30 @@ def fuzzy_cleanup_numeric(pred: str) -> float:
     if is_negative and not numeric_str.startswith("-"):
         result = -result
     return result
+
+
+# TODO: add tests
+def mean_relative_accuracy(pred, true, start=0.5, end=0.95, step=0.05) -> float:
+    thresholds = np.linspace(start, end, int((end - start) / step) + 2)
+    rel_err = np.abs(pred - true) / true
+    return float(np.mean([(rel_err < 1 - t).mean() for t in thresholds]))
+
+
+# TODO: add tests
+def weighted_mean_std(scores: np.ndarray, counts: np.ndarray) -> tuple[float, float]:
+    """
+    Weighted mean:
+        weighted_avg = sum(score_i * count_i) / sum(count_i)
+    Weighted variance:
+        weighted_var = sum(count_i * (score_i - weighted_avg)**2) / sum(count_i)
+    Weighted std:
+        weighted_std = sqrt(weighted_var)
+    Only models with count > 0 are included.
+    """
+    mask = counts > 0
+    scores = scores[mask]
+    counts = counts[mask]
+    weighted_avg = (scores * counts).sum() / counts.sum() if counts.sum() > 0 else 0
+    weighted_var = ((counts * (scores - weighted_avg) ** 2).sum() / counts.sum()) if counts.sum() > 0 else 0
+    weighted_std = weighted_var**0.5
+    return weighted_avg, weighted_std

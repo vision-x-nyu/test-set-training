@@ -264,7 +264,7 @@ class TestModelEvaluatorProtocol:
         """Test that concrete implementation of ModelEvaluator works"""
 
         class ConcreteEvaluator(ModelEvaluator):
-            def evaluate_fold(self, model, train_df, test_df, target_col, fold_num, seed):
+            def train_and_evaluate_fold(self, model, train_df, test_df, target_col, fold_num, seed):
                 return 0.8
 
         # Should be able to instantiate concrete implementation
@@ -272,7 +272,7 @@ class TestModelEvaluatorProtocol:
         assert evaluator is not None
 
         # Should be able to call the method
-        result = evaluator.evaluate_fold(
+        result = evaluator.train_and_evaluate_fold(
             model=MockModel(), train_df=pd.DataFrame(), test_df=pd.DataFrame(), target_col="test", fold_num=1, seed=42
         )
         assert result == 0.8
@@ -305,7 +305,7 @@ class TestTypeAnnotations:
         from inspect import signature
 
         # Check evaluate_fold method signature
-        sig = signature(ModelEvaluator.evaluate_fold)
+        sig = signature(ModelEvaluator.train_and_evaluate_fold)
         params = sig.parameters
 
         assert "model" in params

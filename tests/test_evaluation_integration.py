@@ -11,7 +11,7 @@ import numpy as np
 
 from TsT.evaluation import run_evaluation
 from TsT.core.cross_validation import UnifiedCrossValidator, CrossValidationConfig
-from TsT.core.evaluators import RandomForestFoldEvaluator
+from TsT.core.evaluators import RandomForestEvaluator
 
 
 class SimpleTestModel:
@@ -95,7 +95,7 @@ class TestUnifiedFrameworkIntegration:
 
         # Test unified framework
         results = run_evaluation(
-            models=[model], df_full=df, n_splits=3, random_state=42, verbose=False, repeats=1, mode="rf"
+            question_models=[model], df_full=df, n_splits=3, random_state=42, verbose=False, repeats=1, mode="rf"
         )
 
         # Verify results structure
@@ -121,15 +121,15 @@ class TestUnifiedFrameworkIntegration:
         """Test cross-validation with UnifiedCrossValidator directly"""
         # Setup
         model = SimpleTestModel()
-        evaluator = RandomForestFoldEvaluator()
+        evaluator = RandomForestEvaluator()
         df = create_learnable_data(40, 4)
 
         # Create cross-validator
-        config = CrossValidationConfig(n_splits=2, random_state=42, verbose=False, repeats=1, show_progress=False)
+        config = CrossValidationConfig(n_folds=2, random_state=42, verbose=False, repeats=1, show_progress=False)
         cv = UnifiedCrossValidator(config)
 
         # Run CV
-        result = cv.evaluate_model(
+        result = cv.cross_validate(
             model=model,
             evaluator=evaluator,
             df=df,
@@ -150,10 +150,12 @@ class TestUnifiedFrameworkIntegration:
         df = create_learnable_data(30, 2, seed=42)
 
         # Run evaluation twice with same parameters
-        results1 = run_evaluation(models=[model], df_full=df, n_splits=2, random_state=42, verbose=False, mode="rf")
+        results1 = run_evaluation(
+            question_models=[model], df_full=df, n_splits=2, random_state=42, verbose=False, mode="rf"
+        )
 
         results2 = run_evaluation(
-            models=[model],
+            question_models=[model],
             df_full=df,
             n_splits=2,
             random_state=42,  # Same seed
@@ -175,7 +177,9 @@ class TestUnifiedFrameworkIntegration:
         df = create_learnable_data(40, 2)
 
         # Evaluate multiple models
-        results = run_evaluation(models=models, df_full=df, n_splits=2, random_state=42, verbose=False, mode="rf")
+        results = run_evaluation(
+            question_models=models, df_full=df, n_splits=2, random_state=42, verbose=False, mode="rf"
+        )
 
         # Verify results
         assert len(results) == 2
@@ -193,7 +197,7 @@ class TestUnifiedFrameworkIntegration:
         df = create_learnable_data(20, 2)
 
         # Should handle error gracefully
-        results = run_evaluation(models=[model], df_full=df, n_splits=2, verbose=False, mode="rf")
+        results = run_evaluation(question_models=[model], df_full=df, n_splits=2, verbose=False, mode="rf")
 
         # Should still return results (with error info)
         assert len(results) == 1
@@ -207,7 +211,9 @@ class TestUnifiedFrameworkIntegration:
         df = create_learnable_data(30, 2)
 
         # Test with gt_idx
-        results1 = run_evaluation(models=[model], df_full=df, target_col="gt_idx", n_splits=2, verbose=False, mode="rf")
+        results1 = run_evaluation(
+            question_models=[model], df_full=df, target_col="gt_idx", n_splits=2, verbose=False, mode="rf"
+        )
 
         # Test with ground_truth (for regression-like scenario)
         model_reg = SimpleTestModel()
@@ -215,7 +221,7 @@ class TestUnifiedFrameworkIntegration:
         model_reg._metric = "mra"
 
         results2 = run_evaluation(
-            models=[model_reg], df_full=df, target_col="ground_truth", n_splits=2, verbose=False, mode="rf"
+            question_models=[model_reg], df_full=df, target_col="ground_truth", n_splits=2, verbose=False, mode="rf"
         )
 
         # Both should succeed
@@ -232,7 +238,7 @@ class TestUnifiedFrameworkIntegration:
 
         # Filter to only one model
         results = run_evaluation(
-            models=models, df_full=df, question_types=["keep_this"], n_splits=2, verbose=False, mode="rf"
+            question_models=models, df_full=df, question_types=["keep_this"], n_splits=2, verbose=False, mode="rf"
         )
 
         # Should only have one result
@@ -261,7 +267,7 @@ class TestBackwardCompatibility:
 
             # Test new evaluation framework
             results = run_evaluation(
-                models=models,
+                question_models=models,
                 df_full=df_small,
                 n_splits=2,
                 random_state=42,
@@ -295,11 +301,11 @@ class TestBackwardCompatibility:
 
         # Test both
         clf_results = run_evaluation(
-            models=[clf_model], df_full=df, target_col="gt_idx", n_splits=2, verbose=False, mode="rf"
+            question_models=[clf_model], df_full=df, target_col="gt_idx", n_splits=2, verbose=False, mode="rf"
         )
 
         reg_results = run_evaluation(
-            models=[reg_model], df_full=df, target_col="ground_truth", n_splits=2, verbose=False, mode="rf"
+            question_models=[reg_model], df_full=df, target_col="ground_truth", n_splits=2, verbose=False, mode="rf"
         )
 
         # Both should succeed
@@ -322,7 +328,9 @@ class TestPerformanceAndMemory:
         # Time the evaluation
         start_time = time.time()
 
-        results = run_evaluation(models=[model], df_full=df, n_splits=3, random_state=42, verbose=False, mode="rf")
+        results = run_evaluation(
+            question_models=[model], df_full=df, n_splits=3, random_state=42, verbose=False, mode="rf"
+        )
 
         end_time = time.time()
         duration = end_time - start_time
@@ -338,6 +346,6 @@ class TestPerformanceAndMemory:
         df = create_learnable_data(20000, 2)
 
         # Should complete without memory errors
-        results = run_evaluation(models=[model], df_full=df, n_splits=2, verbose=False, mode="rf")
+        results = run_evaluation(question_models=[model], df_full=df, n_splits=2, verbose=False, mode="rf")
 
         assert len(results) == 1

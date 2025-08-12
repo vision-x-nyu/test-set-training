@@ -11,6 +11,8 @@ from typing import Protocol, Literal, Optional, List, runtime_checkable
 from abc import ABC, abstractmethod
 import pandas as pd
 
+from .results import EvaluationResult, FoldResult
+
 
 @runtime_checkable
 class BiasModel(Protocol):
@@ -33,6 +35,9 @@ class BiasModel(Protocol):
     def metric(self) -> Literal["acc", "mra"]:
         """Accuracy or mean relative accuracy"""
         ...
+
+    def __str__(self) -> str:
+        return f"{self.name} ({self.format})"
 
 
 @runtime_checkable
@@ -77,8 +82,24 @@ class ModelEvaluator(ABC):
     """Abstract base for model evaluation strategies"""
 
     @abstractmethod
-    def evaluate_fold(
-        self, model: BiasModel, train_df: pd.DataFrame, test_df: pd.DataFrame, target_col: str, fold_num: int, seed: int
-    ) -> float:
+    def train_and_evaluate_fold(
+        self,
+        model: BiasModel,
+        train_df: pd.DataFrame,
+        test_df: pd.DataFrame,
+        target_col: str,
+        fold_id: int,
+        seed: int,
+    ) -> FoldResult:
         """Evaluate a single fold and return score"""
         pass
+
+    def process_results(
+        self,
+        model: BiasModel,
+        df: pd.DataFrame,
+        target_col: str,
+        evaluation_result: EvaluationResult,
+    ) -> EvaluationResult:
+        """Default results processor that simply returns unmodified evaluation result."""
+        return evaluation_result

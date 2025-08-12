@@ -18,7 +18,7 @@ from TsT.llm import (
     create_auto_predictor,
     get_gpu_count,
 )
-from TsT.core.evaluators import LLMFoldEvaluator
+from TsT.core.evaluators import LLMEvaluator
 
 
 def create_sample_data():
@@ -110,12 +110,12 @@ def example_evaluation_integration():
     df = create_sample_data()  # noqa: F841
 
     # Use LLM fold evaluator for LLM evaluation
-    llm_evaluator = LLMFoldEvaluator(
-        {
-            "model_name": "google/gemma-2-2b-it",
-            "epochs": 1,
-            "batch_size": 4,
-        }
+
+    llm_evaluator = LLMEvaluator(
+        model=model,
+        df=df,
+        target_col="gt_idx",
+        llm_config=None,  # use default config
     )
 
     print("✅ Created LLM fold evaluator")

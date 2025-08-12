@@ -7,51 +7,22 @@ any model type (RF, LLM, etc.) through the BiasModel protocol and ModelEvaluator
 
 import numpy as np
 import pandas as pd
-from typing import Protocol, Optional
+from typing import Optional, Dict, Literal
 from dataclasses import dataclass
 from tqdm.auto import tqdm
 from sklearn.model_selection import StratifiedKFold, KFold
 from ezcolorlog import root_logger as logger
 
-from .protocols import BiasModel
-from .results import EvaluationResult, RepeatResult, FoldResult
-
-
-class FoldEvaluator(Protocol):
-    """Protocol for evaluating a single fold with rich result objects"""
-
-    def evaluate_fold(
-        self,
-        model: BiasModel,
-        train_df: pd.DataFrame,
-        test_df: pd.DataFrame,
-        target_col: str,
-        fold_id: int,
-        seed: int,
-    ) -> FoldResult:
-        """Evaluate a single fold and return detailed result"""
-        ...
-
-
-class PostProcessor(Protocol):
-    """Protocol for post-processing evaluation results"""
-
-    def process_results(
-        self,
-        model: BiasModel,
-        df: pd.DataFrame,
-        target_col: str,
-        evaluation_result: EvaluationResult,
-    ) -> EvaluationResult:
-        """Post-process results (e.g., add feature importances)"""
-        ...
+from .protocols import BiasModel, ModelEvaluator
+from .results import EvaluationResult, RepeatResult
+from .evaluators import RandomForestEvaluator, LLMEvaluator
 
 
 @dataclass
 class CrossValidationConfig:
     """Configuration for cross-validation"""
 
-    n_splits: int = 5
+    n_folds: int = 5
     random_state: int = 42
     repeats: int = 1
     verbose: bool = True
@@ -64,13 +35,44 @@ class UnifiedCrossValidator:
     def __init__(self, config: Optional[CrossValidationConfig] = None):
         self.config = config or CrossValidationConfig()
 
-    def evaluate_model(
+    def __str__(self):
+        return f"UnifiedCrossValidator(config={self.config})"
+
+    def cross_validate(
         self,
         model: BiasModel,
-        evaluator: FoldEvaluator,
         df: pd.DataFrame,
         target_col: str = "ground_truth",
-        post_processor: Optional[PostProcessor] = None,
+        mode: Literal["rf", "llm"] = "rf",
+        llm_config: Optional[Dict] = None,
+    ) -> EvaluationResult:
+        resolved_target_col = self.resolve_target_column(model, target_col)
+        match mode:
+            case "rf":
+                if llm_config is not None:
+                    raise ValueError(f"RF mode does not require llm_config, got: {llm_config}")
+                return self.cross_validate_rf(model, df, resolved_target_col)
+            case "llm":
+                return self.cross_validate_llm(model, df, resolved_target_col, llm_config)
+            case _:
+                raise ValueError(f"Unknown mode: {mode}")
+
+    def cross_validate_rf(self, model: BiasModel, df: pd.DataFrame, target_col: str) -> EvaluationResult:
+        evaluator = RandomForestEvaluator()
+        return self.run_cross_validation_repeats(model, evaluator, df, target_col)
+
+    def cross_validate_llm(
+        self, model: BiasModel, df: pd.DataFrame, target_col: str, llm_config: Dict
+    ) -> EvaluationResult:
+        evaluator = LLMEvaluator(model, df, target_col, llm_config)
+        return self.run_cross_validation_repeats(model, evaluator, df, target_col)
+
+    def run_cross_validation_repeats(
+        self,
+        model: BiasModel,
+        evaluator: ModelEvaluator,
+        df: pd.DataFrame,
+        target_col: str = "ground_truth",
     ) -> EvaluationResult:
         """
         Run complete cross-validation evaluation for a model.
@@ -80,14 +82,12 @@ class UnifiedCrossValidator:
             evaluator: Fold evaluator for this model type
             df: Full dataset
             target_col: Target column name
-            post_processor: Optional post-processing (e.g., feature importances)
 
         Returns:
             Complete evaluation result
         """
         # Select and prepare data
         qdf = model.select_rows(df)
-        target_col = self._resolve_target_column(model, target_col)
 
         # Run repeated cross-validation
         repeat_results = []
@@ -98,7 +98,7 @@ class UnifiedCrossValidator:
         )
 
         for repeat_id in repeat_pbar:
-            repeat_result = self._evaluate_repeat(model, evaluator, qdf, target_col, repeat_id)
+            repeat_result = self.run_cross_validation(model, evaluator, qdf, target_col, repeat_id)
             repeat_results.append(repeat_result)
 
             if self.config.repeats > 1:
@@ -113,19 +113,18 @@ class UnifiedCrossValidator:
         )
 
         # Post-process if needed (e.g., feature importances)
-        if post_processor is not None:
-            evaluation_result = post_processor.process_results(model, qdf, target_col, evaluation_result)
+        evaluation_result = evaluator.process_results(model, qdf, target_col, evaluation_result)
 
         # Log results
         if self.config.verbose:
-            self._log_results(evaluation_result)
+            self.log_results(evaluation_result, self.config.n_folds, self.config.repeats)
 
         return evaluation_result
 
-    def _evaluate_repeat(
+    def run_cross_validation(
         self,
         model: BiasModel,
-        evaluator: FoldEvaluator,
+        evaluator: ModelEvaluator,
         qdf: pd.DataFrame,
         target_col: str,
         repeat_id: int,
@@ -135,10 +134,10 @@ class UnifiedCrossValidator:
 
         # Create appropriate splitter
         if model.task == "reg":
-            splitter = KFold(n_splits=self.config.n_splits, shuffle=True, random_state=seed)
+            splitter = KFold(n_splits=self.config.n_folds, shuffle=True, random_state=seed)
             split_args = (qdf,)
         else:
-            splitter = StratifiedKFold(n_splits=self.config.n_splits, shuffle=True, random_state=seed)
+            splitter = StratifiedKFold(n_splits=self.config.n_folds, shuffle=True, random_state=seed)
             split_args = (qdf, qdf[target_col])
 
         # Evaluate folds
@@ -146,16 +145,16 @@ class UnifiedCrossValidator:
         fold_pbar = tqdm(
             enumerate(splitter.split(*split_args), 1),
             desc=f"[{model.name.upper()}] Folds",
-            total=self.config.n_splits,
-            disable=self.config.repeats > 1 or not self.config.show_progress,
+            total=self.config.n_folds,
+            disable=not self.config.show_progress or self.config.repeats > 1,
         )
 
-        for fold_id, (tr_idx, te_idx) in fold_pbar:
-            tr_df = qdf.iloc[tr_idx].copy()
-            te_df = qdf.iloc[te_idx].copy()
+        for fold_id, (train_idx, test_idx) in fold_pbar:
+            train_df = qdf.iloc[train_idx].copy()
+            test_df = qdf.iloc[test_idx].copy()
 
             # Evaluate fold
-            fold_result = evaluator.evaluate_fold(model, tr_df, te_df, target_col, fold_id, seed)
+            fold_result = evaluator.train_and_evaluate_fold(model, train_df, test_df, target_col, fold_id, seed)
             fold_results.append(fold_result)
 
             # Update progress
@@ -165,26 +164,34 @@ class UnifiedCrossValidator:
         # Create repeat result
         return RepeatResult.from_fold_results(repeat_id, fold_results)
 
-    def _resolve_target_column(self, model: BiasModel, target_col: str) -> str:
+    @staticmethod
+    def resolve_target_column(model: BiasModel, target_col: str) -> str:
         """Resolve target column with model-specific overrides"""
-        if model.target_col_override is not None:
+        if model.target_col_override is not None and model.target_col_override != target_col:
+            logger.warning(
+                f"[WARNING] {model.name} has an override target column '{model.target_col_override}'. Replacing '{target_col}'."
+            )
             return model.target_col_override
 
         if model.task == "reg" and target_col == "gt_idx":
+            logger.warning(
+                f"[WARNING] {model.name} is numerical, with no gt_idx column. Overriding target column to 'ground_truth'"
+            )
             return "ground_truth"
 
         return target_col
 
-    def _log_results(self, result: EvaluationResult):
+    @staticmethod
+    def log_results(result: EvaluationResult, n_folds: int, repeats: int):
         """Log evaluation results"""
         logger.info(
             f"[{result.model_name.upper()}] "
             f"Overall {result.metric_name.upper()}: "
             f"{result.overall_mean:.2%} ± {result.overall_std:.2%} "
-            f"(n_splits={self.config.n_splits}, repeats={self.config.repeats})"
+            f"(n_folds={n_folds}, repeats={repeats})"
         )
 
-        if self.config.repeats == 1:
+        if repeats == 1:
             fold_scores = [f.score for f in result.repeat_results[0].fold_results]
             logger.info(
                 f"[{result.model_name.upper()}] Fold {result.metric_name.upper()}s: {[f'{s:.2%}' for s in fold_scores]}"

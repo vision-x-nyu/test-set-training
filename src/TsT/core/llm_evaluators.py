@@ -28,7 +28,7 @@ class LLMEvaluator(ModelEvaluator):
         """
         self.trainable_predictor = trainable_predictor
 
-    def evaluate_fold(
+    def train_and_evaluate_fold(
         self, model: BiasModel, train_df: pd.DataFrame, test_df: pd.DataFrame, target_col: str, fold_num: int, seed: int
     ) -> float:
         """

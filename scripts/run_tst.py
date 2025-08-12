@@ -125,7 +125,7 @@ if __name__ == "__main__":
     logger.info("")
 
     run_evaluation(
-        models=models,
+        question_models=models,
         df_full=df_full,
         n_splits=args.n_splits,
         random_state=args.random_state,

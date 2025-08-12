@@ -19,7 +19,7 @@ from TsT.llm import (
     TestInstance,
     LLMPredictionResult,
 )
-from TsT.core.evaluators import LLMFoldEvaluator
+from TsT.core.evaluators import LLMEvaluator
 
 
 class TestLLMComponents:
@@ -193,7 +193,7 @@ class TestLLMTrainingWithMocks:
 
     def test_llm_fold_evaluator(self):
         """Test that LLM fold evaluator works for LLM evaluation"""
-        evaluator = LLMFoldEvaluator({"model_name": "test/model"})
+        evaluator = LLMEvaluator({"model_name": "test/model"})
 
         assert evaluator is not None
         # The LLM fold evaluator should exist and be callable

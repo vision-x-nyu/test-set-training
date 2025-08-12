@@ -16,23 +16,24 @@ class TestFoldResult:
 
     def test_basic_creation(self):
         """Test basic FoldResult creation"""
-        result = FoldResult(fold_id=1, score=0.85, fold_size=20, metadata={"test": True})
+        result = FoldResult(fold_id=1, score=0.85, train_size=20, test_size=20, metadata={"test": True})
 
         assert result.fold_id == 1
         assert result.score == 0.85
-        assert result.fold_size == 20
+        assert result.train_size == 20
+        assert result.test_size == 20
         assert result.metadata["test"] is True
 
     def test_default_metadata(self):
         """Test FoldResult with default metadata"""
-        result = FoldResult(fold_id=2, score=0.7, fold_size=15)
+        result = FoldResult(fold_id=2, score=0.7, train_size=15, test_size=15)
 
         assert result.metadata == {}
         assert isinstance(result.metadata, dict)
 
     def test_metadata_modification(self):
         """Test that metadata can be modified after creation"""
-        result = FoldResult(fold_id=1, score=0.8, fold_size=10)
+        result = FoldResult(fold_id=1, score=0.8, train_size=10, test_size=10)
         result.metadata["new_key"] = "new_value"
 
         assert result.metadata["new_key"] == "new_value"
@@ -44,9 +45,9 @@ class TestRepeatResult:
     def test_basic_creation(self):
         """Test basic RepeatResult creation"""
         fold_results = [
-            FoldResult(1, 0.8, 20),
-            FoldResult(2, 0.9, 20),
-            FoldResult(3, 0.7, 20),
+            FoldResult(1, 0.8, 20, 20),
+            FoldResult(2, 0.9, 20, 20),
+            FoldResult(3, 0.7, 20, 20),
         ]
 
         result = RepeatResult(repeat_id=0, fold_results=fold_results, mean_score=0.8, std_score=0.1)
@@ -59,9 +60,9 @@ class TestRepeatResult:
     def test_total_instances(self):
         """Test total_instances property"""
         fold_results = [
-            FoldResult(1, 0.8, 20),
-            FoldResult(2, 0.9, 15),
-            FoldResult(3, 0.7, 25),
+            FoldResult(1, 0.8, 20, 20),
+            FoldResult(2, 0.9, 15, 15),
+            FoldResult(3, 0.7, 25, 25),
         ]
 
         result = RepeatResult(0, fold_results, 0.8, 0.1)
@@ -70,9 +71,9 @@ class TestRepeatResult:
     def test_from_fold_results(self):
         """Test creating RepeatResult from fold results with calculated statistics"""
         fold_results = [
-            FoldResult(1, 0.8, 20),
-            FoldResult(2, 0.6, 20),
-            FoldResult(3, 1.0, 20),
+            FoldResult(1, 0.8, 20, 20),
+            FoldResult(2, 0.6, 20, 20),
+            FoldResult(3, 1.0, 20, 20),
         ]
 
         result = RepeatResult.from_fold_results(0, fold_results)
@@ -106,15 +107,15 @@ class TestEvaluationResult:
         """Create sample repeat results for testing"""
         # First repeat
         fold_results_1 = [
-            FoldResult(1, 0.8, 25),
-            FoldResult(2, 0.9, 25),
+            FoldResult(1, 0.8, 25, 25),
+            FoldResult(2, 0.9, 25, 25),
         ]
         repeat_1 = RepeatResult.from_fold_results(0, fold_results_1)
 
         # Second repeat
         fold_results_2 = [
-            FoldResult(1, 0.7, 25),
-            FoldResult(2, 0.8, 25),
+            FoldResult(1, 0.7, 25, 25),
+            FoldResult(2, 0.8, 25, 25),
         ]
         repeat_2 = RepeatResult.from_fold_results(1, fold_results_2)
 
@@ -235,15 +236,15 @@ class TestResultsIntegration:
         """Test complete pipeline from fold results to evaluation result"""
         # Create fold results for two repeats
         fold_results_1 = [
-            FoldResult(1, 0.9, 30, {"estimator": "rf_1"}),
-            FoldResult(2, 0.8, 30, {"estimator": "rf_2"}),
-            FoldResult(3, 0.85, 30, {"estimator": "rf_3"}),
+            FoldResult(1, 0.9, 30, 30, {"estimator": "rf_1"}),
+            FoldResult(2, 0.8, 30, 30, {"estimator": "rf_2"}),
+            FoldResult(3, 0.85, 30, 30, {"estimator": "rf_3"}),
         ]
 
         fold_results_2 = [
-            FoldResult(1, 0.95, 30, {"estimator": "rf_1"}),
-            FoldResult(2, 0.75, 30, {"estimator": "rf_2"}),
-            FoldResult(3, 0.9, 30, {"estimator": "rf_3"}),
+            FoldResult(1, 0.95, 30, 30, {"estimator": "rf_1"}),
+            FoldResult(2, 0.75, 30, 30, {"estimator": "rf_2"}),
+            FoldResult(3, 0.9, 30, 30, {"estimator": "rf_3"}),
         ]
 
         # Create repeat results
@@ -268,7 +269,7 @@ class TestResultsIntegration:
         """Test that results are mathematically consistent"""
         # Create known scores
         scores = [0.6, 0.8, 1.0]
-        fold_results = [FoldResult(i + 1, score, 20) for i, score in enumerate(scores)]
+        fold_results = [FoldResult(i + 1, score, 20, 20) for i, score in enumerate(scores)]
 
         # Create repeat result
         repeat_result = RepeatResult.from_fold_results(0, fold_results)
@@ -299,7 +300,7 @@ class TestResultsIntegration:
             for fold_id in range(5):
                 # Use slightly different scores for variety
                 score = 0.7 + 0.1 * np.sin(repeat_id + fold_id)
-                fold_results.append(FoldResult(fold_id + 1, score, 50))
+                fold_results.append(FoldResult(fold_id + 1, score, 50, 50))
 
             repeat_results.append(RepeatResult.from_fold_results(repeat_id, fold_results))
 

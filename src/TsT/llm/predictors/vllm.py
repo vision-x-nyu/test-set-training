@@ -56,6 +56,9 @@ class VLLMPredictor(BaseLLMPredictor):
         # Load base model
         self._load_base_model()
 
+    def __str__(self) -> str:
+        return f"VLLMPredictor(config={self.config})"
+
     def _load_base_model(self) -> None:
         """Load base model and tokenizer"""
         try:

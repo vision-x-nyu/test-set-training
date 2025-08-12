@@ -5,54 +5,71 @@ This module contains evaluator classes that implement the actual evaluation
 logic for different model types while working with the unified cross-validation framework.
 """
 
-import pandas as pd
-from typing import Dict, Any
+from typing import Dict, Any, Optional, List
+from tqdm import tqdm
+import tempfile
+from pathlib import Path
 
-from .protocols import ModelEvaluator, FeatureBasedBiasModel
-from .cross_validation import FoldEvaluator, PostProcessor
+import pandas as pd
+import numpy as np
+from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
+from sklearn.preprocessing import LabelEncoder
+from sklearn.model_selection import KFold, StratifiedKFold
+from ezcolorlog import root_logger as logger
+
+
+from .protocols import ModelEvaluator, FeatureBasedBiasModel, BiasModel
 from .results import FoldResult, EvaluationResult
+from ..llm.data.models import TestInstance
+from ..llm.predictors.vllm import VLLMPredictor, VLLMPredictorConfig
+from ..llm.utils.llamafactory import (
+    format_records_for_llama_factory_sft,
+    generate_llama_factory_config,
+    run_llama_factory_training,
+)
+from ..utils import mean_relative_accuracy
+
+
+###############################################################################
+# Random Forest Evaluator -----------------------------------------------------
+###############################################################################
+
+
+def make_rf_estimator(task, seed):
+    if task == "clf":
+        return RandomForestClassifier(n_estimators=100, random_state=seed, n_jobs=-1)
+    else:
+        return RandomForestRegressor(n_estimators=200, random_state=seed, n_jobs=-1)
+
+
+def encode_categoricals(X_train: pd.DataFrame, X_test: pd.DataFrame) -> Dict[str, LabelEncoder]:
+    """Label-encode *object* columns (fit on **train only** to avoid leak).
+    Unseen categories in test are mapped to -1."""
+    cat_cols = X_train.select_dtypes(include="object").columns
+    encoders: Dict[str, LabelEncoder] = {}
+    for col in cat_cols:
+        enc = LabelEncoder().fit(X_train[col].astype(str))
+        mapping = {cls: i for i, cls in enumerate(enc.classes_)}
+        X_train[col] = X_train[col].astype(str).map(mapping).astype(int)
+        X_test[col] = X_test[col].astype(str).map(mapping).fillna(-1).astype(int)
+        encoders[col] = enc
+    return encoders
+
+
+def score_rf(est, X, y, metric="acc") -> float:
+    if metric == "acc":
+        return float(est.score(X, y))  # plain accuracy
+    elif metric == "mra":
+        y_pred = est.predict(X)
+        return mean_relative_accuracy(y_pred, y.values.astype(float))
+    else:
+        raise ValueError(f"Unknown metric: {metric}")
 
 
 class RandomForestEvaluator(ModelEvaluator):
-    """Legacy evaluator for feature-based Random Forest models"""
+    """RF model evaluator for unified evaluation framework"""
 
-    def evaluate_fold(
-        self,
-        model: FeatureBasedBiasModel,  # Feature-based model
-        train_df: pd.DataFrame,
-        test_df: pd.DataFrame,
-        target_col: str,
-        fold_num: int,
-        seed: int,
-    ) -> float:
-        """Evaluate RF on a single fold"""
-        # Import here to avoid circular imports
-        from ..evaluation import encode_categoricals, _make_estimator, _score
-
-        # Feature engineering - this is RF-specific
-        model.fit_feature_maps(train_df)
-        train_features = model.add_features(train_df)
-        test_features = model.add_features(test_df)
-
-        # Prepare data for sklearn
-        X_tr = train_features[model.feature_cols].copy()
-        X_te = test_features[model.feature_cols].copy()
-        encode_categoricals(X_tr, X_te)
-        y_tr = train_features[target_col]
-        y_te = test_features[target_col]
-
-        # Train and evaluate
-        estimator = _make_estimator(model.task, seed)
-        estimator.fit(X_tr, y_tr)
-        score = _score(estimator, X_te, y_te, model.metric)
-
-        return score
-
-
-class RandomForestFoldEvaluator(FoldEvaluator):
-    """RF-specific fold evaluator for unified evaluation framework"""
-
-    def evaluate_fold(
+    def train_and_evaluate_fold(
         self,
         model: FeatureBasedBiasModel,  # Feature-based model
         train_df: pd.DataFrame,
@@ -62,8 +79,6 @@ class RandomForestFoldEvaluator(FoldEvaluator):
         seed: int,
     ) -> FoldResult:
         """Evaluate RF on a single fold and return rich result"""
-        # Import here to avoid circular imports
-        from ..evaluation import encode_categoricals, _make_estimator, _score
 
         # Feature engineering
         model.fit_feature_maps(train_df)
@@ -78,24 +93,20 @@ class RandomForestFoldEvaluator(FoldEvaluator):
         y_te = test_features[target_col]
 
         # Train and evaluate
-        estimator = _make_estimator(model.task, seed)
+        estimator = make_rf_estimator(model.task, seed)
         estimator.fit(X_tr, y_tr)
-        score = _score(estimator, X_te, y_te, model.metric)
+        score = score_rf(estimator, X_te, y_te, model.metric)
 
         return FoldResult(
             fold_id=fold_id,
             score=score,
-            fold_size=len(test_df),
+            train_size=len(train_df),
+            test_size=len(test_df),
             metadata={
                 "estimator_params": estimator.get_params(),
                 "n_features": len(model.feature_cols),
-                "train_size": len(train_df),
             },
         )
-
-
-class RandomForestPostProcessor(PostProcessor):
-    """Generate feature importances for RF models"""
 
     def process_results(
         self,
@@ -105,8 +116,6 @@ class RandomForestPostProcessor(PostProcessor):
         evaluation_result: EvaluationResult,
     ) -> EvaluationResult:
         """Add feature importances to RF results"""
-        # Import here to avoid circular imports
-        from ..evaluation import encode_categoricals, _make_estimator
 
         # Train on full dataset for feature importances
         model.fit_feature_maps(df)
@@ -122,11 +131,11 @@ class RandomForestPostProcessor(PostProcessor):
             # Try to extract seed from metadata if available
             pass
 
-        estimator = _make_estimator(model.task, seed)
-        estimator.fit(X_full_encoded, y_full)
+        rf_estimator = make_rf_estimator(model.task, seed)
+        rf_estimator.fit(X_full_encoded, y_full)
 
         feature_importances = (
-            pd.DataFrame({"feature": model.feature_cols, "importance": estimator.feature_importances_})
+            pd.DataFrame({"feature": model.feature_cols, "importance": rf_estimator.feature_importances_})
             .sort_values("importance", ascending=False)
             .reset_index(drop=True)
         )
@@ -144,14 +153,353 @@ class RandomForestPostProcessor(PostProcessor):
         return evaluation_result
 
 
-class LLMFoldEvaluator(FoldEvaluator):
-    """LLM-specific fold evaluator for unified evaluation framework"""
+###############################################################################
+# LLM Evaluator ---------------------------------------------------------------
+###############################################################################
 
-    def __init__(self, llm_config: Dict[str, Any]):
+
+def score_llm():
+    raise NotImplementedError("LLM scoring not implemented")
+
+
+def convert_to_blind_qa_format(df: pd.DataFrame, target_col: str, format_type: str) -> List[Dict[str, str]]:
+    """
+    Convert dataframe to blind QA format for LLM training.
+    Removes all visual information, keeping only text-based questions and answers.
+    """
+    training_data = []
+
+    for _, row in df.iterrows():
+        # TODO: make this configurable
+        # Extract question text - this varies by benchmark
+        if "question" in row:
+            question = row["question"]
+        elif "instruction" in row:
+            question = row["instruction"]
+        elif "prompt" in row:
+            question = row["prompt"]
+        else:
+            # Fallback: look for any text column that might contain the question
+            text_cols = [col for col in row.index if isinstance(row[col], str) and len(str(row[col])) > 10]
+            question = row[text_cols[0]] if text_cols else str(row.iloc[0])
+
+        post_prompt = "Answer with the option's letter from the given choices directly."
+
+        # Format based on question type
+        if format_type == "mc":  # Multiple choice
+            # Include answer choices in the question
+            # TODO: make this configurable
+            if "choices" in row:
+                choices_text = " ".join([f"({chr(65 + i)}) {choice}" for i, choice in enumerate(row["choices"])])
+                instruction = f"{question} Choices: {choices_text}"
+            elif "options" in row:
+                choices_text = "\n".join(row["options"])
+                instruction = f"{question} Options:\n{choices_text}"
+            else:
+                instruction = question
+
+            instruction = f"{instruction}\n{post_prompt}"
+
+            # Get the correct answer
+            if target_col == "gt_idx":
+                # Convert index to letter
+                answer = chr(65 + int(row[target_col]))
+            else:
+                answer = str(row[target_col])
+
+        else:  # Numerical or open-ended
+            instruction = question
+            answer = str(row[target_col])
+
+        training_data.append(
+            {
+                "instruction": instruction,
+                "response": answer,
+            }
+        )
+
+    return training_data
+
+
+def train_llm(train_data: List[Dict[str, str]], temp_path: Path, llm_config: Dict, fold: int, seed: int) -> str:
+    """
+    Train LLM on a single fold using LLaMA-Factory.
+    Returns path to the trained adapter.
+    """
+    dataset_dir = temp_path / "dataset"
+    output_dir = temp_path / "output" / f"fold_{fold}"
+
+    # Format data for LLaMA-Factory
+    sft_spec, dataset_path = format_records_for_llama_factory_sft(
+        train_data,
+        str(dataset_dir),
+        instruction_key="instruction",
+        response_key="response",
+        overwrite=True,
+    )
+
+    # TODO: make this configurable
+    # Add template to LLM config
+    template = "gemma"
+    assert llm_config["model_name"] == "google/gemma-2-2b-it", "Only Gemma is supported for now"
+
+    # Generate training config
+    config_path = generate_llama_factory_config(
+        dataset_dir=str(dataset_dir),
+        dataset_name=sft_spec.dataset_name,
+        output_dir=str(output_dir),
+        model_name=llm_config["model_name"],
+        learning_rate=llm_config["learning_rate"],
+        num_epochs=llm_config["num_epochs"],
+        batch_size=llm_config["batch_size"],
+        lora_rank=llm_config["lora_rank"],
+        lora_alpha=llm_config["lora_alpha"],
+        max_seq_length=llm_config["max_seq_length"],
+        seed=seed,
+        template=template,
+    )
+
+    # Run training
+    run_llama_factory_training(config_path)
+
+    return str(output_dir)
+
+
+def evaluate_llm_zero_shot(predictor: VLLMPredictor, df: pd.DataFrame, target_col: str, format_type: str) -> float:
+    """
+    Evaluate zero-shot baseline performance.
+    """
+    logger.info(f"Evaluating zero-shot baseline for {format_type} format")
+    test_data = convert_to_blind_qa_format(df, target_col, format_type)
+    return evaluate_llm(predictor, test_data, format_type)
+
+
+def evaluate_llm(predictor: VLLMPredictor, test_data: List[Dict[str, str]], format_type: str) -> float:
+    """
+    Evaluate LLM on test data and return accuracy.
+    """
+    instructions = [item["instruction"] for item in test_data]
+    ground_truth = [item["response"] for item in test_data]
+
+    # Convert to TestInstance format for the new API
+    test_instances = [
+        TestInstance(
+            instruction=instruction,
+            instance_id=f"eval_{i}",
+            ground_truth=gt,
+        )
+        for i, (instruction, gt) in enumerate(zip(instructions, ground_truth))
+    ]
+
+    # TODO: make an evaluation function that takes LLMPredictionResult objects and returns a score
+    # HACK [temporary]: manually score here
+    # Generate predictions using new interface
+    prediction_results = predictor.predict(test_instances)
+    predictions = [result.prediction for result in prediction_results]
+
+    # print the first prediction and ground truth
+    if predictions and ground_truth:
+        logger.info(f"First prediction: {predictions[0]}")
+        logger.info(f"First ground truth: {ground_truth[0]}")
+
+    # Calculate accuracy
+    if format_type == "mc":
+        # For multiple choice, exact match
+        correct = sum(1 for pred, gt in zip(predictions, ground_truth) if pred.strip().upper() == gt.strip().upper())
+    else:
+        # For numerical, use relative accuracy or exact match
+        correct = sum(1 for pred, gt in zip(predictions, ground_truth) if pred.strip() == gt.strip())
+
+    return correct / len(test_data) if test_data else 0.0
+
+
+# TODO: create a new bias model type for LLM evaluation
+def evaluate_bias_model_llm(
+    model: FeatureBasedBiasModel,
+    df: pd.DataFrame,
+    n_splits: int = 5,
+    random_state: int = 42,
+    verbose: bool = True,
+    repeats: int = 1,
+    target_col: str = "ground_truth",
+    llm_config: Optional[Dict] = None,
+):
+    """
+    Evaluate bias model using LLM fine-tuning instead of Random Forest.
+
+    This implements the TsT method with LLM fine-tuning as described in the task document.
+    Uses LoRA fine-tuning on k-fold splits to learn non-visual shortcuts.
+    """
+    if llm_config is None:
+        llm_config = {
+            "model_name": "google/gemma-2-2b-it",
+            "batch_size": 32,
+            "learning_rate": 2e-4,
+            "num_epochs": 5,
+            "lora_rank": 8,
+            "lora_alpha": 16,
+            "max_seq_length": 512,
+        }
+
+    qdf = model.select_rows(df)
+    all_scores = []
+    all_zero_shot_scores = []
+
+    # Initialize LLM predictor
+    llm_config_obj = VLLMPredictorConfig(
+        model_name=llm_config["model_name"],
+        batch_size=llm_config["batch_size"],
+        max_seq_length=llm_config["max_seq_length"],
+        apply_chat_template=False,  # Disable for compatibility with Gemma and other models
+    )
+    llm_predictor = VLLMPredictor(llm_config_obj)
+
+    # Get zero-shot baseline first
+    zero_shot_acc = evaluate_llm_zero_shot(llm_predictor, qdf, target_col, model.format)
+    logger.info(f"Zero-shot baseline accuracy: {zero_shot_acc:.2%}")
+    llm_predictor.reset()  # cleanup the base model after getting the zero-shot baseline
+
+    repeat_pbar = tqdm(range(repeats), desc=f"[{model.name.upper()}] LLM Repeats", disable=repeats == 1)
+    for repeat in repeat_pbar:
+        current_seed = random_state + repeat
+
+        # Use appropriate splitter based on task type
+        if model.task == "reg":
+            splitter = KFold(n_splits=n_splits, shuffle=True, random_state=current_seed)
+            split_args = (qdf,)
+        else:
+            splitter = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=current_seed)
+            split_args = (qdf, qdf[target_col])
+
+        scores = []
+        zero_shot_scores = []
+
+        fold_pbar = tqdm(
+            enumerate(splitter.split(*split_args), 1),
+            desc=f"[{model.name.upper()}] LLM Folds",
+            total=n_splits,
+            disable=repeats > 1,
+        )
+
+        for fold, (tr_idx, te_idx) in fold_pbar:
+            tr, te = qdf.iloc[tr_idx].copy(), qdf.iloc[te_idx].copy()
+
+            # Create training dataset in blind QA format
+            train_data = convert_to_blind_qa_format(tr, target_col, model.format)
+            test_data = convert_to_blind_qa_format(te, target_col, model.format)
+
+            # Fine-tune LLM on training fold
+            with tempfile.TemporaryDirectory() as temp_dir:
+                temp_path = Path(temp_dir)
+
+                # Fine-tune model
+                adapter_path = train_llm(train_data, temp_path, llm_config, fold, current_seed)
+
+                # Load fine-tuned adapter
+                llm_predictor.load_adapter(adapter_path)
+
+                # Evaluate on test fold
+                fold_score = evaluate_llm(llm_predictor, test_data, model.format)
+                scores.append(fold_score)
+
+                # Also track zero-shot for comparison
+                zero_shot_scores.append(zero_shot_acc)
+
+                fold_pbar.set_postfix(
+                    {"fold_acc": f"{np.mean(scores):.2%}", "vs_zero_shot": f"+{np.mean(scores) - zero_shot_acc:.2%}"}
+                )
+
+        all_scores.append(scores)
+        all_zero_shot_scores.append(zero_shot_scores)
+
+        if repeats > 1:
+            current_avg = np.mean(scores)
+            repeat_pbar.set_postfix({"avg_acc": f"{current_avg:.2%}"})
+
+    # Calculate statistics
+    mean_scores = [np.mean(scores) for scores in all_scores]
+    mean_acc = float(np.mean(mean_scores))
+    std_acc = float(np.std(mean_scores))
+    count = len(qdf)
+
+    # Calculate improvement over zero-shot
+    improvement = mean_acc - zero_shot_acc
+
+    if verbose:
+        logger.info(f"\n[{model.name.upper()}] LLM TsT Results:")
+        logger.info(f"Zero-shot baseline: {zero_shot_acc:.2%}")
+        logger.info(f"TsT-LoRA accuracy: {mean_acc:.2%} ± {std_acc:.2%}")
+        logger.info(f"Improvement: +{improvement:.2%}")
+        if repeats == 1:
+            logger.info(f"[{model.name.upper()}] Fold accuracies: {[f'{s:.2%}' for s in all_scores[0]]}")
+        else:
+            logger.info(f"[{model.name.upper()}] Repeat accuracies: {[f'{s:.2%}' for s in mean_scores]}")
+
+    # Create mock feature importances for compatibility
+    fi = pd.DataFrame(
+        {
+            "feature": ["llm_finetuning", "zero_shot_baseline", "improvement"],
+            "importance": [mean_acc, zero_shot_acc, improvement],
+        }
+    )
+
+    return mean_acc, std_acc, fi, count
+
+
+class LLMEvaluator(ModelEvaluator):
+    """LLM model evaluator for unified evaluation framework"""
+
+    default_llm_config = {
+        "model_name": "google/gemma-2-2b-it",
+        "batch_size": 32,
+        "learning_rate": 2e-4,
+        "num_epochs": 5,
+        "lora_rank": 8,
+        "lora_alpha": 16,
+        "max_seq_length": 512,
+    }
+
+    def __init__(
+        self,
+        model: BiasModel,
+        df: pd.DataFrame,
+        target_col: str,
+        llm_config: Optional[Dict[str, Any]] = None,
+    ):
+        self.model = model
+        self.df = df
+        self.target_col = target_col
+        if llm_config is None:
+            logger.warning(f"No LLM config provided, using default config: {self.default_llm_config}")
+            llm_config = self.default_llm_config
         self.llm_config = llm_config
-        self.trainable_predictor = None
 
-    def evaluate_fold(
+        # Initialize LLM predictor
+        self.llm_config_obj = VLLMPredictorConfig(
+            model_name=self.llm_config["model_name"],
+            batch_size=self.llm_config["batch_size"],
+            max_seq_length=self.llm_config["max_seq_length"],
+            apply_chat_template=False,  # Disable for compatibility with Gemma and other models
+        )
+        self.predictor = VLLMPredictor(self.llm_config_obj)
+
+        # TODO: evaluate baseline performance here?
+        self.zero_shot_baseline = self.evaluate_zero_shot_baseline()
+
+    def evaluate_zero_shot_baseline(self) -> float:
+        """Evaluate zero-shot baseline performance."""
+        logger.info(f"Evaluating zero-shot baseline for {self.model} with LLM predictor {self.predictor}")
+        score = evaluate_llm_zero_shot(
+            self.predictor,
+            self.df,
+            self.target_col,
+            self.model.format,
+        )
+        self.predictor.reset()
+        logger.info(f"Zero-shot baseline score: {score:.2%}")
+        return score
+
+    def train_and_evaluate_fold(
         self,
         model,  # BiasModel
         train_df: pd.DataFrame,
@@ -160,58 +508,33 @@ class LLMFoldEvaluator(FoldEvaluator):
         fold_id: int,
         seed: int,
     ) -> FoldResult:
-        """Evaluate LLM on a single fold using legacy evaluation function"""
-        # Import here to avoid circular imports
-        from ..evaluation import evaluate_bias_model_llm
-        from typing import cast
-        from .protocols import FeatureBasedBiasModel
+        """Train + Evaluate LLM on a single fold"""
 
-        # Create a temporary combined DataFrame for the legacy function
-        train_df_copy = train_df.copy()
-        train_df_copy["split"] = "train"
-        test_df_copy = test_df.copy()
-        test_df_copy["split"] = "test"
-        combined_df = pd.concat([train_df_copy, test_df_copy], ignore_index=True)
+        # Create training dataset in blind QA format
+        train_data = convert_to_blind_qa_format(train_df, target_col, self.model.format)
+        test_data = convert_to_blind_qa_format(test_df, target_col, self.model.format)
 
-        # Call the legacy function directly
-        if hasattr(model, "feature_cols"):  # Check if it has feature engineering capabilities
-            feature_model = cast(FeatureBasedBiasModel, model)
-            mean_score, _, _, _ = evaluate_bias_model_llm(
-                model=feature_model,
-                df=combined_df,
-                n_splits=1,  # Use pre-split data
-                random_state=seed,
-                verbose=False,
-                repeats=1,
-                target_col=target_col,
-                llm_config=self.llm_config,
-            )
-        else:
-            # Non-feature-based models not supported for LLM evaluation
-            raise NotImplementedError(
-                f"LLM evaluation currently requires FeatureBasedBiasModel with feature engineering capabilities. "
-                f"Model {model.name} (type: {type(model).__name__}) does not have feature_cols attribute."
-            )
-            # TODO: implement a text-based model?
+        # Fine-tune LLM on training fold
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+
+            # FT model on train fold
+            adapter_path = train_llm(train_data, temp_path, self.llm_config, fold_id, seed)
+
+            # eval on test fold
+            self.predictor.load_adapter(adapter_path)  # load FTed adapter
+            fold_score = evaluate_llm(self.predictor, test_data, self.model.format)
 
         return FoldResult(
             fold_id=fold_id,
-            score=mean_score,
-            fold_size=len(test_df),
+            score=fold_score,
+            train_size=len(train_df),
+            test_size=len(test_df),
             metadata={
-                "training_size": len(train_df),
                 "model_name": self.llm_config.get("model_name", "unknown"),
                 "llm_config": self.llm_config,
             },
         )
-
-
-class LLMPostProcessor(PostProcessor):
-    """Generate LLM-specific metadata"""
-
-    def __init__(self, llm_config: Dict[str, Any], zero_shot_baseline: float = None):
-        self.llm_config = llm_config
-        self.zero_shot_baseline = zero_shot_baseline
 
     def process_results(
         self,
