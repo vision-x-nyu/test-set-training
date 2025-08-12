@@ -5,6 +5,7 @@ This module provides functions to convert between different data formats
 used in the TsT framework and LLM training pipelines.
 """
 
+import ast
 import pandas as pd
 from typing import List, Literal, Dict, Optional, Any
 from .models import TrainingDatum, TestInstance
@@ -41,14 +42,22 @@ def get_blind_qa(
     target = record[target_col]
     match format_type:
         case "mc":
-            # Include answer choices in the question
+            # Include answer choices in the question; require a non-empty list
             if "choices" in record:
                 options = record["choices"]
             elif "options" in record:
                 options = record["options"]
             else:
-                raise ValueError(f"No choices/options found in MC row: {record}")
+                options = None
 
+            if isinstance(options, str):
+                # TODO: add a test for this
+                options = ast.literal_eval(options)
+
+            if not isinstance(options, (list, tuple)) or len(options) == 0:
+                raise ValueError(f"No valid choices/options found in MC row: {record}")
+
+            options = list(options)
             options_text = "\n".join(options)
             question_text = f"{question_text} Options:\n{options_text}"
 

@@ -58,8 +58,10 @@ def evaluate_llm(
 
     # Log first example for quick debugging
     if prediction_results and test_instances:
-        logger.info(f"First prediction: {prediction_results[0].prediction}")
-        logger.info(f"First ground truth: {test_instances[0].ground_truth}")
+        logger.info(f"First ground truth:\t{test_instances[0].ground_truth}")
+        logger.info(f"  --> options:\t{test_instances[0].options}")
+        logger.info(f"First prediction:\t{prediction_results[0].prediction}")
+        logger.info(f"  --> Raw output:\t{prediction_results[0].raw_output}")
 
     # Compute per-instance scores then average
     scores = [score_llm(res, inst, format_type) for res, inst in zip(prediction_results, test_instances)]
@@ -101,6 +103,7 @@ class LLMEvaluator(ModelEvaluator):
     ):
         self.model = model
         self.df = df
+        self.qdf = model.select_rows(df)
         self.target_col = target_col
         # Use provided run config or defaults
         self.llm_config = llm_config or LLMRunConfig()
@@ -126,7 +129,7 @@ class LLMEvaluator(ModelEvaluator):
         logger.info(f"Evaluating zero-shot baseline for {self.model} with LLM predictor {self.predictor}")
         score = evaluate_llm_zero_shot(
             self.predictor,
-            self.df,
+            self.qdf,
             self.target_col,
             self.model.format,
         )
