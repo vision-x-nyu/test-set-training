@@ -10,7 +10,7 @@ from typing import List, Literal, Dict, Optional
 from .models import TrainingDatum, TestInstance
 
 
-def convert_to_tst_training_format(
+def convert_to_blind_training_format(
     df: pd.DataFrame,
     target_col: str,
     format_type: Literal["mc", "num"],
@@ -178,7 +178,7 @@ def convert_benchmark_to_llm_format(
     response_template = template_config["response"]
 
     # Convert to training format
-    training_data = convert_to_tst_training_format(
+    training_data = convert_to_blind_training_format(
         df=df,
         target_col=target_col,
         format_type=format_type,

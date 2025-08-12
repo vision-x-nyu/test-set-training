@@ -93,7 +93,7 @@ class TestLLMDataConversion:
 
     def test_benchmark_data_conversion(self):
         """Test conversion from benchmark data to LLM format"""
-        from TsT.evaluators.llm.data.conversion import convert_to_tst_training_format
+        from TsT.evaluators.llm.data.conversion import convert_to_blind_training_format
 
         # Create sample benchmark data
         df = pd.DataFrame(
@@ -105,7 +105,7 @@ class TestLLMDataConversion:
         )
 
         # Convert to training format
-        training_data = convert_to_tst_training_format(df=df, target_col="gt_idx", format_type="mc")
+        training_data = convert_to_blind_training_format(df=df, target_col="gt_idx", format_type="mc")
 
         assert len(training_data) == 2
         assert training_data[0].instruction == "Answer the following question: What is the color?"

@@ -36,7 +36,7 @@ from .data.models import (
 
 # Data conversion utilities
 from .data.conversion import (
-    convert_to_tst_training_format,
+    convert_to_blind_training_format,
     convert_to_test_instances,
     convert_benchmark_to_llm_format,
     format_for_chat_template,
@@ -184,7 +184,7 @@ __all__ = [
     "LLMEvaluationMetrics",
     "LLMConfig",
     # Conversion utilities
-    "convert_to_tst_training_format",
+    "convert_to_blind_training_format",
     "convert_to_test_instances",
     "convert_benchmark_to_llm_format",
     "format_for_chat_template",
