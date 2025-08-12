@@ -5,7 +5,7 @@ This module defines type-safe data models for LLM training and inference,
 following DataEnvGym patterns for robustness and maintainability.
 """
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import Dict, Optional, Any
 from pathlib import Path
 
@@ -45,9 +45,8 @@ class LoRAAdapterInfo(BaseModel):
     model_name: str = Field(..., description="Base model name that was fine-tuned")
     training_config: Dict[str, Any] = Field(..., description="Training configuration used")
 
-    class Config:
-        # Allow Path objects to be serialized
-        arbitrary_types_allowed = True
+    # Allow non-pydantic types like pathlib.Path (kept for compatibility)
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
 
 class LLMEvaluationMetrics(BaseModel):
@@ -77,5 +76,5 @@ class LLMConfig(BaseModel):
     temperature: float = Field(0.0, description="Sampling temperature")
     max_tokens: int = Field(10, description="Maximum tokens to generate")
 
-    class Config:
-        extra = "allow"  # Allow additional config fields
+    # Allow additional config fields to pass through
+    model_config = ConfigDict(extra="allow")
