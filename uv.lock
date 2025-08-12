@@ -575,6 +575,39 @@ wheels = [
 ]
 
 [[package]]
+name = "cuda-bindings"
+version = "12.9.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "cuda-pathfinder" },
+    { name = "pywin32", marker = "sys_platform == 'win32'" },
+]
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/74/4c/126d07b181860b18b520f8f092e577d995f62033b26aa4cae90782822940/cuda_bindings-12.9.1-cp310-cp310-manylinux_2_24_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:cf7c7ce6be46c707a9dee620d288da456d4597debf9ae27d963f3bc2bf2cf03d", size = 12427778, upload-time = "2025-08-07T02:22:05.194Z" },
+    { url = "https://files.pythonhosted.org/packages/bc/06/50b3ebf3af9f7d4a4ac2ce958f84c20719a64b639d2b416c6ada2b70057b/cuda_bindings-12.9.1-cp310-cp310-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:b4e5b5dd3d334ee683752fd33f4da06df0711bf6ec7f876b04b7ab33c04e75ac", size = 12834849, upload-time = "2025-08-07T02:22:08.193Z" },
+    { url = "https://files.pythonhosted.org/packages/f9/e8/5788639641de76583bf42be55b6426df852ba0d9a6fff345f816b8d01123/cuda_bindings-12.9.1-cp310-cp310-win_amd64.whl", hash = "sha256:25a962417d8a8ee013420b5562a0efbc8afd680cc516e8ef5cda51fa0d1d03c7", size = 12155578, upload-time = "2025-08-07T02:22:10.937Z" },
+]
+
+[[package]]
+name = "cuda-pathfinder"
+version = "1.1.0"
+source = { registry = "https://pypi.org/simple" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/52/07/7978a4c4d8e70620170aa247ce16241a72d4cf6e4336bd3b296926baf7df/cuda_pathfinder-1.1.0-py3-none-any.whl", hash = "sha256:3e66fe0af8ead20eca25e077d2e0cb2dcc027d4297d550a74f99a0211e610799", size = 17673, upload-time = "2025-08-07T01:34:08.562Z" },
+]
+
+[[package]]
+name = "cuda-python"
+version = "12.9.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "cuda-bindings" },
+]
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/24/3c/4475aebeaab9651f2e61000fbe76f91a476d371dbfbf0a1cf46e689af253/cuda_python-12.9.0-py3-none-any.whl", hash = "sha256:926acba49b2c0a0374c61b7c98f337c085199cf51cdfe4d6423c4129c20547a7", size = 7532, upload-time = "2025-05-06T19:14:07.771Z" },
+]
+
+[[package]]
 name = "cupy-cuda12x"
 version = "13.5.1"
 source = { registry = "https://pypi.org/simple" }
@@ -933,6 +966,22 @@ dependencies = [
     { name = "torch" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/63/91/91bcbd7424877fa8da4e7cc04b8a777247a33037b9c1fd976a5ad426c047/flash_attn-2.8.2.tar.gz", hash = "sha256:740a5370f406cbe16155cc6d078ec543a97a137501f32cba89198295e6b80e54", size = 8167111, upload-time = "2025-07-24T16:06:45.953Z" }
+
+[[package]]
+name = "flashinfer-python"
+version = "0.2.11.post1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "cuda-python" },
+    { name = "einops" },
+    { name = "ninja" },
+    { name = "numpy" },
+    { name = "nvidia-cudnn-frontend" },
+    { name = "pynvml" },
+    { name = "requests" },
+    { name = "torch" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/37/e3/2e8e31f7f7ee26f39968264e4fcf74f9810d90e940859016d974106ed5c6/flashinfer_python-0.2.11.post1.tar.gz", hash = "sha256:014ea1e3cbc19763f5cb73ed72ea727ade9f47c4ff4fb9107e05ca2c5e5cca7f", size = 3567506, upload-time = "2025-08-11T09:47:51.311Z" }
 
 [[package]]
 name = "fonttools"
@@ -2514,6 +2563,16 @@ wheels = [
 ]
 
 [[package]]
+name = "nvidia-cudnn-frontend"
+version = "1.13.0"
+source = { registry = "https://pypi.org/simple" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/d3/1f/9768f4dffeac73d64e383d4b295220d8e8ea91537c54bc2e019f4fb2ec3c/nvidia_cudnn_frontend-1.13.0-cp310-cp310-manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:660a5b07d1802fb185741f0e420a8af9abab5ab42baa76a90d0e6a0debbc4651", size = 1693930, upload-time = "2025-07-30T17:17:52.771Z" },
+    { url = "https://files.pythonhosted.org/packages/f0/ab/5d036d050bb4a3ce16825b404409c1328fb5b8ab56db932c0caa15b1e17a/nvidia_cudnn_frontend-1.13.0-cp310-cp310-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:2695c66e0880a33a736eb465c5989129d9730b42b7935301bff08567ef493d3c", size = 1804952, upload-time = "2025-07-17T05:25:02.402Z" },
+    { url = "https://files.pythonhosted.org/packages/0b/d6/98331dba5569b9b89410b010263c52301dc7de5bbbc3983dfac5c0f834ee/nvidia_cudnn_frontend-1.13.0-cp310-cp310-win_amd64.whl", hash = "sha256:7ad0e6c6ddffe4f49258b24b7c98864d06ee50a0625ca36917036c424dc2338a", size = 1260947, upload-time = "2025-07-17T05:26:35.264Z" },
+]
+
+[[package]]
 name = "nvidia-cufft-cu12"
 version = "11.3.0.4"
 source = { registry = "https://pypi.org/simple" }
@@ -2574,6 +2633,15 @@ version = "0.6.3"
 source = { registry = "https://pypi.org/simple" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/3b/9a/72ef35b399b0e183bc2e8f6f558036922d453c4d8237dab26c666a04244b/nvidia_cusparselt_cu12-0.6.3-py3-none-manylinux2014_x86_64.whl", hash = "sha256:e5c8a26c36445dd2e6812f1177978a24e2d37cacce7e090f297a688d1ec44f46", size = 156785796, upload-time = "2024-10-15T21:29:17.709Z" },
+]
+
+[[package]]
+name = "nvidia-ml-py"
+version = "12.575.51"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/d2/4d/6f017814ed5ac28e08e1b8a62e3a258957da27582c89b7f8f8b15ac3d2e7/nvidia_ml_py-12.575.51.tar.gz", hash = "sha256:6490e93fea99eb4e966327ae18c6eec6256194c921f23459c8767aee28c54581", size = 46597, upload-time = "2025-05-06T20:46:37.962Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/db/24/552ebea28f0570b9e65e62b50287a273804c9f997cc1c2dcd4e2d64b9e7d/nvidia_ml_py-12.575.51-py3-none-any.whl", hash = "sha256:eb8641800d98ce40a22f479873f34b482e214a7e80349c63be51c3919845446e", size = 47547, upload-time = "2025-05-06T20:46:36.457Z" },
 ]
 
 [[package]]
@@ -3316,6 +3384,18 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/b0/77/a5b8c569bf593b0140bde72ea885a803b82086995367bf2037de0159d924/pygments-2.19.2.tar.gz", hash = "sha256:636cb2477cec7f8952536970bc533bc43743542f70392ae026374600add5b887", size = 4968631, upload-time = "2025-06-21T13:39:12.283Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/c7/21/705964c7812476f378728bdf590ca4b771ec72385c533964653c68e86bdc/pygments-2.19.2-py3-none-any.whl", hash = "sha256:86540386c03d588bb81d44bc3928634ff26449851e99741617ecb9037ee5ec0b", size = 1225217, upload-time = "2025-06-21T13:39:07.939Z" },
+]
+
+[[package]]
+name = "pynvml"
+version = "12.0.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "nvidia-ml-py" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/26/6f/6b5880ed0239e85b9a39aed103b65b2ef81425beef9f45e5c035bf008330/pynvml-12.0.0.tar.gz", hash = "sha256:299ce2451a6a17e6822d6faee750103e25b415f06f59abb8db65d30f794166f5", size = 33636, upload-time = "2024-12-02T15:04:36.631Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/ed/df/f7cf07a65a96dd11d71f346f9c2863accdd4784da83af7181b067d556cbc/pynvml-12.0.0-py3-none-any.whl", hash = "sha256:fdff84b62a27dbe98e08e1a647eb77342bef1aebe0878bcd15e99a83fcbecb9e", size = 26560, upload-time = "2024-12-02T15:04:35.047Z" },
 ]
 
 [[package]]
@@ -4158,6 +4238,7 @@ dependencies = [
     { name = "datasets" },
     { name = "ezcolorlog" },
     { name = "flash-attn" },
+    { name = "flashinfer-python" },
     { name = "joblib" },
     { name = "jupyter" },
     { name = "llamafactory", extra = ["bitsandbytes", "deepspeed", "liger-kernel", "metrics", "torch", "vllm"] },
@@ -4193,6 +4274,7 @@ requires-dist = [
     { name = "datasets", specifier = ">=3.6.0" },
     { name = "ezcolorlog", specifier = ">=1.0.3" },
     { name = "flash-attn", specifier = ">=2.8.2" },
+    { name = "flashinfer-python", specifier = ">=0.2.11.post1" },
     { name = "joblib", specifier = ">=1.5.1" },
     { name = "jupyter", specifier = ">=1.1.1" },
     { name = "llamafactory", extras = ["bitsandbytes", "deepspeed", "liger-kernel", "metrics", "torch", "vllm"], editable = "src/external/LLaMA-Factory" },
