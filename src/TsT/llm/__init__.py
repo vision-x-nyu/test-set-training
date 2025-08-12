@@ -20,8 +20,8 @@ Example usage:
     trainable = create_trainable_predictor(predictor, trainer)
 
     # Use with evaluation framework
-    from TsT.core.evaluators import LLMFoldEvaluator
-    evaluator = LLMFoldEvaluator({"model_name": "google/gemma-2-2b-it"})
+    from TsT.core.evaluators import LLMEvaluator
+    # Note: LLMEvaluator requires model, df, target_col, and llm_config parameters
 """
 
 # Data models

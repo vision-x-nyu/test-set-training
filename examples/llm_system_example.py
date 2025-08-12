@@ -123,7 +123,7 @@ def example_evaluation_integration():
 
     # Option 2: Use production LLM evaluator (when ready for full GPU training)
     # trainable = example_single_gpu_usage()
-    # from TsT.core.llm_evaluators import LLMEvaluator
+    # from TsT.core.evaluators import LLMEvaluator
     # llm_evaluator = LLMEvaluator(trainable)
 
     # Example of running cross-validation (commented out to avoid actual training)
