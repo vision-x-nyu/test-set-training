@@ -20,6 +20,7 @@ from TsT.evaluators.llm import (
     LLMPredictionResult,
 )
 from TsT.evaluators import LLMEvaluator
+from TsT.evaluators.llm.config import LLMRunConfig
 
 
 class TestLLMComponents:
@@ -224,13 +225,13 @@ class TestLLMTrainingWithMocks:
                     model=mock_model,
                     df=test_df,
                     target_col="gt_idx",
-                    llm_config={
-                        "model_name": "test/model",
-                        "batch_size": 4,
-                        "max_seq_length": 512,
-                        "learning_rate": 2e-4,
-                        "num_epochs": 1,
-                    },
+                    llm_config=LLMRunConfig(
+                        model_name="test/model",
+                        batch_size=4,
+                        max_seq_length=512,
+                        learning_rate=2e-4,
+                        num_epochs=1,
+                    ),
                 )
 
                 assert evaluator is not None

@@ -5,7 +5,7 @@ This module contains the LLMEvaluator and related utilities for
 training and evaluating LLM models on bias detection tasks.
 """
 
-from typing import Dict, Any, Optional, List, Literal, Union
+from typing import Optional, List, Literal
 import tempfile
 from pathlib import Path
 
@@ -85,52 +85,18 @@ def evaluate_llm(
 class LLMEvaluator(ModelEvaluator):
     """LLM model evaluator for unified evaluation framework"""
 
-    default_llm_config = {
-        "model_name": "google/gemma-2-2b-it",
-        "batch_size": 32,
-        "learning_rate": 2e-4,
-        "num_epochs": 5,
-        "lora_rank": 8,
-        "lora_alpha": 16,
-        "max_seq_length": 512,
-    }
-
     def __init__(
         self,
         model: BiasModel,
         df: pd.DataFrame,
         target_col: str,
-        llm_config: Optional[Union[Dict[str, Any], LLMRunConfig]] = None,
+        llm_config: Optional[LLMRunConfig] = None,
     ):
         self.model = model
         self.df = df
         self.target_col = target_col
-        if llm_config is None:
-            logger.warning(f"No LLM config provided, using default config: {self.default_llm_config}")
-            self.llm_config = LLMRunConfig(
-                model_name=self.default_llm_config["model_name"],
-                batch_size=self.default_llm_config["batch_size"],
-                learning_rate=self.default_llm_config["learning_rate"],
-                num_epochs=self.default_llm_config["num_epochs"],
-                lora_rank=self.default_llm_config["lora_rank"],
-                lora_alpha=self.default_llm_config["lora_alpha"],
-                max_seq_length=self.default_llm_config["max_seq_length"],
-                template="gemma",
-            )
-        elif isinstance(llm_config, dict):
-            # Map dict to typed LLMRunConfig while preserving defaults
-            self.llm_config = LLMRunConfig(
-                model_name=llm_config.get("model_name", self.default_llm_config["model_name"]),
-                batch_size=llm_config.get("batch_size", self.default_llm_config["batch_size"]),
-                learning_rate=llm_config.get("learning_rate", self.default_llm_config["learning_rate"]),
-                num_epochs=llm_config.get("num_epochs", self.default_llm_config["num_epochs"]),
-                lora_rank=llm_config.get("lora_rank", self.default_llm_config["lora_rank"]),
-                lora_alpha=llm_config.get("lora_alpha", self.default_llm_config["lora_alpha"]),
-                max_seq_length=llm_config.get("max_seq_length", self.default_llm_config["max_seq_length"]),
-                template=llm_config.get("template", "gemma"),
-            )
-        else:
-            self.llm_config = llm_config
+        # Use provided run config or defaults
+        self.llm_config = llm_config or LLMRunConfig()
 
         # Initialize LLM predictor
         self.llm_config_obj = self.llm_config.to_predictor_config()

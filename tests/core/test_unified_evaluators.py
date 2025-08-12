@@ -226,7 +226,7 @@ class TestLLMFoldEvaluator:
         with patch("TsT.evaluators.llm.evaluator.VLLMPredictor"):
             with patch("TsT.evaluators.llm.evaluator.evaluate_llm_zero_shot") as mock_zero_shot:
                 mock_zero_shot.return_value = 0.25
-                evaluator = LLMEvaluator(model, df, "gt_idx", llm_config)
+                evaluator = LLMEvaluator(model, df, "gt_idx", LLMRunConfig(**llm_config))
 
         # Verify typed config fields match the provided dict
         assert isinstance(evaluator.llm_config, LLMRunConfig)
@@ -262,7 +262,7 @@ class TestLLMFoldEvaluator:
                         mock_train.return_value = None
                         mock_evaluate_llm.return_value = 0.85
 
-                        evaluator = LLMEvaluator(model, train_df, "gt_idx", llm_config)
+                        evaluator = LLMEvaluator(model, train_df, "gt_idx", LLMRunConfig(**llm_config))
 
                         result = evaluator.train_and_evaluate_fold(
                             model=model, train_df=train_df, test_df=test_df, target_col="gt_idx", fold_id=3, seed=456
@@ -305,7 +305,7 @@ class TestLLMFoldEvaluator:
         with patch("TsT.evaluators.llm.evaluator.VLLMPredictor"):
             with patch("TsT.evaluators.llm.evaluator.evaluate_llm_zero_shot") as mock_zero_shot:
                 mock_zero_shot.return_value = 0.25
-                evaluator2 = LLMEvaluator(model, df, "gt_idx", full_config)
+                evaluator2 = LLMEvaluator(model, df, "gt_idx", LLMRunConfig(**full_config))
                 # Verify typed config reflects provided dict
                 assert evaluator2.llm_config.model_name == full_config["model_name"]
                 assert evaluator2.llm_config.batch_size == full_config["batch_size"]
@@ -348,7 +348,7 @@ class TestLLMPostProcessing:
         with patch("TsT.evaluators.llm.evaluator.VLLMPredictor"):
             with patch("TsT.evaluators.llm.evaluator.evaluate_llm_zero_shot") as mock_zero_shot:
                 mock_zero_shot.return_value = 0.25
-                evaluator = LLMEvaluator(model, df, "gt_idx", llm_config)
+                evaluator = LLMEvaluator(model, df, "gt_idx", LLMRunConfig(**llm_config))
 
                 evaluation_result = self.create_mock_evaluation_result()
 
@@ -445,7 +445,7 @@ class TestEvaluatorIntegration:
                         mock_train.return_value = None
                         mock_evaluate_llm.return_value = 0.8
 
-                        evaluator = LLMEvaluator(model, train_df, "gt_idx", llm_config)
+                        evaluator = LLMEvaluator(model, train_df, "gt_idx", LLMRunConfig(**llm_config))
 
                         # Run fold evaluation
                         fold_result = evaluator.train_and_evaluate_fold(
