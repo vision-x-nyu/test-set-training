@@ -221,6 +221,13 @@ class VLLMPredictor(BaseLLMPredictor):
 
         self._set_loaded(False)
 
+    def ensure_loaded(self) -> None:
+        """(Re)load the base model if not currently loaded."""
+        if self.is_loaded:
+            return
+        # Recreate the base model components using the stored config
+        self._load_base_model()
+
     def __del__(self):
         """Cleanup when object is destroyed"""
         try:

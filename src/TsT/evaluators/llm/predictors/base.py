@@ -46,6 +46,17 @@ class LLMPredictorInterface(ABC):
         """
         pass
 
+    @abstractmethod
+    def ensure_loaded(self) -> None:
+        """
+        Ensure the predictor is loaded and ready for inference.
+
+        Implementations should (re)load any necessary resources if the predictor
+        is currently not loaded. This is used by composed trainers that may reset
+        the predictor before training to free GPU memory.
+        """
+        pass
+
     @property
     @abstractmethod
     def is_loaded(self) -> bool:
@@ -116,3 +127,11 @@ class BaseLLMPredictor(LLMPredictorInterface):
             confidence=confidence,
             raw_output=raw_output,
         )
+
+    def ensure_loaded(self) -> None:
+        """Default ensure_loaded that errors if not already loaded.
+
+        Concrete predictors should override to implement reload behavior.
+        """
+        if not self.is_loaded:
+            raise RuntimeError("Predictor not loaded and does not support automatic reload")

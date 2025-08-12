@@ -94,18 +94,12 @@ class TrainableLLMPredictor:
             self._last_training_info = adapter_info
 
             # Ensure predictor is loaded (it may have been reset before training)
-            if not self.predictor.is_loaded:
-                try:
-                    predictor_cls = self.predictor.__class__
-                    predictor_config = getattr(self.predictor, "config", None)
-                    if predictor_config is None:
-                        raise RuntimeError("Predictor not loaded and no config available to reload it.")
-                    # Recreate predictor instance to reload the base model
-                    self.predictor = predictor_cls(predictor_config)
-                except Exception as e:
-                    if self.config.reset_predictor_after_training:
-                        self.predictor.reset()
-                    raise RuntimeError(f"Failed to reload predictor before loading adapter: {e}")
+            try:
+                self.predictor.ensure_loaded()
+            except Exception as e:
+                if self.config.reset_predictor_after_training:
+                    self.predictor.reset()
+                raise RuntimeError(f"Failed to ensure predictor is loaded before loading adapter: {e}")
 
             # Load trained adapter for inference
             self._load_adapter_for_inference(str(adapter_info.adapter_path))
