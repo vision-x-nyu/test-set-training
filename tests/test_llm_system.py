@@ -31,6 +31,7 @@ class TestLLMComponents:
         training_datum = TrainingDatum(instruction="What is 2 + 2?", response="4", metadata={"test": True})
         assert training_datum.instruction == "What is 2 + 2?"
         assert training_datum.response == "4"
+        assert training_datum.metadata is not None
         assert training_datum.metadata["test"] is True
 
         # Test test instance
@@ -193,11 +194,36 @@ class TestLLMTrainingWithMocks:
 
     def test_llm_fold_evaluator(self):
         """Test that LLM fold evaluator works for LLM evaluation"""
-        evaluator = LLMEvaluator({"model_name": "test/model"})
+        # Create mock model and data for LLMEvaluator constructor
+        from unittest.mock import Mock
 
-        assert evaluator is not None
-        # The LLM fold evaluator should exist and be callable
-        assert hasattr(evaluator, "evaluate_fold")
+        mock_model = Mock()
+        mock_model.name = "test_model"
+        mock_model.format = "mc"
+
+        test_df = pd.DataFrame({"question": ["What is 2+2?", "What is 3+3?"], "gt_idx": [0, 1]})
+
+        # Mock the VLLMPredictor and evaluate_llm_zero_shot to avoid actual LLM calls
+        with patch("TsT.core.evaluators.VLLMPredictor"):
+            with patch("TsT.core.evaluators.evaluate_llm_zero_shot") as mock_eval:
+                mock_eval.return_value = 0.5
+
+                evaluator = LLMEvaluator(
+                    model=mock_model,
+                    df=test_df,
+                    target_col="gt_idx",
+                    llm_config={
+                        "model_name": "test/model",
+                        "batch_size": 4,
+                        "max_seq_length": 512,
+                        "learning_rate": 2e-4,
+                        "num_epochs": 1,
+                    },
+                )
+
+                assert evaluator is not None
+                # The LLM evaluator should have the required method
+                assert hasattr(evaluator, "train_and_evaluate_fold")
 
 
 if __name__ == "__main__":

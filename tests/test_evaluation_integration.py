@@ -11,7 +11,6 @@ import numpy as np
 
 from TsT.evaluation import run_evaluation
 from TsT.core.cross_validation import UnifiedCrossValidator, CrossValidationConfig
-from TsT.core.evaluators import RandomForestEvaluator
 
 
 class SimpleTestModel:
@@ -121,19 +120,18 @@ class TestUnifiedFrameworkIntegration:
         """Test cross-validation with UnifiedCrossValidator directly"""
         # Setup
         model = SimpleTestModel()
-        evaluator = RandomForestEvaluator()
         df = create_learnable_data(40, 4)
 
         # Create cross-validator
         config = CrossValidationConfig(n_folds=2, random_state=42, verbose=False, repeats=1, show_progress=False)
         cv = UnifiedCrossValidator(config)
 
-        # Run CV
+        # Run CV using the correct interface
         result = cv.cross_validate(
             model=model,
-            evaluator=evaluator,
             df=df,
             target_col="gt_idx",
+            mode="rf",  # Specify RF mode instead of passing evaluator directly
         )
 
         # Verify results

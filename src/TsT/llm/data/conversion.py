@@ -6,7 +6,7 @@ used in the TsT framework and LLM training pipelines.
 """
 
 import pandas as pd
-from typing import List, Literal, Dict
+from typing import List, Literal, Dict, Optional
 from .models import TrainingDatum, TestInstance
 
 
@@ -114,7 +114,7 @@ def convert_to_test_instances(
 
 def format_for_chat_template(
     instruction: str,
-    response: str = None,
+    response: Optional[str] = None,
     system_prompt: str = "You are a helpful assistant that answers questions accurately.",
 ) -> List[Dict[str, str]]:
     """

@@ -304,7 +304,7 @@ class TestTypeAnnotations:
         """Test ModelEvaluator type hints"""
         from inspect import signature
 
-        # Check evaluate_fold method signature
+        # Check train_and_evaluate_fold method signature
         sig = signature(ModelEvaluator.train_and_evaluate_fold)
         params = sig.parameters
 
@@ -312,5 +312,5 @@ class TestTypeAnnotations:
         assert "train_df" in params
         assert "test_df" in params
         assert "target_col" in params
-        assert "fold_num" in params
+        assert "fold_id" in params  # Changed from fold_num to fold_id
         assert "seed" in params
