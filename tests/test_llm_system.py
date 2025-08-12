@@ -19,7 +19,7 @@ from TsT.llm import (
     TestInstance,
     LLMPredictionResult,
 )
-from TsT.core.evaluators import LLMEvaluator
+from TsT.evaluators import LLMEvaluator
 
 
 class TestLLMComponents:
@@ -204,8 +204,8 @@ class TestLLMTrainingWithMocks:
         test_df = pd.DataFrame({"question": ["What is 2+2?", "What is 3+3?"], "gt_idx": [0, 1]})
 
         # Mock the VLLMPredictor and evaluate_llm_zero_shot to avoid actual LLM calls
-        with patch("TsT.core.evaluators.llm.VLLMPredictor"):
-            with patch("TsT.core.evaluators.llm.evaluate_llm_zero_shot") as mock_eval:
+        with patch("TsT.evaluators.llm.VLLMPredictor"):
+            with patch("TsT.evaluators.llm.evaluate_llm_zero_shot") as mock_eval:
                 mock_eval.return_value = 0.5
 
                 evaluator = LLMEvaluator(

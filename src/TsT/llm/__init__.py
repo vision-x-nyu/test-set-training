@@ -20,7 +20,7 @@ Example usage:
     trainable = create_trainable_predictor(predictor, trainer)
 
     # Use with evaluation framework
-    from TsT.core.evaluators import LLMEvaluator
+    from TsT.evaluators import LLMEvaluator
     # Note: LLMEvaluator requires model, df, target_col, and llm_config parameters
 """
 

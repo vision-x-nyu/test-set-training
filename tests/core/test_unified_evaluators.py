@@ -9,7 +9,7 @@ import pandas as pd
 import numpy as np
 from unittest.mock import Mock, patch
 
-from TsT.core.evaluators import RandomForestEvaluator, LLMEvaluator
+from TsT.evaluators import RandomForestEvaluator, LLMEvaluator
 from TsT.core.results import FoldResult, EvaluationResult
 
 
@@ -119,9 +119,9 @@ class TestRandomForestFoldEvaluator:
         assert 0.0 <= result.score <= 1.0  # MRA should be between 0 and 1
         assert result.test_size == 8
 
-    @patch("TsT.core.evaluators.rf.make_rf_estimator")
-    @patch("TsT.core.evaluators.rf.score_rf")
-    @patch("TsT.core.evaluators.rf.encode_categoricals")
+    @patch("TsT.evaluators.rf.make_rf_estimator")
+    @patch("TsT.evaluators.rf.score_rf")
+    @patch("TsT.evaluators.rf.encode_categoricals")
     def test_evaluation_pipeline_mocked(self, mock_encode, mock_score, mock_make_estimator):
         """Test evaluation pipeline with mocked sklearn components"""
         # Setup mocks
@@ -222,8 +222,8 @@ class TestLLMFoldEvaluator:
         }
 
         # Mock the predictor to avoid actual model loading
-        with patch("TsT.core.evaluators.llm.VLLMPredictor"):
-            with patch("TsT.core.evaluators.llm.evaluate_llm_zero_shot") as mock_zero_shot:
+        with patch("TsT.evaluators.llm.VLLMPredictor"):
+            with patch("TsT.evaluators.llm.evaluate_llm_zero_shot") as mock_zero_shot:
                 mock_zero_shot.return_value = 0.25
                 evaluator = LLMEvaluator(model, df, "gt_idx", llm_config)
 
@@ -245,10 +245,10 @@ class TestLLMFoldEvaluator:
         }
 
         # Mock all the LLM components
-        with patch("TsT.core.evaluators.llm.VLLMPredictor"):
-            with patch("TsT.core.evaluators.llm.evaluate_llm_zero_shot") as mock_zero_shot:
-                with patch("TsT.core.evaluators.llm.train_llm") as mock_train_llm:
-                    with patch("TsT.core.evaluators.llm.evaluate_llm") as mock_evaluate_llm:
+        with patch("TsT.evaluators.llm.VLLMPredictor"):
+            with patch("TsT.evaluators.llm.evaluate_llm_zero_shot") as mock_zero_shot:
+                with patch("TsT.evaluators.llm.train_llm") as mock_train_llm:
+                    with patch("TsT.evaluators.llm.evaluate_llm") as mock_evaluate_llm:
                         mock_zero_shot.return_value = 0.25
                         mock_train_llm.return_value = "/tmp/adapter"
                         mock_evaluate_llm.return_value = 0.85
@@ -276,8 +276,8 @@ class TestLLMFoldEvaluator:
         df = create_test_data(20, 2)
 
         # Test with minimal config (None = uses default)
-        with patch("TsT.core.evaluators.llm.VLLMPredictor"):
-            with patch("TsT.core.evaluators.llm.evaluate_llm_zero_shot") as mock_zero_shot:
+        with patch("TsT.evaluators.llm.VLLMPredictor"):
+            with patch("TsT.evaluators.llm.evaluate_llm_zero_shot") as mock_zero_shot:
                 mock_zero_shot.return_value = 0.25
                 evaluator1 = LLMEvaluator(model, df, "gt_idx", None)
                 # Should use default config
@@ -293,8 +293,8 @@ class TestLLMFoldEvaluator:
             "lora_rank": 8,
             "lora_alpha": 16,
         }
-        with patch("TsT.core.evaluators.llm.VLLMPredictor"):
-            with patch("TsT.core.evaluators.llm.evaluate_llm_zero_shot") as mock_zero_shot:
+        with patch("TsT.evaluators.llm.VLLMPredictor"):
+            with patch("TsT.evaluators.llm.evaluate_llm_zero_shot") as mock_zero_shot:
                 mock_zero_shot.return_value = 0.25
                 evaluator2 = LLMEvaluator(model, df, "gt_idx", full_config)
                 assert evaluator2.llm_config == full_config
@@ -329,8 +329,8 @@ class TestLLMPostProcessing:
         }
 
         # Mock the evaluator setup
-        with patch("TsT.core.evaluators.llm.VLLMPredictor"):
-            with patch("TsT.core.evaluators.llm.evaluate_llm_zero_shot") as mock_zero_shot:
+        with patch("TsT.evaluators.llm.VLLMPredictor"):
+            with patch("TsT.evaluators.llm.evaluate_llm_zero_shot") as mock_zero_shot:
                 mock_zero_shot.return_value = 0.25
                 evaluator = LLMEvaluator(model, df, "gt_idx", llm_config)
 
@@ -421,10 +421,10 @@ class TestEvaluatorIntegration:
         test_df = create_test_data(5, 2)
 
         # Mock all LLM components
-        with patch("TsT.core.evaluators.llm.VLLMPredictor"):
-            with patch("TsT.core.evaluators.llm.evaluate_llm_zero_shot") as mock_zero_shot:
-                with patch("TsT.core.evaluators.llm.train_llm") as mock_train_llm:
-                    with patch("TsT.core.evaluators.llm.evaluate_llm") as mock_evaluate_llm:
+        with patch("TsT.evaluators.llm.VLLMPredictor"):
+            with patch("TsT.evaluators.llm.evaluate_llm_zero_shot") as mock_zero_shot:
+                with patch("TsT.evaluators.llm.train_llm") as mock_train_llm:
+                    with patch("TsT.evaluators.llm.evaluate_llm") as mock_evaluate_llm:
                         mock_zero_shot.return_value = 0.25
                         mock_train_llm.return_value = "/tmp/adapter"
                         mock_evaluate_llm.return_value = 0.8

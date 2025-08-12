@@ -10,9 +10,9 @@ import pandas as pd
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.preprocessing import LabelEncoder
 
-from ..protocols import ModelEvaluator, FeatureBasedBiasModel
-from ..results import FoldResult, EvaluationResult
-from ...utils import mean_relative_accuracy
+from ..core.protocols import ModelEvaluator, FeatureBasedBiasModel
+from ..core.results import FoldResult, EvaluationResult
+from ..utils import mean_relative_accuracy
 
 
 def make_rf_estimator(task, seed):

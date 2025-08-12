@@ -12,11 +12,11 @@ from pathlib import Path
 import pandas as pd
 from ezcolorlog import root_logger as logger
 
-from ..protocols import ModelEvaluator, BiasModel
-from ..results import FoldResult, EvaluationResult
-from ...llm.data.models import TestInstance
-from ...llm.predictors.vllm import VLLMPredictor, VLLMPredictorConfig
-from ...llm.utils.llamafactory import (
+from ..core.protocols import ModelEvaluator, BiasModel
+from ..core.results import FoldResult, EvaluationResult
+from ..llm.data.models import TestInstance
+from ..llm.predictors.vllm import VLLMPredictor, VLLMPredictorConfig
+from ..llm.utils.llamafactory import (
     format_records_for_llama_factory_sft,
     generate_llama_factory_config,
     run_llama_factory_training,

@@ -78,6 +78,9 @@ class FeatureBasedBiasModel(BiasModel, Protocol):
             raise ValueError(f"Unknown format: {self.format}")
 
 
+# TODO: make a QA bias model for LLMs
+
+
 class ModelEvaluator(ABC):
     """Abstract base for model evaluation strategies"""
 
