@@ -9,22 +9,86 @@ from typing import Optional, List, Literal
 import tempfile
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 from ezcolorlog import root_logger as logger
 
-from ...core.protocols import ModelEvaluator, BiasModel
-from ...core.results import FoldResult, EvaluationResult
-from ..llm.data.models import TestInstance
+from ..llm.data.models import TestInstance, LLMPredictionResult
 from ..llm.data.conversion import convert_to_blind_training_format, convert_to_blind_test_instances
 from ..llm.predictors.vllm import VLLMPredictor
 from ..llm.predictors.base import LLMPredictorInterface
 from ..llm.trainers.llamafactory import create_llamafactory_trainer
 from ..llm.trainable.predictor import TrainableLLMPredictor, TrainableLLMPredictorConfig
 from ..llm.config import LLMRunConfig
+from ...core.protocols import ModelEvaluator, BiasModel
+from ...core.results import FoldResult, EvaluationResult
+from ...utils import fuzzy_match, fuzzy_cleanup_numeric, fuzzy_mra, parse_multi_choice_response
 
 
-def score_llm():
-    raise NotImplementedError("LLM scoring not implemented")
+def score_llm(result: LLMPredictionResult, test_instance: TestInstance, format_type: Literal["mc", "num", "oe"]):
+    match format_type:
+        case "mc":
+            pred_idx = parse_multi_choice_response(result.prediction, test_instance.options)
+            gt_idx = parse_multi_choice_response(test_instance.ground_truth, test_instance.options)
+            return float(pred_idx == gt_idx)
+        case "num":
+            return fuzzy_mra(result.prediction, test_instance.ground_truth)
+        case "oe":
+            return fuzzy_match(result.prediction, test_instance.ground_truth)
+        case _:
+            raise ValueError(f"Unknown format_type: {format_type}")
+
+
+def evaluate_llm(
+    predictor: LLMPredictorInterface,
+    test_instances: List[TestInstance],
+    format_type: Literal["mc", "num", "oe"],
+) -> float:
+    """
+    Evaluate LLM on test data and return a score in [0, 1].
+
+    - mc (multiple choice): uses fuzzy matching on cleaned strings
+    - num (numeric): uses numeric cleaning + mean relative accuracy across thresholds
+    - oe (open-ended): uses fuzzy string matching
+    """
+    if not test_instances:
+        return 0.0
+
+    # Already TestInstance objects
+    prediction_results = predictor.predict(test_instances)
+    predictions = [str(result.prediction) for result in prediction_results]
+    ground_truth = [str(instance.ground_truth) for instance in test_instances]
+
+    # Log first example for quick debugging
+    if predictions and ground_truth:
+        logger.info(f"First prediction: {predictions[0]}")
+        logger.info(f"First ground truth: {ground_truth[0]}")
+
+    match format_type:
+        case "mc":
+            # Fuzzy match (case/spacing/punctuation tolerant)
+            correct_flags = [fuzzy_match(p, gt) for p, gt in zip(predictions, ground_truth)]
+            score = float(sum(correct_flags) / len(correct_flags))
+        case "num":
+            # Numeric scoring via mean relative accuracy
+            true_numeric = np.array([fuzzy_cleanup_numeric(gt) for gt in ground_truth], dtype=float)
+            pred_numeric = []
+            for p in predictions:
+                try:
+                    pred_numeric.append(fuzzy_cleanup_numeric(p))
+                except Exception:
+                    # Unparseable predictions count as very wrong
+                    pred_numeric.append(float("inf"))
+            pred_numeric = np.array(pred_numeric, dtype=float)
+            score = fuzzy_mra(pred_numeric, true_numeric)
+        case "oe":
+            # Open-ended: tolerant fuzzy string matching
+            correct_flags = [fuzzy_match(p, gt) for p, gt in zip(predictions, ground_truth)]
+            score = float(sum(correct_flags) / len(correct_flags))
+        case _:
+            raise ValueError(f"Unknown format_type: {format_type}")
+
+    return score
 
 
 def evaluate_llm_zero_shot(
@@ -48,38 +112,6 @@ def evaluate_llm_zero_shot(
     )
 
     return evaluate_llm(predictor, test_instances, format_type)
-
-
-def evaluate_llm(
-    predictor: LLMPredictorInterface,
-    test_instances: List[TestInstance],
-    format_type: Literal["mc", "num", "oe"],
-) -> float:
-    """
-    Evaluate LLM on test data and return accuracy.
-    """
-    # No need to convert - already TestInstance objects!
-    prediction_results = predictor.predict(test_instances)
-    predictions = [result.prediction for result in prediction_results]
-    ground_truth = [instance.ground_truth for instance in test_instances]
-
-    # print the first prediction and ground truth
-    if predictions and ground_truth:
-        logger.info(f"First prediction: {predictions[0]}")
-        logger.info(f"First ground truth: {ground_truth[0]}")
-
-    # TODO: make an evaluation function that takes LLMPredictionResult objects and returns a score
-    # HACK [temporary]: manually score here
-
-    # Calculate accuracy
-    if format_type == "mc":
-        # For multiple choice, exact match
-        correct = sum(1 for pred, gt in zip(predictions, ground_truth) if pred.strip().upper() == gt.strip().upper())
-    else:
-        # For numerical, use relative accuracy or exact match
-        correct = sum(1 for pred, gt in zip(predictions, ground_truth) if pred.strip() == gt.strip())
-
-    return correct / len(test_instances) if test_instances else 0.0
 
 
 class LLMEvaluator(ModelEvaluator):

@@ -6,7 +6,7 @@ following DataEnvGym patterns for robustness and maintainability.
 """
 
 from pydantic import BaseModel, Field, ConfigDict
-from typing import Dict, Optional, Any
+from typing import Dict, Optional, Any, List
 from pathlib import Path
 
 
@@ -24,6 +24,7 @@ class TestInstance(BaseModel):
     instance_id: str = Field(..., description="Unique identifier for this instance")
     instruction: str = Field(..., description="The instruction/question for the model")
     ground_truth: str = Field(..., description="The correct answer for evaluation")
+    options: Optional[List[str]] = Field(None, description="The options for the multiple choice question")
     metadata: Optional[Dict[str, Any]] = Field(None, description="Optional metadata for tracking")
 
 
