@@ -338,3 +338,71 @@ def test_weighted_mean_std_empty_arrays():
     # Should handle empty arrays gracefully
     assert mean == 0
     assert std == 0
+
+
+class TestExactMatch:
+    def test_strings_case_insensitive(self):
+        assert utils.exact_match("Hello", "hello") == 1.0
+        assert utils.exact_match("World", "world") == 1.0
+        assert utils.exact_match("Hello", "World") == 0.0
+
+    def test_numeric_values(self):
+        assert utils.exact_match(3, 3) == 1.0
+        assert utils.exact_match(3.0, 3.0) == 1.0
+        assert utils.exact_match(3.0, 4.0) == 0.0
+
+
+@pytest.mark.parametrize(
+    "pred,target,expected",
+    [
+        ("  Hello world.  ", "hello", 1.0),
+        ("Test. ", "test", 1.0),
+        ("42 is the answer", "42", 1.0),
+        (" 42. ", "42", 1.0),
+        ("MixedCase Word.", "mixedcase", 1.0),
+        ("foo.bar ", "foo.bar", 1.0),
+        ("different", "answer", 0.0),
+    ],
+)
+def test_fuzzy_match(pred, target, expected):
+    assert utils.fuzzy_match(pred, target) == expected
+
+
+class TestMultiChoiceParsing:
+    def test_get_multi_choice_info(self):
+        options = ["Red", "Blue", "Green"]
+        index2ans, all_choices = utils.get_multi_choice_info(options)
+
+        assert all_choices == ["A", "B", "C"]
+        assert index2ans == {"A": "Red", "B": "Blue", "C": "Green"}
+
+    @pytest.mark.parametrize(
+        "response,expected",
+        [
+            ("The answer is (B).", "B"),
+            ("I choose C", "C"),
+            ("Final answer: A.", "A"),
+        ],
+    )
+    def test_parse_multi_choice_response_variants(self, response, expected):
+        options = ["Option A", "Option B", "Option C"]
+        assert utils.parse_multi_choice_response(response, options) == expected
+
+    def test_parse_multi_choice_content_based(self):
+        options = ["cat", "dog", "bird"]
+        # Use >5 tokens to trigger content-based parsing in the implementation
+        response = "In my opinion, it is the dog indeed."
+        assert utils.parse_multi_choice_response(response, options) == "B"
+
+    def test_multiple_candidates_last_one_wins(self):
+        options = ["opt1", "opt2", "opt3"]
+        response = "A B A"  # Both A and B appear; last occurrence is A
+        assert utils.parse_multi_choice_response(response, options) == "A"
+
+    def test_random_fallback_monkeypatched(self, monkeypatch):
+        # Force random fallback to a deterministic choice
+        monkeypatch.setattr(utils.random, "choice", lambda seq: "C")
+
+        options = ["Red", "Blue", "Green"]
+        response = "No valid marker here"
+        assert utils.parse_multi_choice_response(response, options) == "C"
