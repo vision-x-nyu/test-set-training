@@ -24,13 +24,14 @@ class LLMRunConfig:
     max_seq_length: int = 512
 
     # Inference (predictor)
-    batch_size: int = 32
+    eval_batch_size: int = 32
     temperature: float = 0.0
     max_tokens: int = 10
     apply_chat_template: bool = False
 
     # Training (trainer)
     learning_rate: float = 2e-4
+    train_batch_size: int = 32
     num_epochs: int = 5
     lora_rank: int = 8
     lora_alpha: int = 16
@@ -44,7 +45,7 @@ class LLMRunConfig:
             max_seq_length=self.max_seq_length,
             temperature=self.temperature,
             max_tokens=self.max_tokens,
-            batch_size=self.batch_size,
+            batch_size=self.eval_batch_size,
             apply_chat_template=self.apply_chat_template,
         )
 
@@ -55,7 +56,7 @@ class LLMRunConfig:
             template=self.template,
             learning_rate=self.learning_rate,
             num_epochs=self.num_epochs,
-            batch_size=self.batch_size,
+            batch_size=self.train_batch_size,
             lora_rank=self.lora_rank,
             lora_alpha=self.lora_alpha,
             lora_dropout=self.lora_dropout,

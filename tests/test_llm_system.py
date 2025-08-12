@@ -227,7 +227,8 @@ class TestLLMTrainingWithMocks:
                     target_col="gt_idx",
                     llm_config=LLMRunConfig(
                         model_name="test/model",
-                        batch_size=4,
+                        train_batch_size=4,
+                        eval_batch_size=16,
                         max_seq_length=512,
                         learning_rate=2e-4,
                         num_epochs=1,

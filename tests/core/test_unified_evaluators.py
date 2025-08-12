@@ -218,7 +218,8 @@ class TestLLMFoldEvaluator:
         df = create_test_data(20, 2)
         llm_config = {
             "model_name": "google/gemma-2-2b-it",
-            "batch_size": 4,
+            "train_batch_size": 4,
+            "eval_batch_size": 16,
             "max_seq_length": 512,
             "learning_rate": 2e-4,
             "num_epochs": 5,
@@ -235,7 +236,8 @@ class TestLLMFoldEvaluator:
         # Verify typed config fields match the provided dict
         assert isinstance(evaluator.llm_config, LLMRunConfig)
         assert evaluator.llm_config.model_name == llm_config["model_name"]
-        assert evaluator.llm_config.batch_size == llm_config["batch_size"]
+        assert evaluator.llm_config.train_batch_size == llm_config["train_batch_size"]
+        assert evaluator.llm_config.eval_batch_size == llm_config["eval_batch_size"]
         assert evaluator.llm_config.max_seq_length == llm_config["max_seq_length"]
         assert evaluator.llm_config.learning_rate == llm_config["learning_rate"]
         assert evaluator.llm_config.num_epochs == llm_config["num_epochs"]
@@ -249,7 +251,8 @@ class TestLLMFoldEvaluator:
         test_df = create_test_data(5, 2)
         llm_config = {
             "model_name": "google/gemma-2-2b-it",
-            "batch_size": 4,
+            "train_batch_size": 4,
+            "eval_batch_size": 16,
             "max_seq_length": 512,
             "learning_rate": 2e-4,
             "num_epochs": 5,
@@ -299,7 +302,8 @@ class TestLLMFoldEvaluator:
         # Test with full config
         full_config = {
             "model_name": "google/gemma-2-2b-it",
-            "batch_size": 8,
+            "train_batch_size": 8,
+            "eval_batch_size": 16,
             "learning_rate": 2e-4,
             "num_epochs": 2,
             "max_seq_length": 512,
@@ -312,7 +316,8 @@ class TestLLMFoldEvaluator:
                 evaluator2 = LLMEvaluator(model, df, "gt_idx", LLMRunConfig(**full_config))
                 # Verify typed config reflects provided dict
                 assert evaluator2.llm_config.model_name == full_config["model_name"]
-                assert evaluator2.llm_config.batch_size == full_config["batch_size"]
+                assert evaluator2.llm_config.train_batch_size == full_config["train_batch_size"]
+                assert evaluator2.llm_config.eval_batch_size == full_config["eval_batch_size"]
                 assert evaluator2.llm_config.learning_rate == full_config["learning_rate"]
                 assert evaluator2.llm_config.num_epochs == full_config["num_epochs"]
                 assert evaluator2.llm_config.max_seq_length == full_config["max_seq_length"]
@@ -340,7 +345,8 @@ class TestLLMPostProcessing:
         df = create_test_data(50, 2)
         llm_config = {
             "model_name": "google/gemma-2-2b-it",
-            "batch_size": 32,
+            "train_batch_size": 32,
+            "eval_batch_size": 64,
             "max_seq_length": 512,
             "learning_rate": 2e-4,
             "num_epochs": 5,
@@ -429,7 +435,8 @@ class TestEvaluatorIntegration:
         # Create components
         llm_config = {
             "model_name": "google/gemma-2-2b-it",
-            "batch_size": 4,
+            "train_batch_size": 4,
+            "eval_batch_size": 16,
             "max_seq_length": 512,
             "learning_rate": 2e-4,
             "num_epochs": 5,
