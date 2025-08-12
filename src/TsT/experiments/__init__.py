@@ -6,5 +6,6 @@ managing results, and handling logging/metadata capture.
 """
 
 from .llm_single_run import run_single_llm_experiment
+from .llm_sweep import run_llm_sweep
 
-__all__ = ["run_single_llm_experiment"]
+__all__ = ["run_single_llm_experiment", "run_llm_sweep"]
