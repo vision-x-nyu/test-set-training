@@ -58,11 +58,15 @@ def create_test_data(n_samples=50, n_classes=2):
     """Create test data for evaluators"""
     np.random.seed(42)
 
+    # Build shared MC options for all rows
+    mc_options = [f"{chr(65 + i)}: {i}" for i in range(n_classes)]
+
     data = {
         "id": range(n_samples),
         "gt_idx": np.random.randint(0, n_classes, n_samples),
         "ground_truth": np.random.randn(n_samples),
         "question": [f"Question {i}" for i in range(n_samples)],
+        "options": [mc_options for _ in range(n_samples)],
     }
 
     return pd.DataFrame(data)

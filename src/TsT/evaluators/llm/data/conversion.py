@@ -47,10 +47,11 @@ def get_blind_qa(
             elif "options" in record:
                 options = record["options"]
             else:
-                raise ValueError(f"No choices found in the row: {record}")
+                raise ValueError(f"No choices/options found in MC row: {record}")
 
             options_text = "\n".join(options)
             question_text = f"{question_text} Options:\n{options_text}"
+
             if target_col == "gt_idx" and isinstance(target, int):
                 # Convert index to letter
                 answer = chr(65 + int(target))
@@ -95,7 +96,7 @@ def convert_to_blind_training_format(
 
     for idx, row in df.iterrows():
         instruction, response, answer, options = get_blind_qa(
-            row, target_col, format_type, instruction_template, post_prompt, response_template
+            row.to_dict(), target_col, format_type, instruction_template, post_prompt, response_template
         )
 
         training_data.append(
@@ -140,7 +141,7 @@ def convert_to_blind_test_instances(
 
     for idx, row in df.iterrows():
         instruction, response, answer, options = get_blind_qa(
-            row, target_col, format_type, instruction_template, post_prompt, response_template
+            row.to_dict(), target_col, format_type, instruction_template, post_prompt, response_template
         )
 
         instance_id = f"{id_prefix}_{idx}"
