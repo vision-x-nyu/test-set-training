@@ -10,6 +10,7 @@ import numpy as np
 from unittest.mock import Mock, patch
 
 from TsT.evaluators import RandomForestEvaluator, LLMEvaluator
+from TsT.evaluators.llm.config import LLMRunConfig
 from TsT.core.results import FoldResult, EvaluationResult
 
 
@@ -227,7 +228,15 @@ class TestLLMFoldEvaluator:
                 mock_zero_shot.return_value = 0.25
                 evaluator = LLMEvaluator(model, df, "gt_idx", llm_config)
 
-        assert evaluator.llm_config == llm_config
+        # Verify typed config fields match the provided dict
+        assert isinstance(evaluator.llm_config, LLMRunConfig)
+        assert evaluator.llm_config.model_name == llm_config["model_name"]
+        assert evaluator.llm_config.batch_size == llm_config["batch_size"]
+        assert evaluator.llm_config.max_seq_length == llm_config["max_seq_length"]
+        assert evaluator.llm_config.learning_rate == llm_config["learning_rate"]
+        assert evaluator.llm_config.num_epochs == llm_config["num_epochs"]
+        assert evaluator.llm_config.lora_rank == llm_config["lora_rank"]
+        assert evaluator.llm_config.lora_alpha == llm_config["lora_alpha"]
 
     def test_evaluation_with_mocked_components(self):
         """Test LLM evaluation with mocked components"""
@@ -281,7 +290,7 @@ class TestLLMFoldEvaluator:
                 mock_zero_shot.return_value = 0.25
                 evaluator1 = LLMEvaluator(model, df, "gt_idx", None)
                 # Should use default config
-                assert evaluator1.llm_config["model_name"] == "google/gemma-2-2b-it"
+                assert evaluator1.llm_config.model_name == "google/gemma-2-2b-it"
 
         # Test with full config
         full_config = {
@@ -297,7 +306,14 @@ class TestLLMFoldEvaluator:
             with patch("TsT.evaluators.llm.evaluator.evaluate_llm_zero_shot") as mock_zero_shot:
                 mock_zero_shot.return_value = 0.25
                 evaluator2 = LLMEvaluator(model, df, "gt_idx", full_config)
-                assert evaluator2.llm_config == full_config
+                # Verify typed config reflects provided dict
+                assert evaluator2.llm_config.model_name == full_config["model_name"]
+                assert evaluator2.llm_config.batch_size == full_config["batch_size"]
+                assert evaluator2.llm_config.learning_rate == full_config["learning_rate"]
+                assert evaluator2.llm_config.num_epochs == full_config["num_epochs"]
+                assert evaluator2.llm_config.max_seq_length == full_config["max_seq_length"]
+                assert evaluator2.llm_config.lora_rank == full_config["lora_rank"]
+                assert evaluator2.llm_config.lora_alpha == full_config["lora_alpha"]
 
 
 class TestLLMPostProcessing:

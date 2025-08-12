@@ -5,7 +5,7 @@ This module contains the LLMEvaluator and related utilities for
 training and evaluating LLM models on bias detection tasks.
 """
 
-from typing import Dict, Any, Optional, List, Literal
+from typing import Dict, Any, Optional, List, Literal, Union
 import tempfile
 from pathlib import Path
 
@@ -16,10 +16,11 @@ from ...core.protocols import ModelEvaluator, BiasModel
 from ...core.results import FoldResult, EvaluationResult
 from ..llm.data.models import TestInstance
 from ..llm.data.conversion import convert_to_blind_training_format, convert_to_blind_test_instances
-from ..llm.predictors.vllm import VLLMPredictor, VLLMPredictorConfig
+from ..llm.predictors.vllm import VLLMPredictor
 from ..llm.predictors.base import LLMPredictorInterface
 from ..llm.trainers.llamafactory import create_llamafactory_trainer
 from ..llm.trainable.predictor import TrainableLLMPredictor, TrainableLLMPredictorConfig
+from ..llm.config import LLMRunConfig
 
 
 def score_llm():
@@ -99,35 +100,46 @@ class LLMEvaluator(ModelEvaluator):
         model: BiasModel,
         df: pd.DataFrame,
         target_col: str,
-        llm_config: Optional[Dict[str, Any]] = None,
+        llm_config: Optional[Union[Dict[str, Any], LLMRunConfig]] = None,
     ):
         self.model = model
         self.df = df
         self.target_col = target_col
         if llm_config is None:
             logger.warning(f"No LLM config provided, using default config: {self.default_llm_config}")
-            llm_config = self.default_llm_config
-        self.llm_config = llm_config
+            self.llm_config = LLMRunConfig(
+                model_name=self.default_llm_config["model_name"],
+                batch_size=self.default_llm_config["batch_size"],
+                learning_rate=self.default_llm_config["learning_rate"],
+                num_epochs=self.default_llm_config["num_epochs"],
+                lora_rank=self.default_llm_config["lora_rank"],
+                lora_alpha=self.default_llm_config["lora_alpha"],
+                max_seq_length=self.default_llm_config["max_seq_length"],
+                template="gemma",
+            )
+        elif isinstance(llm_config, dict):
+            # Map dict to typed LLMRunConfig while preserving defaults
+            self.llm_config = LLMRunConfig(
+                model_name=llm_config.get("model_name", self.default_llm_config["model_name"]),
+                batch_size=llm_config.get("batch_size", self.default_llm_config["batch_size"]),
+                learning_rate=llm_config.get("learning_rate", self.default_llm_config["learning_rate"]),
+                num_epochs=llm_config.get("num_epochs", self.default_llm_config["num_epochs"]),
+                lora_rank=llm_config.get("lora_rank", self.default_llm_config["lora_rank"]),
+                lora_alpha=llm_config.get("lora_alpha", self.default_llm_config["lora_alpha"]),
+                max_seq_length=llm_config.get("max_seq_length", self.default_llm_config["max_seq_length"]),
+                template=llm_config.get("template", "gemma"),
+            )
+        else:
+            self.llm_config = llm_config
 
         # Initialize LLM predictor
-        self.llm_config_obj = VLLMPredictorConfig(
-            model_name=self.llm_config["model_name"],
-            batch_size=self.llm_config["batch_size"],
-            max_seq_length=self.llm_config["max_seq_length"],
-            apply_chat_template=False,  # Disable for compatibility with Gemma and other models
-        )
+        self.llm_config_obj = self.llm_config.to_predictor_config()
+        # Force-disable chat template for compatibility unless explicitly enabled in run config
+        self.llm_config_obj.apply_chat_template = self.llm_config.apply_chat_template
         self.predictor = VLLMPredictor(self.llm_config_obj)
 
         # Initialize LlamaFactory trainer and composed trainable predictor
-        self.trainer = create_llamafactory_trainer(
-            model_name=self.llm_config["model_name"],
-            learning_rate=self.llm_config["learning_rate"],
-            num_epochs=self.llm_config["num_epochs"],
-            batch_size=self.llm_config["batch_size"],
-            lora_rank=self.llm_config.get("lora_rank", 8),
-            max_seq_length=self.llm_config["max_seq_length"],
-            template=self.llm_config.get("template", "gemma"),
-        )
+        self.trainer = create_llamafactory_trainer(**self.llm_config.to_trainer_config().__dict__)
         self.trainable = TrainableLLMPredictor(
             predictor=self.predictor,
             trainer=self.trainer,
@@ -188,7 +200,7 @@ class LLMEvaluator(ModelEvaluator):
             train_size=len(train_df),
             test_size=len(test_df),
             metadata={
-                "model_name": self.llm_config.get("model_name", "unknown"),
+                "model_name": self.llm_config.model_name,
                 "llm_config": self.llm_config,
             },
         )

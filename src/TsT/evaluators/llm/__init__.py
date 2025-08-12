@@ -74,6 +74,7 @@ from .utils.io import (
 )
 
 from .evaluator import LLMEvaluator
+from .config import LLMRunConfig
 
 
 def create_vllm_predictor(
@@ -220,4 +221,6 @@ __all__ = [
     "get_gpu_count",
     # Evaluator
     "LLMEvaluator",
+    # Config
+    "LLMRunConfig",
 ]
