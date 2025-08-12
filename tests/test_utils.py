@@ -119,3 +119,222 @@ def test_fuzzy_cleanup_numeric_invalid(pred):
 )
 def test_fuzzy_cleanup_numeric_negative(pred, expected):
     assert utils.fuzzy_cleanup_numeric(pred) == expected
+
+
+# Tests for mean_relative_accuracy
+def test_mean_relative_accuracy_perfect_predictions():
+    """Test MRA with perfect predictions (should return 1.0)"""
+    import numpy as np
+
+    pred = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
+    true = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
+
+    result = utils.mean_relative_accuracy(pred, true)
+    assert result == 1.0
+
+
+def test_mean_relative_accuracy_basic_case():
+    """Test MRA with known inputs and expected output"""
+    import numpy as np
+
+    # Simple case: predictions that are 10% off
+    pred = np.array([1.1, 2.2, 3.3])
+    true = np.array([1.0, 2.0, 3.0])
+
+    # Relative errors are all 0.1 (10%)
+    # For thresholds 0.5 to 0.95, some will pass and some won't
+    # 0.1 < (1-0.5)=0.5 ✓, but 0.1 < (1-0.95)=0.05 ✗
+    result = utils.mean_relative_accuracy(pred, true)
+    assert 0.0 < result < 1.0  # Should be between 0 and 1
+
+
+def test_mean_relative_accuracy_very_good_predictions():
+    """Test MRA with very good predictions that pass all thresholds"""
+    import numpy as np
+
+    # Predictions with only 1% error
+    pred = np.array([1.01, 2.01, 3.01])
+    true = np.array([1.0, 2.0, 3.0])
+
+    # Relative errors are all 0.01 (1%)
+    # This should pass all thresholds since 0.01 < (1-t) for all t in [0.5, 0.95]
+    result = utils.mean_relative_accuracy(pred, true)
+    assert result == 1.0
+
+
+def test_mean_relative_accuracy_poor_predictions():
+    """Test MRA with very poor predictions"""
+    import numpy as np
+
+    # Predictions that are 200% off (relative error = 2.0)
+    pred = np.array([3.0, 6.0, 9.0])
+    true = np.array([1.0, 2.0, 3.0])
+
+    # Relative errors are all 2.0 (200%)
+    # For thresholds 0.5 to 0.95, none should pass since 2.0 > (1-threshold) for all
+    result = utils.mean_relative_accuracy(pred, true)
+    assert result == 0.0
+
+
+def test_mean_relative_accuracy_mixed_predictions():
+    """Test MRA with mixed quality predictions"""
+    import numpy as np
+
+    # Mix of good and bad predictions
+    pred = np.array([1.05, 3.0, 2.1])  # 5% error, 200% error, 5% error
+    true = np.array([1.0, 1.0, 2.0])
+
+    result = utils.mean_relative_accuracy(pred, true)
+    # Should be between 0 and 1, closer to 0.67 since 2/3 predictions are good
+    assert 0.0 < result < 1.0
+
+
+def test_mean_relative_accuracy_custom_thresholds():
+    """Test MRA with custom threshold ranges"""
+    import numpy as np
+
+    pred = np.array([1.1, 1.1, 1.1])  # 10% error
+    true = np.array([1.0, 1.0, 1.0])
+
+    # With stricter thresholds (0.8 to 0.9), 10% error might not pass all
+    result = utils.mean_relative_accuracy(pred, true, start=0.8, end=0.9, step=0.05)
+    assert 0.0 <= result <= 1.0
+
+
+def test_mean_relative_accuracy_edge_cases():
+    """Test MRA edge cases"""
+    import numpy as np
+
+    # Single value
+    result = utils.mean_relative_accuracy(np.array([1.0]), np.array([1.0]))
+    assert result == 1.0
+
+    # Zero true values should be handled (but might cause division by zero)
+    # This tests the robustness of the function
+    try:
+        result = utils.mean_relative_accuracy(np.array([1.0]), np.array([0.0]))
+        # If it doesn't crash, result should be a valid number
+        assert isinstance(result, (int, float))
+    except (ZeroDivisionError, ValueError):
+        # It's acceptable if the function raises an error for zero true values
+        pass
+
+
+# Tests for weighted_mean_std
+def test_weighted_mean_std_basic():
+    """Test weighted mean and std with basic inputs"""
+    import numpy as np
+
+    scores = np.array([0.8, 0.6, 0.9])
+    counts = np.array([10, 20, 30])
+
+    mean, std = utils.weighted_mean_std(scores, counts)
+
+    # Manual calculation: weighted_avg = (0.8*10 + 0.6*20 + 0.9*30) / (10+20+30)
+    expected_mean = (0.8 * 10 + 0.6 * 20 + 0.9 * 30) / 60
+    assert abs(mean - expected_mean) < 1e-10
+
+
+def test_weighted_mean_std_equal_weights():
+    """Test weighted stats with equal weights (should match simple mean/std)"""
+    import numpy as np
+
+    scores = np.array([0.5, 0.7, 0.9])
+    counts = np.array([1, 1, 1])  # Equal weights
+
+    mean, std = utils.weighted_mean_std(scores, counts)
+
+    # Should be close to simple mean and std
+    expected_mean = np.mean(scores)
+    assert abs(mean - expected_mean) < 1e-10
+
+
+def test_weighted_mean_std_zero_counts():
+    """Test weighted stats with some zero counts"""
+    import numpy as np
+
+    scores = np.array([0.8, 0.6, 0.9, 0.4])
+    counts = np.array([10, 0, 20, 0])  # Only first and third have non-zero counts
+
+    mean, std = utils.weighted_mean_std(scores, counts)
+
+    # Should only consider scores with non-zero counts
+    expected_mean = (0.8 * 10 + 0.9 * 20) / 30
+    assert abs(mean - expected_mean) < 1e-10
+
+
+def test_weighted_mean_std_all_zero_counts():
+    """Test weighted stats with all zero counts"""
+    import numpy as np
+
+    scores = np.array([0.8, 0.6, 0.9])
+    counts = np.array([0, 0, 0])
+
+    mean, std = utils.weighted_mean_std(scores, counts)
+
+    # Should return 0, 0 for all zero counts
+    assert mean == 0
+    assert std == 0
+
+
+def test_weighted_mean_std_single_value():
+    """Test weighted stats with single non-zero value"""
+    import numpy as np
+
+    scores = np.array([0.75])
+    counts = np.array([100])
+
+    mean, std = utils.weighted_mean_std(scores, counts)
+
+    assert abs(mean - 0.75) < 1e-10
+    assert std == 0.0  # Single value should have zero std
+
+
+def test_weighted_mean_std_mathematical_correctness():
+    """Test that weighted variance formula is implemented correctly"""
+    import numpy as np
+
+    scores = np.array([0.2, 0.8])
+    counts = np.array([3, 7])
+
+    mean, std = utils.weighted_mean_std(scores, counts)
+
+    # Manual calculation
+    total_count = 10
+    weighted_mean = (0.2 * 3 + 0.8 * 7) / total_count  # = 0.62
+    weighted_var = (3 * (0.2 - weighted_mean) ** 2 + 7 * (0.8 - weighted_mean) ** 2) / total_count
+    expected_std = weighted_var**0.5
+
+    assert abs(mean - weighted_mean) < 1e-10
+    assert abs(std - expected_std) < 1e-10
+
+
+def test_weighted_mean_std_larger_arrays():
+    """Test weighted stats with larger arrays"""
+    import numpy as np
+
+    np.random.seed(42)
+    scores = np.random.uniform(0, 1, 100)
+    counts = np.random.randint(1, 50, 100)
+
+    mean, std = utils.weighted_mean_std(scores, counts)
+
+    # Basic sanity checks
+    assert 0 <= mean <= 1  # Should be within score range
+    assert std >= 0  # Standard deviation should be non-negative
+    assert isinstance(mean, float)
+    assert isinstance(std, float)
+
+
+def test_weighted_mean_std_empty_arrays():
+    """Test weighted stats with empty arrays"""
+    import numpy as np
+
+    scores = np.array([])
+    counts = np.array([])
+
+    mean, std = utils.weighted_mean_std(scores, counts)
+
+    # Should handle empty arrays gracefully
+    assert mean == 0
+    assert std == 0

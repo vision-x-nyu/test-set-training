@@ -15,7 +15,6 @@ def fuzzy_cleanup(pred: str) -> str:
     return str(pred).strip().split(" ")[0].rstrip(".").strip().lower()
 
 
-# TODO: add tests
 def fuzzy_cleanup_numeric(pred: str) -> float:
     t2d = get_t2d()
     cleaned_pred = pred.strip().lower().rstrip(".").strip()
@@ -48,14 +47,12 @@ def fuzzy_cleanup_numeric(pred: str) -> float:
     return result
 
 
-# TODO: add tests
 def mean_relative_accuracy(pred, true, start=0.5, end=0.95, step=0.05) -> float:
     thresholds = np.linspace(start, end, int((end - start) / step) + 2)
     rel_err = np.abs(pred - true) / true
     return float(np.mean([(rel_err < 1 - t).mean() for t in thresholds]))
 
 
-# TODO: add tests
 def weighted_mean_std(scores: np.ndarray, counts: np.ndarray) -> tuple[float, float]:
     """
     Weighted mean:
