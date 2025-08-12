@@ -151,7 +151,6 @@ class LlamaFactoryConfig:
 
     # Evaluation settings
     val_size: float = 0.1
-    evaluation_strategy: str = "steps"
     eval_steps: int = 100
 
     # Logging and saving
@@ -265,7 +264,6 @@ class LlamaFactoryTrainer(BaseLLMTrainer):
             "seed": self.config.seed,
             # Evaluation
             "val_size": self.config.val_size,
-            "evaluation_strategy": self.config.evaluation_strategy,
             "eval_steps": self.config.eval_steps,
             "per_device_eval_batch_size": self.config.batch_size,
             # Performance
