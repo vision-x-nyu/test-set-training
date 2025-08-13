@@ -6,6 +6,7 @@ predictor and trainer configs used by the system.
 """
 
 from dataclasses import dataclass
+from typing import Optional
 
 from .predictors.vllm import VLLMPredictorConfig
 from .trainers.llamafactory import LlamaFactoryConfig
@@ -34,7 +35,8 @@ class LLMRunConfig:
     train_batch_size: int = 32
     num_epochs: int = 5
     lora_rank: int = 8
-    lora_alpha: int = 16
+    # lora_alpha: int = 16
+    lora_alpha: Optional[int] = None  # If None, will be set to lora_rank*2 by default
     lora_dropout: float = 0.1
     template: str = "gemma"
 

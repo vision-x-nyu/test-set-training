@@ -143,7 +143,8 @@ class LlamaFactoryConfig:
     batch_size: int = 4
     gradient_accumulation_steps: int = 1
     lora_rank: int = 8
-    lora_alpha: int = 16
+    # lora_alpha: int = 16
+    lora_alpha: Optional[int] = None  # If None, will be set to lora_rank*2 by default
     lora_dropout: float = 0.1
     max_seq_length: int = 512
     fp16: bool = True

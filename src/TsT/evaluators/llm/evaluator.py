@@ -165,10 +165,14 @@ class LLMEvaluator(ModelEvaluator):
             temp_path = Path(temp_dir)
 
             # Train adapter on the training fold (loads adapter into predictor)
+            logger.info(f"Training adapter on fold #{fold_id} with {len(train_data)} samples")
             _adapter_info = self.trainable.train(train_data, temp_path)
+            logger.info(f"Trained adapter on fold #{fold_id} with {len(train_data)} samples")
 
             # Evaluate on test fold using the same predictor with loaded adapter
+            logger.info(f"Evaluating on fold #{fold_id} with {len(test_instances)} samples")
             fold_score = evaluate_llm(self.predictor, test_instances, self.model.format)
+            logger.info(f"Fold #{fold_id} score: {fold_score:.2%}")
 
         return FoldResult(
             fold_id=fold_id,
