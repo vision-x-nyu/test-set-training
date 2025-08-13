@@ -15,17 +15,18 @@ def main():
 
     # Configure hyperparameters
     llm_config = LLMRunConfig(
-        model_name="google/gemma-2-2b-it",
+        model_name="Qwen/Qwen2-7B-Instruct",
         learning_rate=6e-4,
-        train_batch_size=32,
+        train_batch_size=16,
+        eval_batch_size=16,
         lora_rank=16,
         lora_alpha=32,
         num_epochs=6,
         max_seq_length=2048,
-        eval_batch_size=32,
         temperature=0.0,
         # max_tokens=10,
         max_tokens=128,
+        template="qwen",
     )
 
     print("🚀 Starting single LLM experiment")
