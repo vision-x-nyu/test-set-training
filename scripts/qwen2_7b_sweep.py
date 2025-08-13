@@ -34,9 +34,9 @@ def main():
     # --- 1) Matched-total-steps fairness set (≈500 updates each) at r=8 ---
     # steps/epoch ≈ ceil(500/bs); keep ~512 updates for fair comparison.
     matched = [
-        dict(train_batch_size=32, num_epochs=32, lora_rank=8, learning_rate=6e-4),
-        dict(train_batch_size=16, num_epochs=16, lora_rank=8, learning_rate=6e-4),
-        dict(train_batch_size=8, num_epochs=8, lora_rank=8, learning_rate=6e-4),
+        dict(train_batch_size=32, num_epochs=32, lora_rank=8, learning_rate=6e-4),  # +8.1%
+        dict(train_batch_size=16, num_epochs=16, lora_rank=8, learning_rate=6e-4),  # +6.9%
+        dict(train_batch_size=8, num_epochs=8, lora_rank=8, learning_rate=6e-4),  # +10.6%
     ]
     for kw in matched:
         configs.append(replace(base_config, **kw))
@@ -44,11 +44,11 @@ def main():
     # --- 2) Core sweep anchored at bs=8 (good for small data + bias surfacing) ---
     core_bs8 = [
         # (rank, lr, epochs)
-        (4, 6e-4, 24),
-        (8, 6e-4, 16),
-        (8, 1e-3, 16),
-        (16, 4e-4, 16),
-        (16, 2e-4, 24),
+        (4, 6e-4, 24),  # +2.8%
+        (8, 6e-4, 16),  # +6.6%
+        (8, 1e-3, 16),  # +2.6%
+        (16, 4e-4, 16),  # +5.4%
+        (16, 2e-4, 24),  # +2.5%
         (32, 2e-4, 16),
         (32, 1e-4, 24),
     ]
@@ -122,10 +122,12 @@ def main():
     sweep_dir = run_llm_sweep(
         configs=configs,
         benchmark="mmmu",
+        experiment_name="qwen2_7b_mmmu_sweep",
         n_splits=3,
         random_state=42,
         verbose=True,
         continue_on_failure=True,
+        resume=True,  # Enable resume by default
     )
 
     print(f"\n✅ Sweep complete! Results in: {sweep_dir}")
