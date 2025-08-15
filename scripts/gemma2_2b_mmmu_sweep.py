@@ -96,10 +96,12 @@ def main():
     sweep_dir = run_llm_sweep(
         configs=configs,
         benchmark="mmmu",
+        experiment_name="gemma2_2b_mmmu_sweep",
         n_splits=2,  # Use fewer splits for faster testing
         random_state=42,
         verbose=True,
         continue_on_failure=True,  # Don't stop if one config fails
+        resume=True,
     )
 
     print(f"\n✅ Sweep complete! Results in: {sweep_dir}")

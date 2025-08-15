@@ -4274,7 +4274,7 @@ requires-dist = [
     { name = "datasets", specifier = ">=3.6.0" },
     { name = "ezcolorlog", specifier = ">=1.0.3" },
     { name = "flash-attn", specifier = ">=2.8.2" },
-    { name = "flashinfer-python", specifier = ">=0.2.11.post1" },
+    { name = "flashinfer-python", specifier = ">=0.2.3" },
     { name = "joblib", specifier = ">=1.5.1" },
     { name = "jupyter", specifier = ">=1.1.1" },
     { name = "llamafactory", extras = ["bitsandbytes", "deepspeed", "liger-kernel", "metrics", "torch", "vllm"], editable = "src/external/LLaMA-Factory" },
