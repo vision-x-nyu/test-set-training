@@ -34,23 +34,12 @@ def main():
     # Build a large pool of configurations
     configs = []
 
-    # 1) Core variants that performed well in prior sweeps
-    core_variants = [
-        dict(learning_rate=8e-4, train_batch_size=8, lora_rank=8, num_epochs=12),
-        dict(learning_rate=4e-4, train_batch_size=8, lora_rank=16, num_epochs=24),
-        dict(learning_rate=3e-4, train_batch_size=8, lora_rank=8, num_epochs=24),
-        dict(learning_rate=4e-4, train_batch_size=8, lora_rank=8, num_epochs=24),
-        dict(learning_rate=6e-4, train_batch_size=16, lora_rank=8, num_epochs=16),
-        dict(learning_rate=6e-4, train_batch_size=8, lora_rank=8, num_epochs=24),
-        dict(learning_rate=2e-4, train_batch_size=8, lora_rank=16, num_epochs=24),
-        dict(learning_rate=4e-4, train_batch_size=4, lora_rank=16, num_epochs=16),
-    ]
-    for cfg in core_variants:
-        configs.append(replace(base_config, **cfg))
+    # 1) (Optional) Hand-picked variants can be added here if needed
+    # Intentionally left empty to keep total runs ~half of the original v3
 
-    # 2) Broader grid around promising regions (skip very high ranks)
-    learning_rates = [2e-4, 3e-4, 4e-4, 6e-4, 8e-4]
-    train_batch_sizes = [4, 8, 16]
+    # 2) Moderately broad grid around promising regions
+    learning_rates = [3e-4, 4e-4, 6e-4, 8e-4, 1e-4]
+    train_batch_sizes = [8, 16]
     lora_ranks = [8, 16]
     num_epochs_list = [12, 16, 24]
     for lr in learning_rates:
@@ -67,20 +56,16 @@ def main():
                         )
                     )
 
-    # 3) Regularization-focused sweep on top variants (dropout, alpha)
+    # 3) Regularization-focused sweep on a compact set of top variants
     top_variants = [
         (8e-4, 8, 8, 12),
         (4e-4, 8, 16, 24),
         (3e-4, 8, 8, 24),
-        (4e-4, 8, 8, 24),
         (6e-4, 16, 8, 16),
-        (6e-4, 8, 8, 24),
-        (2e-4, 8, 16, 24),
-        (4e-4, 4, 16, 16),
     ]
     for lr, bs, rank, epochs in top_variants:
         for dropout in [0.05, 0.1, 0.2]:
-            for alpha_mult in [1, 2, 4]:
+            for alpha_mult in [1, 2]:
                 configs.append(
                     replace(
                         base_config,
@@ -93,20 +78,6 @@ def main():
                     )
                 )
 
-    # 4) Sequence length sensitivity on a subset of top variants
-    for lr, bs, rank, epochs in top_variants[:3]:
-        for msl in [1024, 2048]:
-            configs.append(
-                replace(
-                    base_config,
-                    learning_rate=lr,
-                    train_batch_size=bs,
-                    lora_rank=rank,
-                    num_epochs=epochs,
-                    max_seq_length=msl,
-                )
-            )
-
     # Deduplicate configurations
     deduped = []
     seen = set()
@@ -118,7 +89,6 @@ def main():
             c.num_epochs,
             c.lora_alpha,
             c.lora_dropout,
-            c.max_seq_length,
         )
         if key not in seen:
             seen.add(key)
