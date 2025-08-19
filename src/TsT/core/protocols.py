@@ -24,7 +24,8 @@ Metric = Literal["acc", "mra"]  # accuracy or mean relative accuracy
 class BiasModel(Protocol):
     """Base protocol for any bias detection model (RF, LLM, etc.)"""
 
-    name: str
+    name: str  # e.g., "count_2d", ...
+    benchmark_name: str  # e.g., "cvb", "vsi"
     format: QAFormat
     target_col_override: Optional[str] = None
 
@@ -98,8 +99,6 @@ class QuestionAnswerBiasModel(BiasModel, Protocol):
     Unlike FeatureBasedBiasModel, these models work directly with
     question-answer pairs without feature engineering.
     """
-
-    benchmark_name: str  # e.g., "cvb", "vsi"
 
     def prepare_instances(self, df: pd.DataFrame) -> pd.DataFrame:
         """Optional preprocessing of data before evaluation"""

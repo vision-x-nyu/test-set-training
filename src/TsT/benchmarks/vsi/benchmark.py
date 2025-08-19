@@ -8,7 +8,7 @@ from datasets import load_dataset, Dataset
 
 from ...core.benchmark import Benchmark, BenchmarkRegistry
 from ...core.protocols import FeatureBasedBiasModel
-from ...core.qa_models import SimpleBenchmarkQAModel
+from ...core.qa_models import GlobalBenchmarkQAModel
 from .models import (
     ObjCountModel,
     ObjAbsDistModel,
@@ -65,11 +65,11 @@ class VSIBenchmark(Benchmark):
             ObjOrderModel(),
         ]
 
-    def get_qa_model(self) -> SimpleBenchmarkQAModel:
+    def get_qa_model(self) -> GlobalBenchmarkQAModel:
         """Get single model for LLM evaluation of entire benchmark (mixed format)."""
         # Since VSI has both numerical and MC questions, we'll handle as mixed
         # But for simplicity, let's focus on MC questions for LLM evaluation
-        return SimpleBenchmarkQAModel(
+        return GlobalBenchmarkQAModel(
             benchmark_name=self.name,
             name=f"{self.name}_mc",
             format="mc",  # Focus on MC questions for LLM evaluation

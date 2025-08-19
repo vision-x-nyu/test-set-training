@@ -11,7 +11,7 @@ from datasets import load_dataset, Dataset
 
 from ...core.benchmark import Benchmark, BenchmarkRegistry
 from ...core.protocols import FeatureBasedBiasModel
-from ...core.qa_models import SimpleBenchmarkQAModel
+from ...core.qa_models import GlobalBenchmarkQAModel
 from .models import MMMUMCModel
 
 
@@ -67,9 +67,9 @@ class MMMUBenchmark(Benchmark):
             MMMUMCModel(),
         ]
 
-    def get_qa_model(self) -> SimpleBenchmarkQAModel:
+    def get_qa_model(self) -> GlobalBenchmarkQAModel:
         """Get single model for LLM evaluation of entire benchmark."""
-        return SimpleBenchmarkQAModel(
+        return GlobalBenchmarkQAModel(
             benchmark_name=self.name,
             name=f"{self.name}_all",
             format="mc",  # All MMMU questions are multiple choice

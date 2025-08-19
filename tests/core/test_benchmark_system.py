@@ -9,7 +9,7 @@ import pytest
 import pandas as pd
 
 from TsT.core.benchmark import Benchmark, BenchmarkRegistry
-from TsT.core.qa_models import SimpleBenchmarkQAModel
+from TsT.core.qa_models import GlobalBenchmarkQAModel
 from TsT.core.protocols import QuestionAnswerBiasModel
 from ..conftest import isolate_registry
 
@@ -65,7 +65,7 @@ class TestBenchmarkRegistry:
                 return [MockFeatureModel("test_model")]
 
             def get_qa_model(self):
-                return SimpleBenchmarkQAModel(benchmark_name=self.name, name=f"{self.name}_qa", format="mc")
+                return GlobalBenchmarkQAModel(benchmark_name=self.name, name=f"{self.name}_qa", format="mc")
 
         # Should be registered
         assert "test_benchmark" in BenchmarkRegistry._benchmarks
@@ -86,7 +86,7 @@ class TestBenchmarkRegistry:
                 return []
 
             def get_qa_model(self):
-                return SimpleBenchmarkQAModel("another_test", "qa", "mc")
+                return GlobalBenchmarkQAModel("another_test", "qa", "mc")
 
         # Should get instance
         benchmark = BenchmarkRegistry.get_benchmark("another_test")
@@ -114,7 +114,7 @@ class TestBenchmarkRegistry:
                 return []
 
             def get_qa_model(self):
-                return SimpleBenchmarkQAModel("bench1", "qa", "mc")
+                return GlobalBenchmarkQAModel("bench1", "qa", "mc")
 
         @BenchmarkRegistry.register
         class Benchmark2(Benchmark):
@@ -127,7 +127,7 @@ class TestBenchmarkRegistry:
                 return []
 
             def get_qa_model(self):
-                return SimpleBenchmarkQAModel("bench2", "qa", "mc")
+                return GlobalBenchmarkQAModel("bench2", "qa", "mc")
 
         benchmarks = BenchmarkRegistry.list_benchmarks()
         assert "bench1" in benchmarks
@@ -148,7 +148,7 @@ class TestBenchmarkRegistry:
                 return []
 
             def get_qa_model(self):
-                return SimpleBenchmarkQAModel("all1", "qa", "mc")
+                return GlobalBenchmarkQAModel("all1", "qa", "mc")
 
         @BenchmarkRegistry.register
         class AllBench2(Benchmark):
@@ -161,7 +161,7 @@ class TestBenchmarkRegistry:
                 return []
 
             def get_qa_model(self):
-                return SimpleBenchmarkQAModel("all2", "qa", "mc")
+                return GlobalBenchmarkQAModel("all2", "qa", "mc")
 
         all_benchmarks = BenchmarkRegistry.get_all_benchmarks()
         assert "all1" in all_benchmarks
@@ -192,7 +192,7 @@ class TestBenchmarkBaseClass:
                     return []
 
                 def get_qa_model(self):
-                    return SimpleBenchmarkQAModel("test", "qa", "mc")
+                    return GlobalBenchmarkQAModel("test", "qa", "mc")
 
     def test_concrete_implementation_works(self):
         """Test that concrete implementation of Benchmark works"""
@@ -208,7 +208,7 @@ class TestBenchmarkBaseClass:
                 return [MockFeatureModel("model1", "mc"), MockFeatureModel("model2", "num")]
 
             def get_qa_model(self):
-                return SimpleBenchmarkQAModel(benchmark_name=self.name, name=f"{self.name}_qa", format="mc")
+                return GlobalBenchmarkQAModel(benchmark_name=self.name, name=f"{self.name}_qa", format="mc")
 
         # Should be able to instantiate
         benchmark = ConcreteBenchmark()
@@ -246,7 +246,7 @@ class TestBenchmarkBaseClass:
                 ]
 
             def get_qa_model(self):
-                return SimpleBenchmarkQAModel("metadata_test", "qa", "oe")
+                return GlobalBenchmarkQAModel("metadata_test", "qa", "oe")
 
         benchmark = MetadataBenchmark()
         metadata = benchmark.get_metadata()
@@ -276,7 +276,7 @@ class TestBenchmarkBaseClass:
                 return []
 
             def get_qa_model(self):
-                return SimpleBenchmarkQAModel("format_test", "qa", "mc")
+                return GlobalBenchmarkQAModel("format_test", "qa", "mc")
 
         benchmark = FormatBenchmark()
 
@@ -304,7 +304,7 @@ class TestSimpleBenchmarkQAModel:
 
     def test_basic_creation(self):
         """Test basic QA model creation"""
-        model = SimpleBenchmarkQAModel(benchmark_name="test_bench", name="test_qa", format="mc")
+        model = GlobalBenchmarkQAModel(benchmark_name="test_bench", name="test_qa", format="mc")
 
         assert model.benchmark_name == "test_bench"
         assert model.name == "test_qa"
@@ -314,7 +314,7 @@ class TestSimpleBenchmarkQAModel:
 
     def test_select_rows_all_types(self):
         """Test select_rows when question_types is None (all types)"""
-        model = SimpleBenchmarkQAModel("bench", "qa", "mc")
+        model = GlobalBenchmarkQAModel("bench", "qa", "mc")
 
         df = pd.DataFrame({"question_type": ["type1", "type2", "type1", "type3"], "question": ["Q1", "Q2", "Q3", "Q4"]})
 
@@ -323,7 +323,7 @@ class TestSimpleBenchmarkQAModel:
 
     def test_select_rows_filtered_types(self):
         """Test select_rows when question_types is specified"""
-        model = SimpleBenchmarkQAModel(
+        model = GlobalBenchmarkQAModel(
             benchmark_name="bench", name="qa", format="mc", question_types=["type1", "type3"]
         )
 
@@ -337,7 +337,7 @@ class TestSimpleBenchmarkQAModel:
 
     def test_prepare_instances_default(self):
         """Test default prepare_instances implementation"""
-        model = SimpleBenchmarkQAModel("bench", "qa", "mc")
+        model = GlobalBenchmarkQAModel("bench", "qa", "mc")
 
         df = pd.DataFrame({"test": [1, 2, 3]})
         prepared = model.prepare_instances(df)
@@ -347,9 +347,9 @@ class TestSimpleBenchmarkQAModel:
 
     def test_task_property(self):
         """Test task property for different formats"""
-        mc_model = SimpleBenchmarkQAModel("bench", "qa", "mc")
-        num_model = SimpleBenchmarkQAModel("bench", "qa", "num")
-        oe_model = SimpleBenchmarkQAModel("bench", "qa", "oe")
+        mc_model = GlobalBenchmarkQAModel("bench", "qa", "mc")
+        num_model = GlobalBenchmarkQAModel("bench", "qa", "num")
+        oe_model = GlobalBenchmarkQAModel("bench", "qa", "oe")
 
         assert mc_model.task == "clf"
         assert num_model.task == "reg"
@@ -357,9 +357,9 @@ class TestSimpleBenchmarkQAModel:
 
     def test_metric_property(self):
         """Test metric property for different formats"""
-        mc_model = SimpleBenchmarkQAModel("bench", "qa", "mc")
-        num_model = SimpleBenchmarkQAModel("bench", "qa", "num")
-        oe_model = SimpleBenchmarkQAModel("bench", "qa", "oe")
+        mc_model = GlobalBenchmarkQAModel("bench", "qa", "mc")
+        num_model = GlobalBenchmarkQAModel("bench", "qa", "num")
+        oe_model = GlobalBenchmarkQAModel("bench", "qa", "oe")
 
         assert mc_model.metric == "acc"
         assert num_model.metric == "mra"
@@ -368,7 +368,7 @@ class TestSimpleBenchmarkQAModel:
 
     def test_implements_qa_protocol(self):
         """Test that SimpleBenchmarkQAModel implements QuestionAnswerBiasModel protocol"""
-        model = SimpleBenchmarkQAModel("test", "qa", "mc")
+        model = GlobalBenchmarkQAModel("test", "qa", "mc")
 
         # Should be usable as QuestionAnswerBiasModel
         def use_as_qa_model(qa_model: QuestionAnswerBiasModel):
@@ -409,7 +409,7 @@ class TestBenchmarkIntegration:
                 return [MockFeatureModel("count_model", "mc"), MockFeatureModel("size_model", "mc")]
 
             def get_qa_model(self):
-                return SimpleBenchmarkQAModel(benchmark_name=self.name, name=f"{self.name}_qa", format="mc")
+                return GlobalBenchmarkQAModel(benchmark_name=self.name, name=f"{self.name}_qa", format="mc")
 
         # Test registration
         assert "workflow_test" in BenchmarkRegistry.list_benchmarks()
@@ -452,7 +452,7 @@ class TestBenchmarkIntegration:
                 return [MockFeatureModel("model1")]
 
             def get_qa_model(self):
-                return SimpleBenchmarkQAModel("bench1", "qa1", "mc")
+                return GlobalBenchmarkQAModel("bench1", "qa1", "mc")
 
         @BenchmarkRegistry.register
         class Bench2(Benchmark):
@@ -465,7 +465,7 @@ class TestBenchmarkIntegration:
                 return [MockFeatureModel("model2")]
 
             def get_qa_model(self):
-                return SimpleBenchmarkQAModel("bench2", "qa2", "num")
+                return GlobalBenchmarkQAModel("bench2", "qa2", "num")
 
         # Both should be available
         benchmarks = BenchmarkRegistry.list_benchmarks()

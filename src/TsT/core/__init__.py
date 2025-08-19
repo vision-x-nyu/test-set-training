@@ -12,7 +12,7 @@ from .cross_validation import (
 )
 from .results import FoldResult, RepeatResult, EvaluationResult
 from .benchmark import Benchmark, BenchmarkRegistry
-from .qa_models import SimpleBenchmarkQAModel
+from .qa_models import GlobalBenchmarkQAModel
 
 
 __all__ = [
@@ -24,7 +24,7 @@ __all__ = [
     # Benchmark system
     "Benchmark",
     "BenchmarkRegistry",
-    "SimpleBenchmarkQAModel",
+    "GlobalBenchmarkQAModel",
     # Unified evaluation framework
     "UnifiedCrossValidator",
     "CrossValidationConfig",
