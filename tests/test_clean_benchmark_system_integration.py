@@ -8,6 +8,8 @@ the system works end-to-end.
 import pytest
 import pandas as pd
 
+# Import all benchmarks to ensure they're registered
+
 from TsT.experiments.utils import load_benchmark, list_available_benchmarks
 from TsT.evaluation import run_evaluation
 
