@@ -4,6 +4,7 @@ Visual Spatial Intelligence (VSI) benchmark implementation.
 
 from typing import List
 import pandas as pd
+from datasets import load_dataset, Dataset
 
 from ...core.benchmark import Benchmark, BenchmarkRegistry
 from ...core.protocols import FeatureBasedBiasModel
@@ -18,7 +19,6 @@ from .models import (
     RoutePlanningModel,
     ObjOrderModel,
 )
-from .data_loader import load_data as _load_data
 
 
 @BenchmarkRegistry.register
@@ -28,9 +28,27 @@ class VSIBenchmark(Benchmark):
     name = "vsi"
     description = "Evaluates spatial reasoning biases across numerical and multiple choice tasks"
 
-    def load_data(self) -> pd.DataFrame:
-        """Load VSI dataset."""
-        return _load_data()
+    @staticmethod
+    def load_data() -> pd.DataFrame:
+        """Load and preprocess VSI-Bench data."""
+        testset = load_dataset("nyu-visionx/VSI-Bench", split="test")
+        assert isinstance(testset, Dataset), f"Expected Dataset, got {type(testset)}"
+
+        df = testset.to_pandas(batched=False)
+        assert isinstance(df, pd.DataFrame), f"Expected pd.DataFrame, got {type(df)}"
+
+        # For numerical questions (no options)
+        df["gt_val"] = df["ground_truth"]
+        df["gt_idx"] = -1
+
+        # For multiple choice questions (with options)
+        mc_mask = df["options"].notna()
+        df.loc[mc_mask, "gt_idx"] = df.loc[mc_mask, "ground_truth"].apply(lambda x: "ABCD".index(x))
+        df.loc[mc_mask, "gt_val"] = df[mc_mask].apply(
+            lambda row: row["options"][int(row["gt_idx"])].split(". ")[-1], axis=1
+        )
+
+        return df
 
     def get_feature_based_models(self) -> List[FeatureBasedBiasModel]:
         """Get per-question-type models for RandomForest evaluation."""

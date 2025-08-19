@@ -167,9 +167,9 @@ class TestRealModelCompliance:
     def test_video_mme_model_compliance(self):
         """Test that Video-MME models work as BiasModel"""
         try:
-            from TsT.benchmarks.video_mme import get_models
+            from TsT.benchmarks.video_mme import benchmark
 
-            models = get_models()
+            models = benchmark.get_feature_based_models()
             if not models:
                 pytest.skip("No Video-MME models available")
 
@@ -216,9 +216,9 @@ class TestRealModelCompliance:
     def test_video_mme_qtype_compliance(self):
         """Test that Video-MME models still work as FeatureBasedBiasModel"""
         try:
-            from TsT.benchmarks.video_mme import get_models
+            from TsT.benchmarks.video_mme import benchmark
 
-            models = get_models()
+            models = benchmark.get_feature_based_models()
             if not models:
                 pytest.skip("No Video-MME models available")
 

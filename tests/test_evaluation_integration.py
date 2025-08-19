@@ -250,13 +250,13 @@ class TestBackwardCompatibility:
     def test_video_mme_integration(self):
         """Test integration with actual Video-MME models"""
         try:
-            from TsT.benchmarks.video_mme import get_models, load_data
+            from TsT.benchmarks.video_mme import benchmark
 
-            models = get_models()[:1]  # Just test one model
+            models = benchmark.get_feature_based_models()[:1]  # Just test one model
             if not models:
                 pytest.skip("No Video-MME models available")
 
-            df = load_data()
+            df = benchmark.load_data()
             if len(df) == 0:
                 pytest.skip("No Video-MME data available")
 
