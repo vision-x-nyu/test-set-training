@@ -368,6 +368,24 @@ def test_fuzzy_match(pred, target, expected):
     assert utils.fuzzy_match(pred, target) == expected
 
 
+@pytest.mark.parametrize(
+    "value,expected",
+    [
+        (4, True),
+        ("5000", True),
+        ("  -42 ", True),
+        (5.0, True),
+        (-0.0, True),
+        (3.14, False),
+        ("3.0", False),
+        ("12a", False),
+        (True, False),
+    ],
+)
+def test_is_integer(value, expected):
+    assert utils.is_integer(value) == expected
+
+
 class TestMultiChoiceParsing:
     def test_get_multi_choice_info(self):
         options = ["Red", "Blue", "Green"]

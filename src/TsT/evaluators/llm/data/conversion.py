@@ -6,9 +6,13 @@ used in the TsT framework and LLM training pipelines.
 """
 
 import ast
+from collections.abc import Iterable
 import pandas as pd
 from typing import List, Literal, Dict, Optional, Any
 from .models import TrainingDatum, TestInstance
+from ....utils import is_integer
+
+from ezcolorlog import root_logger as logger
 
 
 def get_blind_qa(
@@ -54,14 +58,15 @@ def get_blind_qa(
                 # TODO: add a test for this
                 options = ast.literal_eval(options)
 
-            if not isinstance(options, (list, tuple)) or len(options) == 0:
+            if not isinstance(options, Iterable) or len(options) == 0:
+                logger.error(f"No valid choices/options found in MC row: {record}")
                 raise ValueError(f"No valid choices/options found in MC row: {record}")
 
             options = list(options)
             options_text = "\n".join(options)
             question_text = f"{question_text} Options:\n{options_text}"
 
-            if target_col == "gt_idx" and isinstance(target, int):
+            if target_col == "gt_idx" and is_integer(target):
                 # Convert index to letter
                 answer = chr(65 + int(target))
             else:

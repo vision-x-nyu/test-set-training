@@ -1,7 +1,9 @@
 import re
 import random
 from functools import lru_cache
+from typing import Any
 import numpy as np
+import numbers
 
 # https://github.com/ShailChoksi/text2digits
 from text2digits import text2digits
@@ -37,6 +39,38 @@ def fuzzy_match(pred, target):
 # =============================================================================
 # MULTI-CHOICE EVALUATION -----------------------------------------------------
 # =============================================================================
+
+
+def is_integer(value: Any) -> bool:
+    """
+    True if value represents an integer:
+      - int (but not bool) -> True
+      - float that is numerically an integer (e.g., 5.0, -3.0) -> True
+      - str of a base-10 int (optional +/- and whitespace) -> True
+      - otherwise -> False
+    """
+    # Avoid treating True/False as integers
+    if isinstance(value, bool):
+        return False
+
+    # Native integers (and numpy integer types, etc.)
+    if isinstance(value, numbers.Integral):
+        return True
+
+    # Floats: only True if they’re exactly an integer value
+    if isinstance(value, float):
+        return value.is_integer()
+
+    # Strings: accept optional sign and whitespace; digits only
+    if isinstance(value, str):
+        s = value.strip()
+        if not s:
+            return False
+        if s[0] in "+-":
+            s = s[1:]
+        return s.isdigit()
+
+    return False
 
 
 def get_multi_choice_info(options):
