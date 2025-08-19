@@ -72,10 +72,16 @@ def create_parser():
         help="LLM model to use for LLM mode (default: google/gemma-2-2b-it)",
     )
     parser.add_argument(
-        "--llm_batch_size",
+        "--llm_train_batch_size",
         type=int,
         default=4,
-        help="Batch size for LLM inference (default: 4)",
+        help="Batch size for LLM training (default: 4)",
+    )
+    parser.add_argument(
+        "--llm_eval_batch_size",
+        type=int,
+        default=4,
+        help="Batch size for LLM evaluation (default: 4)",
     )
     parser.add_argument(
         "--llm_epochs",
@@ -118,7 +124,8 @@ def main():
     if args.mode == "llm":
         llm_config = LLMRunConfig(
             model_name=args.llm_model,
-            batch_size=args.llm_batch_size,
+            train_batch_size=args.llm_train_batch_size,
+            eval_batch_size=args.llm_eval_batch_size,
             learning_rate=2e-4,
             num_epochs=args.llm_epochs,
             lora_rank=8,
@@ -134,7 +141,8 @@ def main():
         logger.info(f"Question types: {question_types}")
     if args.mode == "llm":
         logger.info(f"LLM model: {args.llm_model}")
-        logger.info(f"LLM batch size: {args.llm_batch_size}")
+        logger.info(f"LLM train batch size: {args.llm_train_batch_size}")
+        logger.info(f"LLM eval batch size: {args.llm_eval_batch_size}")
         logger.info(f"LLM epochs: {args.llm_epochs}")
     logger.info("")
 
