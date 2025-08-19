@@ -54,7 +54,7 @@ def main():
         configs.append(replace(base_config, **config_dict))
 
     # Define benchmarks to test across
-    benchmarks = ["video_mme", "mmmu"]
+    benchmarks = ["cvb", "vsi", "mmmu", "video_mme"]
 
     print(f"🚀 Starting multi-benchmark sweep with {len(configs)} configurations")
     print(f"   Benchmarks: {', '.join(benchmarks)}")
@@ -63,8 +63,8 @@ def main():
     sweep_dir = run_llm_multi_benchmark_sweep(
         configs=configs,
         benchmarks=benchmarks,
-        experiment_name="qwen2.5_7b_multi_benchmark_test",
-        n_splits=3,
+        experiment_name="qwen2.5_7b_multi_benchmark_test_v2",
+        n_splits=2,
         random_state=42,
         verbose=True,
         continue_on_failure=True,
