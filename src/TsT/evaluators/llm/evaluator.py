@@ -58,6 +58,7 @@ def evaluate_llm(
 
     # Log first example for quick debugging
     if prediction_results and test_instances:
+        logger.info(f"First instruction:\t{test_instances[0].instruction}")
         logger.info(f"First ground truth:\t{test_instances[0].ground_truth}")
         logger.info(f"  --> options:\t\t{test_instances[0].options}")
         logger.info(f"First prediction:\t\t{prediction_results[0].prediction}")
