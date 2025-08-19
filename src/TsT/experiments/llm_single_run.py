@@ -18,7 +18,7 @@ from .utils import (
     save_llm_config,
     save_metadata,
     save_logs,
-    load_benchmark_module,
+    load_benchmark,
     get_target_column,
 )
 
@@ -58,13 +58,13 @@ def run_single_llm_experiment(
     # Save configuration
     save_llm_config(llm_config, results_dir)
 
-    # Load benchmark module
-    benchmark_module = load_benchmark_module(benchmark)
+    # Load benchmark using registry system
+    benchmark_obj = load_benchmark(benchmark)
 
-    # Load data and models
+    # Load data and get QA model for LLM evaluation
     logger.info(f"Loading {benchmark} data and models...")
-    df_full = benchmark_module.load_data()
-    models = benchmark_module.get_models()
+    df_full = benchmark_obj.load_data()
+    models = [benchmark_obj.get_qa_model()]  # Use QA model for LLM evaluation
 
     logger.info(f"Loaded {len(df_full)} examples from {benchmark}")
     logger.info(f"Found {len(models)} models: {[m.name for m in models]}")

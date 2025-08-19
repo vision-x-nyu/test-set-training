@@ -130,14 +130,18 @@ def save_json(data: Dict[str, Any], results_dir: Path, filename: str) -> Path:
     return file_path
 
 
-def load_benchmark_module(benchmark: str):
-    """Dynamically import benchmark module."""
-    try:
-        import importlib
+def load_benchmark(benchmark_name: str):
+    """Load a benchmark using the registry system."""
+    from ..core.benchmark import BenchmarkRegistry
 
-        return importlib.import_module(f"TsT.benchmarks.{benchmark}")
-    except ImportError:
-        raise ValueError(f"Unknown benchmark: {benchmark}")
+    return BenchmarkRegistry.get_benchmark(benchmark_name)
+
+
+def list_available_benchmarks():
+    """List all available benchmarks."""
+    from ..core.benchmark import BenchmarkRegistry
+
+    return BenchmarkRegistry.list_benchmarks()
 
 
 def get_target_column(benchmark: str) -> str:

@@ -21,7 +21,7 @@ from .utils import (
     save_metadata,
     save_logs,
     save_json,
-    load_benchmark_module,
+    load_benchmark,
     get_target_column,
     create_run_name,
     generate_experiment_name,
@@ -145,11 +145,11 @@ def run_llm_sweep(
 
     logger.info(f"Sweep results will be saved to: {sweep_dir}")
 
-    # Load benchmark module and data once
-    benchmark_module = load_benchmark_module(benchmark)
+    # Load benchmark and data once using new system
+    benchmark_obj = load_benchmark(benchmark)
     logger.info(f"Loading {benchmark} data and models...")
-    df_full = benchmark_module.load_data()
-    models = benchmark_module.get_models()
+    df_full = benchmark_obj.load_data()
+    models = [benchmark_obj.get_qa_model()]  # Use QA model for LLM evaluation
     target_col = get_target_column(benchmark)
 
     logger.info(f"Loaded {len(df_full)} examples from {benchmark}")
@@ -783,10 +783,10 @@ def _run_single_config_benchmark(
     # Save config for this run
     save_llm_config(config, run_dir)
 
-    # Load benchmark module and data
-    benchmark_module = load_benchmark_module(benchmark)
-    df_full = benchmark_module.load_data()
-    models = benchmark_module.get_models()
+    # Load benchmark and data using new system
+    benchmark_obj = load_benchmark(benchmark)
+    df_full = benchmark_obj.load_data()
+    models = [benchmark_obj.get_qa_model()]  # Use QA model for LLM evaluation
     target_col = get_target_column(benchmark)
 
     logger.info(f"Loaded {len(df_full)} examples from {benchmark}")

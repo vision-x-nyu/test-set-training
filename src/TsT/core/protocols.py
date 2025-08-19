@@ -7,11 +7,17 @@ This module defines the complete interface hierarchy for the TsT evaluation fram
 - ModelEvaluator: Abstract base for evaluation strategies
 """
 
-from typing import Protocol, Literal, Optional, List, runtime_checkable
+from typing import Protocol, Optional, List, runtime_checkable, Literal
 from abc import ABC, abstractmethod
 import pandas as pd
 
 from .results import EvaluationResult, FoldResult
+
+
+# Type aliases for better ergonomics - define once, use everywhere
+QAFormat = Literal["mc", "num", "oe"]  # multiple choice, numerical, or open-ended
+Task = Literal["clf", "reg", "oe"]  # classification, regression, or open-ended
+Metric = Literal["acc", "mra"]  # accuracy or mean relative accuracy
 
 
 @runtime_checkable
@@ -19,7 +25,7 @@ class BiasModel(Protocol):
     """Base protocol for any bias detection model (RF, LLM, etc.)"""
 
     name: str
-    format: Literal["mc", "num"]  # multiple choice or numerical
+    format: QAFormat
     target_col_override: Optional[str] = None
 
     def select_rows(self, df: pd.DataFrame) -> pd.DataFrame:
@@ -27,12 +33,12 @@ class BiasModel(Protocol):
         ...
 
     @property
-    def task(self) -> Literal["clf", "reg"]:
+    def task(self) -> Task:
         """Classification or regression task"""
         ...
 
     @property
-    def metric(self) -> Literal["acc", "mra"]:
+    def metric(self) -> Metric:
         """Accuracy or mean relative accuracy"""
         ...
 
@@ -60,25 +66,68 @@ class FeatureBasedBiasModel(BiasModel, Protocol):
         ...
 
     @property
-    def task(self) -> Literal["clf", "reg"]:
-        if self.format == "mc":
-            return "clf"
-        elif self.format == "num":
-            return "reg"
-        else:
-            raise ValueError(f"Unknown format: {self.format}")
+    def task(self) -> Task:
+        match self.format:
+            case "mc":
+                return "clf"
+            case "num":
+                return "reg"
+            case "oe":
+                raise ValueError("Open-ended tasks are not supported for feature-based models")
+            case _:
+                raise ValueError(f"Unknown format: {self.format}")
 
     @property
-    def metric(self) -> Literal["acc", "mra"]:
-        if self.format == "mc":
-            return "acc"
-        elif self.format == "num":
-            return "mra"
-        else:
-            raise ValueError(f"Unknown format: {self.format}")
+    def metric(self) -> Metric:
+        match self.format:
+            case "mc":
+                return "acc"
+            case "num":
+                return "mra"
+            case "oe":
+                raise ValueError("Open-ended tasks are not supported for feature-based models")
+            case _:
+                raise ValueError(f"Unknown format: {self.format}")
 
 
-# TODO: make a QA bias model for LLMs
+@runtime_checkable
+class QuestionAnswerBiasModel(BiasModel, Protocol):
+    """
+    Protocol for question-answer based bias detection models (e.g., LLMs).
+
+    Unlike FeatureBasedBiasModel, these models work directly with
+    question-answer pairs without feature engineering.
+    """
+
+    benchmark_name: str  # e.g., "cvb", "vsi"
+
+    def prepare_instances(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Optional preprocessing of data before evaluation"""
+        return df
+
+    @property
+    def task(self) -> Task:
+        match self.format:
+            case "mc":
+                return "clf"
+            case "num":
+                return "reg"
+            case "oe":
+                return "oe"
+            case _:
+                raise ValueError(f"Unknown format: {self.format}")
+
+    @property
+    def metric(self) -> Metric:
+        match self.format:
+            case "mc":
+                return "acc"
+            case "num":
+                return "mra"
+            case "oe":
+                raise NotImplementedError("TODO")
+            case _:
+                raise ValueError(f"Unknown format: {self.format}")
 
 
 class ModelEvaluator(ABC):

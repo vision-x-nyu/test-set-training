@@ -6,32 +6,37 @@ Run with: python -m TsT [options]
 """
 
 import argparse
-import importlib
 
 from ezcolorlog import root_logger as logger
 from .evaluation import run_evaluation
 from .evaluators.llm.config import LLMRunConfig
 
 
-def get_benchmark_module(benchmark_name: str):
-    """Import the benchmark module dynamically."""
-    try:
-        module = importlib.import_module(f"TsT.benchmarks.{benchmark_name}")
-        return module
-    except ImportError:
-        raise ValueError(f"Unknown benchmark: {benchmark_name}. Available benchmarks: vsi, cvb, video_mme, mmmu")
+def get_benchmark(benchmark_name: str):
+    """Get benchmark using the registry system."""
+    from .core.benchmark import BenchmarkRegistry
+
+    return BenchmarkRegistry.get_benchmark(benchmark_name)
 
 
 def create_parser():
     """Create and configure the argument parser."""
+    from .core.benchmark import BenchmarkRegistry
+
+    # Get available benchmarks from registry
+    available_benchmarks = BenchmarkRegistry.list_benchmarks()
+    if not available_benchmarks:
+        # Fallback to known benchmarks if registry is empty
+        available_benchmarks = ["vsi", "cvb", "video_mme", "mmmu"]
+
     parser = argparse.ArgumentParser(description="Run Test-Set Training evaluation on benchmarks")
     parser.add_argument(
         "--benchmark",
         "-b",
         type=str,
         required=True,
-        choices=["vsi", "cvb", "video_mme", "mmmu"],
-        help="Benchmark to run (vsi, cvb, video_mme, or mmmu)",
+        choices=available_benchmarks,
+        help=f"Benchmark to run: {', '.join(available_benchmarks)}",
     )
     parser.add_argument("--n_splits", "-k", type=int, default=5, help="Number of CV splits")
     parser.add_argument("--random_state", "-s", type=int, default=42, help="Random seed")
@@ -97,12 +102,17 @@ def main():
     parser = create_parser()
     args = parser.parse_args()
 
-    # Import the benchmark module
-    benchmark_module = get_benchmark_module(args.benchmark)
+    # Get benchmark using registry system
+    benchmark = get_benchmark(args.benchmark)
 
-    # Load data and get models
-    df_full = benchmark_module.load_data()
-    models = benchmark_module.get_models()
+    # Load data
+    df_full = benchmark.load_data()
+
+    # Get appropriate models based on mode
+    if args.mode == "rf":
+        models = benchmark.get_feature_based_models()
+    else:  # llm mode
+        models = [benchmark.get_qa_model()]
 
     # Set default target column if not specified
     if args.target_col is None:

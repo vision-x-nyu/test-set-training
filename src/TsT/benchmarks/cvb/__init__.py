@@ -1,21 +1,11 @@
-from .models import (
-    Count2DModel,
-    Relation2DModel,
-    Depth3DModel,
-    Distance3DModel,
-)
-from .data_loader import load_data
+"""
+CVB benchmark module.
+"""
 
+# Import to trigger registration
+from .benchmark import CVBBenchmark
 
-def get_models():
-    """Get all CVB benchmark models."""
-    return [
-        # MC
-        Count2DModel(),
-        Relation2DModel(),
-        Depth3DModel(),
-        Distance3DModel(),
-    ]
+# Export the benchmark
+benchmark = CVBBenchmark()
 
-
-__all__ = ["load_data", "get_models"]
+__all__ = ["benchmark"]
