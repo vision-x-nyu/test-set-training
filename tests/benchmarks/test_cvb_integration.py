@@ -85,7 +85,7 @@ class TestCVBBenchmarkFunctionality:
         """Test that CVB provides QA model"""
         cvb = BenchmarkRegistry.get_benchmark("cvb")
 
-        qa_model = cvb.get_qa_model()
+        qa_model = cvb.get_qa_models()[0]
 
         # Check basic attributes
         assert qa_model.benchmark_name == "cvb"
@@ -198,7 +198,7 @@ class TestCVBModelInterfaces:
     def test_qa_model_works_with_mock_data(self):
         """Test that QA model works with mock data"""
         cvb = BenchmarkRegistry.get_benchmark("cvb")
-        qa_model = cvb.get_qa_model()
+        qa_model = cvb.get_qa_models()[0]
 
         # Create mock data
         mock_data = pd.DataFrame(
@@ -286,7 +286,7 @@ class TestCVBEndToEnd:
 
         # Get both types of models
         feature_models = cvb.get_feature_based_models()
-        qa_model = cvb.get_qa_model()
+        qa_model = cvb.get_qa_models()[0]
 
         assert len(feature_models) == 4
         assert qa_model.benchmark_name == "cvb"

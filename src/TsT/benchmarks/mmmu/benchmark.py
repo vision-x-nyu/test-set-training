@@ -67,11 +67,13 @@ class MMMUBenchmark(Benchmark):
             MMMUMCModel(),
         ]
 
-    def get_qa_model(self) -> GlobalBenchmarkQAModel:
+    def get_qa_models(self) -> List[GlobalBenchmarkQAModel]:
         """Get single model for LLM evaluation of entire benchmark."""
-        return GlobalBenchmarkQAModel(
-            benchmark_name=self.name,
-            name=f"{self.name}_all",
-            format="mc",  # All MMMU questions are multiple choice
-            question_types=None,  # Evaluate all types together
-        )
+        return [
+            GlobalBenchmarkQAModel(
+                benchmark_name=self.name,
+                name=f"{self.name}_all",
+                format="mc",  # All MMMU questions are multiple choice
+                question_types=None,  # Evaluate all types together
+            )
+        ]

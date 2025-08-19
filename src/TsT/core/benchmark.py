@@ -81,7 +81,7 @@ class Benchmark(ABC):
         pass
 
     @abstractmethod
-    def get_qa_model(self) -> QuestionAnswerBiasModel:
+    def get_qa_models(self) -> List[QuestionAnswerBiasModel]:
         """Get a single QA model for LLM evaluation of this benchmark."""
         pass
 

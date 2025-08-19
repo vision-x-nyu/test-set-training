@@ -36,7 +36,7 @@ class TestAllBenchmarksRegistration:
             assert hasattr(benchmark, "description")
             assert hasattr(benchmark, "load_data")
             assert hasattr(benchmark, "get_feature_based_models")
-            assert hasattr(benchmark, "get_qa_model")
+            assert hasattr(benchmark, "get_qa_models")
 
 
 class TestBenchmarkInterfaces:
@@ -64,7 +64,7 @@ class TestBenchmarkInterfaces:
     def test_benchmark_has_qa_model(self, benchmark_name):
         """Test that each benchmark provides QA model"""
         benchmark = load_benchmark(benchmark_name)
-        qa_model = benchmark.get_qa_model()
+        qa_model = benchmark.get_qa_models()[0]
 
         # Should have QA model interface
         assert hasattr(qa_model, "benchmark_name")
@@ -128,7 +128,7 @@ class TestBenchmarkSpecifics:
         assert "num" not in metadata["formats"]
 
         # QA model should be MC
-        qa_model = cvb.get_qa_model()
+        qa_model = cvb.get_qa_models()[0]
         assert qa_model.format == "mc"
 
     def test_vsi_specifics(self):
@@ -144,7 +144,7 @@ class TestBenchmarkSpecifics:
         assert len(metadata["formats"]["num"]) == 4
 
         # QA model should focus on MC for LLM evaluation
-        qa_model = vsi.get_qa_model()
+        qa_model = vsi.get_qa_models()[0]
         assert qa_model.format == "mc"
         assert qa_model.question_types is not None  # Should filter to MC types
 
@@ -159,7 +159,7 @@ class TestBenchmarkSpecifics:
         assert len(metadata["formats"]["mc"]) == 1
 
         # QA model should be MC
-        qa_model = mmmu.get_qa_model()
+        qa_model = mmmu.get_qa_models()[0]
         assert qa_model.format == "mc"
 
     def test_video_mme_specifics(self):
@@ -173,7 +173,7 @@ class TestBenchmarkSpecifics:
         assert len(metadata["formats"]["mc"]) == 1
 
         # QA model should be MC
-        qa_model = video_mme.get_qa_model()
+        qa_model = video_mme.get_qa_models()[0]
         assert qa_model.format == "mc"
 
 
@@ -234,7 +234,7 @@ class TestModeCompatibility:
     def test_llm_mode_model(self, benchmark_name):
         """Test that LLM mode model has correct structure"""
         benchmark = load_benchmark(benchmark_name)
-        qa_model = benchmark.get_qa_model()
+        qa_model = benchmark.get_qa_models()[0]
 
         # Should have QuestionAnswerBiasModel interface
         assert hasattr(qa_model, "benchmark_name")
@@ -258,7 +258,7 @@ class TestModeCompatibility:
             rf_models = benchmark.get_feature_based_models()
 
             # LLM mode: single unified model
-            qa_model = benchmark.get_qa_model()
+            qa_model = benchmark.get_qa_models()[0]
 
             print(f"{benchmark_name}: RF={len(rf_models)} models, LLM=1 model")
 
@@ -297,7 +297,7 @@ class TestEndToEndWorkflow:
                     pass
 
             # Test QA model
-            qa_model = benchmark.get_qa_model()
+            qa_model = benchmark.get_qa_models()[0]
             selected = qa_model.select_rows(mock_data)
             assert isinstance(selected, pd.DataFrame)
 

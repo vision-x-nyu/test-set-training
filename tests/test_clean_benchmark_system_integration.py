@@ -31,7 +31,7 @@ class TestRealBenchmarkSystemIntegration:
         assert hasattr(cvb, "description")
         assert hasattr(cvb, "load_data")
         assert hasattr(cvb, "get_feature_based_models")
-        assert hasattr(cvb, "get_qa_model")
+        assert hasattr(cvb, "get_qa_models")
         assert hasattr(cvb, "get_metadata")
 
         assert cvb.name == "cvb"
@@ -52,7 +52,7 @@ class TestRealBenchmarkSystemIntegration:
             assert hasattr(model, "add_features")
 
         # Should get QA model for LLM
-        qa_model = cvb.get_qa_model()
+        qa_model = cvb.get_qa_models()[0]
         assert hasattr(qa_model, "benchmark_name")
         assert hasattr(qa_model, "prepare_instances")
         assert qa_model.benchmark_name == "cvb"
@@ -62,7 +62,7 @@ class TestRealBenchmarkSystemIntegration:
         cvb = load_benchmark("cvb")
 
         # Get QA model
-        qa_model = cvb.get_qa_model()
+        qa_model = cvb.get_qa_models()[0]
 
         # Create test data
         mock_data = pd.DataFrame(
@@ -155,7 +155,7 @@ class TestRealBenchmarkSystemIntegration:
         cvb = load_benchmark("cvb")
 
         # Should get QA model
-        qa_model = cvb.get_qa_model()
+        qa_model = cvb.get_qa_models()[0]
         assert qa_model.benchmark_name == "cvb"
         assert qa_model.format == "mc"  # CVB is all MC
 
@@ -220,7 +220,7 @@ class TestNewSystemPerformance:
         for _ in range(10):
             cvb = load_benchmark("cvb")
             _ = cvb.get_feature_based_models()
-            __ = cvb.get_qa_model()
+            __ = cvb.get_qa_models()[0]
 
         end = time.time()
         duration = end - start

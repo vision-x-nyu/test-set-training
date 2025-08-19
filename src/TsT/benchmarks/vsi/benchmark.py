@@ -65,21 +65,23 @@ class VSIBenchmark(Benchmark):
             ObjOrderModel(),
         ]
 
-    def get_qa_model(self) -> GlobalBenchmarkQAModel:
+    def get_qa_models(self) -> List[GlobalBenchmarkQAModel]:
         """Get single model for LLM evaluation of entire benchmark (mixed format)."""
         # Since VSI has both numerical and MC questions, we'll handle as mixed
         # But for simplicity, let's focus on MC questions for LLM evaluation
-        return GlobalBenchmarkQAModel(
-            benchmark_name=self.name,
-            name=f"{self.name}_mc",
-            format="mc",  # Focus on MC questions for LLM evaluation
-            question_types=[
-                "object_rel_distance",
-                "object_rel_direction",
-                "route_planning",
-                "obj_appearance_order",
-            ],  # Only MC question types
-        )
+        return [
+            GlobalBenchmarkQAModel(
+                benchmark_name=self.name,
+                name=f"{self.name}_mc",
+                format="mc",  # Focus on MC questions for LLM evaluation
+                question_types=[
+                    "object_rel_distance",
+                    "object_rel_direction",
+                    "route_planning",
+                    "obj_appearance_order",
+                ],  # Only MC question types
+            )
+        ]
 
     def get_metadata(self) -> dict:
         """Override to provide VSI-specific metadata."""

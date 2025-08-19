@@ -149,7 +149,7 @@ def run_llm_sweep(
     benchmark_obj = load_benchmark(benchmark)
     logger.info(f"Loading {benchmark} data and models...")
     df_full = benchmark_obj.load_data()
-    models = [benchmark_obj.get_qa_model()]  # Use QA model for LLM evaluation
+    models = benchmark_obj.get_qa_models()  # Use QA model for LLM evaluation
     target_col = get_target_column(benchmark)
 
     logger.info(f"Loaded {len(df_full)} examples from {benchmark}")
@@ -786,7 +786,7 @@ def _run_single_config_benchmark(
     # Load benchmark and data using new system
     benchmark_obj = load_benchmark(benchmark)
     df_full = benchmark_obj.load_data()
-    models = [benchmark_obj.get_qa_model()]  # Use QA model for LLM evaluation
+    models = benchmark_obj.get_qa_models()  # Use QA model for LLM evaluation
     target_col = get_target_column(benchmark)
 
     logger.info(f"Loaded {len(df_full)} examples from {benchmark}")

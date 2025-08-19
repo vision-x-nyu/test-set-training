@@ -112,7 +112,7 @@ def main():
     if args.mode == "rf":
         models = benchmark.get_feature_based_models()
     else:  # llm mode
-        models = [benchmark.get_qa_model()]
+        models = benchmark.get_qa_models()
 
     # Set default target column if not specified
     if args.target_col is None:

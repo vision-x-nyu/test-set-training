@@ -64,7 +64,7 @@ def run_single_llm_experiment(
     # Load data and get QA model for LLM evaluation
     logger.info(f"Loading {benchmark} data and models...")
     df_full = benchmark_obj.load_data()
-    models = [benchmark_obj.get_qa_model()]  # Use QA model for LLM evaluation
+    models = benchmark_obj.get_qa_models()  # Use QA models for LLM evaluation
 
     logger.info(f"Loaded {len(df_full)} examples from {benchmark}")
     logger.info(f"Found {len(models)} models: {[m.name for m in models]}")
