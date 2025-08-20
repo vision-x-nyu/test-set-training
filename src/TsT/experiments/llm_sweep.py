@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import List, Dict, Any, Optional, Tuple
 
 from ezcolorlog import root_logger as logger
-from ..evaluation import run_evaluation
+from ..evaluation import run_evaluation, get_overall_eval_stats
 from ..evaluators.llm.config import LLMRunConfig
 from .utils import (
     capture_output,
@@ -174,12 +174,15 @@ def run_llm_sweep(
 
             # Load existing results
             try:
-                existing_results_path = run_dir / "results.csv"
-                if existing_results_path.exists():
-                    summary = pd.read_csv(existing_results_path)
+                stats_path = run_dir / "overall_stats.json"
+                if stats_path.exists():
+                    with open(stats_path, "r") as f:
+                        stats = json.load(f)
                     run_start = run_end = datetime.now()  # Dummy times for completed runs
 
-                    run_result = _create_run_result(config, i, run_name, summary, run_start, run_end, success=True)
+                    run_result = _create_run_result(
+                        config, i, run_name, benchmark, stats, run_start, run_end, success=True
+                    )
                     run_results.append(run_result)
                     successful_runs += 1
                     skipped_runs += 1
@@ -200,13 +203,13 @@ def run_llm_sweep(
         try:
             # Run single configuration
             run_start = datetime.now()
-            summary = _run_single_config(
+            _, stats = _run_single_config(
                 config, benchmark, df_full, models, target_col, run_dir, n_splits, random_state, question_types, verbose
             )
             run_end = datetime.now()
 
             # Record successful run
-            run_result = _create_run_result(config, i, run_name, summary, run_start, run_end, success=True)
+            run_result = _create_run_result(config, i, run_name, benchmark, stats, run_start, run_end, success=True)
             run_results.append(run_result)
             successful_runs += 1
 
@@ -226,7 +229,7 @@ def run_llm_sweep(
 
             # Record failed run
             run_result = _create_run_result(
-                config, i, run_name, None, run_start, run_end, success=False, error=error_msg
+                config, i, run_name, benchmark, {}, run_start, run_end, success=False, error=error_msg
             )
             run_results.append(run_result)
             failed_runs += 1
@@ -290,7 +293,8 @@ def run_llm_multi_benchmark_sweep(
     ├── config_summary.csv         # Per-config cross-benchmark stats
     └── {benchmark_name}/
         └── run_{id}_{hyperparams}/
-            ├── results.csv
+            ├── summary.csv
+            ├── overall_stats.json
             ├── metadata.json
             └── ...
 
@@ -418,13 +422,14 @@ def run_llm_multi_benchmark_sweep(
                 try:
                     benchmark_dir = sweep_dir / benchmark
                     run_dir = benchmark_dir / run_name
-                    existing_results_path = run_dir / "results.csv"
-                    if existing_results_path.exists():
-                        summary = pd.read_csv(existing_results_path)
+                    existing_stats_path = run_dir / "overall_stats.json"
+                    if existing_stats_path.exists():
+                        with open(existing_stats_path, "r") as f:
+                            stats = json.load(f)
                         run_start = run_end = datetime.now()  # Dummy times
 
-                        run_result = _create_multi_benchmark_run_result(
-                            config, config_idx, run_name, benchmark, summary, run_start, run_end, success=True
+                        run_result = _create_run_result(
+                            config, config_idx, run_name, benchmark, stats, run_start, run_end, success=True
                         )
                         all_run_results.append(run_result)
                         successful_runs += 1
@@ -449,14 +454,14 @@ def run_llm_multi_benchmark_sweep(
             try:
                 # Run single (config, benchmark) combination
                 run_start = datetime.now()
-                summary = _run_single_config_benchmark(
+                summary, stats = _run_single_config_benchmark(
                     config, benchmark, run_dir, n_splits, random_state, question_types, verbose
                 )
                 run_end = datetime.now()
 
                 # Record successful run
-                run_result = _create_multi_benchmark_run_result(
-                    config, config_idx, run_name, benchmark, summary, run_start, run_end, success=True
+                run_result = _create_run_result(
+                    config, config_idx, run_name, benchmark, stats, run_start, run_end, success=True
                 )
                 all_run_results.append(run_result)
                 successful_runs += 1
@@ -476,8 +481,8 @@ def run_llm_multi_benchmark_sweep(
                     f.write(f"Error: {error_msg}\n")
 
                 # Record failed run
-                run_result = _create_multi_benchmark_run_result(
-                    config, config_idx, run_name, benchmark, None, run_start, run_end, success=False, error=error_msg
+                run_result = _create_run_result(
+                    config, config_idx, run_name, benchmark, {}, run_start, run_end, success=False, error=error_msg
                 )
                 all_run_results.append(run_result)
                 failed_runs += 1
@@ -530,7 +535,7 @@ def _run_single_config(
     random_state: int,
     question_types: Optional[list],
     verbose: bool,
-) -> pd.DataFrame:
+) -> Tuple[pd.DataFrame, Dict[str, float]]:
     """Run evaluation for a single configuration."""
     # Save config for this run
     save_llm_config(config, run_dir)
@@ -558,8 +563,12 @@ def _run_single_config(
     save_logs(stdout_capture, stderr_capture, run_dir)
 
     if summary is not None:
-        results_path = run_dir / "results.csv"
-        summary.to_csv(results_path, index=False)
+        summary_path = run_dir / "summary.csv"
+        summary.to_csv(summary_path, index=False)
+
+        overall_stats_path = run_dir / "overall_stats.json"
+        overall_stats = get_overall_eval_stats(summary)
+        save_json(overall_stats, overall_stats_path, "overall_stats.json")
 
     # Save run metadata
     run_metadata = {
@@ -569,7 +578,7 @@ def _run_single_config(
     }
     save_metadata(run_dir, run_start, run_end, run_metadata)
 
-    return summary
+    return summary, overall_stats
 
 
 def _config_to_dict(config: LLMRunConfig) -> Dict[str, Any]:
@@ -593,16 +602,23 @@ def _create_run_result(
     config: LLMRunConfig,
     run_id: int,
     run_name: str,
-    summary: Optional[pd.DataFrame],
+    benchmark: str,
+    stats: Dict[str, float],
     start_time: datetime,
     end_time: datetime,
     success: bool,
     error: Optional[str] = None,
 ) -> Dict[str, Any]:
     """Create result dictionary for a single run."""
-    result = {
+
+    # if no "score_mean" in stats, put default 0 value
+    if "score_mean" not in stats:
+        stats["score_mean"] = 0.0
+
+    return {
         "run_id": run_id,
         "run_name": run_name,
+        "benchmark": benchmark,
         "success": success,
         "duration_seconds": (end_time - start_time).total_seconds(),
         "learning_rate": config.learning_rate,
@@ -611,22 +627,9 @@ def _create_run_result(
         "lora_rank": config.lora_rank,
         "lora_alpha": config.lora_alpha,
         "model_name": config.model_name,
+        "error": error,
+        **stats,
     }
-
-    if success and summary is not None and not summary.empty:
-        # Extract score from summary (assuming single model)
-        score_str = summary.iloc[0]["Score"]  # e.g., "25.0%"
-        score = float(score_str.rstrip("%")) / 100  # Convert to decimal
-        result["score"] = score
-        result["score_display"] = score_str
-    else:
-        result["score"] = 0.0
-        result["score_display"] = "0.0%" if success else "FAILED"
-
-    if error:
-        result["error"] = error
-
-    return result
 
 
 def _create_sweep_summary(run_results: List[Dict[str, Any]]) -> pd.DataFrame:
@@ -634,7 +637,7 @@ def _create_sweep_summary(run_results: List[Dict[str, Any]]) -> pd.DataFrame:
     summary_df = pd.DataFrame(run_results)
 
     # Sort by score (best first)
-    summary_df = summary_df.sort_values("score", ascending=False)
+    summary_df = summary_df.sort_values("score_mean", ascending=False)
 
     return summary_df
 
@@ -751,7 +754,7 @@ def _find_completed_multi_benchmark_runs(experiment_dir: Path, benchmarks: List[
         for item in benchmark_dir.iterdir():
             if item.is_dir() and item.name.startswith("run_"):
                 # Check if this specific (config, benchmark) run is completed
-                required_files = ["results.csv", "metadata.json", "llm_config.json"]
+                required_files = ["summary.csv", "overall_stats.json", "metadata.json", "llm_config.json"]
 
                 # Check all required files exist
                 all_files_exist = all((item / filename).exists() for filename in required_files)
@@ -815,8 +818,12 @@ def _run_single_config_benchmark(
     save_logs(stdout_capture, stderr_capture, run_dir)
 
     if summary is not None:
-        results_path = run_dir / "results.csv"
-        summary.to_csv(results_path, index=False)
+        summary_path = run_dir / "summary.csv"
+        summary.to_csv(summary_path, index=False)
+
+        overall_stats_path = run_dir / "overall_stats.json"
+        overall_stats = get_overall_eval_stats(summary)
+        save_json(overall_stats, overall_stats_path, "overall_stats.json")
 
     # Save run metadata
     run_metadata = {
@@ -827,65 +834,6 @@ def _run_single_config_benchmark(
     save_metadata(run_dir, run_start, run_end, run_metadata)
 
     return summary
-
-
-def _create_multi_benchmark_run_result(
-    config: LLMRunConfig,
-    run_id: int,
-    run_name: str,
-    benchmark: str,
-    summary: Optional[pd.DataFrame],
-    start_time: datetime,
-    end_time: datetime,
-    success: bool,
-    error: Optional[str] = None,
-) -> Dict[str, Any]:
-    """Create result dictionary for a single (config, benchmark) run."""
-    result = {
-        "run_id": run_id,
-        "run_name": run_name,
-        "benchmark": benchmark,
-        "success": success,
-        "duration_seconds": (end_time - start_time).total_seconds(),
-        "learning_rate": config.learning_rate,
-        "train_batch_size": config.train_batch_size,
-        "num_epochs": config.num_epochs,
-        "lora_rank": config.lora_rank,
-        "lora_alpha": config.lora_alpha,
-        "model_name": config.model_name,
-    }
-
-    if success and summary is not None and not summary.empty:
-        # Extract metrics from summary
-        # The summary has columns: Model,Format,Metric,Score,± Std,Count,Feature Importances,Metadata
-        score_str = summary.iloc[0]["Score"]  # e.g., "25.0%"
-        final_acc = float(score_str.rstrip("%")) / 100  # Convert to decimal
-        result["final_acc"] = final_acc
-        result["score_display"] = score_str
-
-        # Extract baseline and improvement from metadata if available
-        try:
-            metadata_str = summary.iloc[0]["Metadata"]
-            # Parse the metadata string (it's actually a dict representation)
-            import ast
-
-            metadata_dict = ast.literal_eval(metadata_str)
-            result["baseline_acc"] = metadata_dict.get("zero_shot_baseline", 0.0)
-            result["improvement"] = metadata_dict.get("improvement", 0.0)
-        except (ValueError, KeyError, SyntaxError):
-            # Fallback if metadata parsing fails
-            result["baseline_acc"] = 0.0
-            result["improvement"] = final_acc  # Assume improvement is the final score
-    else:
-        result["final_acc"] = 0.0
-        result["baseline_acc"] = 0.0
-        result["improvement"] = 0.0
-        result["score_display"] = "0.0%" if success else "FAILED"
-
-    if error:
-        result["error"] = error
-
-    return result
 
 
 def _create_multi_benchmark_summaries(

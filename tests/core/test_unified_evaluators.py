@@ -366,18 +366,8 @@ class TestLLMPostProcessing:
                     model=model, df=df, target_col="gt_idx", evaluation_result=evaluation_result
                 )
 
-        # Verify mock feature importances were added
-        assert processed_result.feature_importances is not None
-        assert len(processed_result.feature_importances) == 3
-
-        expected_features = ["llm_finetuning", "zero_shot_baseline", "improvement"]
-        assert list(processed_result.feature_importances["feature"]) == expected_features
-
-        # Verify importance values
-        importances = processed_result.feature_importances["importance"].values
-        assert importances[0] == 0.75  # LLM score
-        assert importances[1] == 0.25  # Zero-shot baseline
-        assert importances[2] == 0.5  # Improvement (0.75 - 0.25)
+        # LLM has no feature importances for now
+        assert processed_result.feature_importances is None
 
         # Verify metadata
         assert "zero_shot_baseline" in processed_result.model_metadata
@@ -478,8 +468,7 @@ class TestEvaluatorIntegration:
 
         # Verify complete pipeline
         assert isinstance(processed_result, EvaluationResult)
-        assert processed_result.feature_importances is not None
-        assert len(processed_result.feature_importances) == 3
+        assert processed_result.feature_importances is None
         assert "zero_shot_baseline" in processed_result.model_metadata
         assert "improvement" in processed_result.model_metadata
 

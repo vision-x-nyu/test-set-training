@@ -70,6 +70,7 @@ class EvaluationResult:
     total_count: int
 
     # Model-specific metadata
+    zero_shot_baseline: float = 0.0
     feature_importances: Optional[pd.DataFrame] = None
     model_metadata: Dict[str, Any] = field(default_factory=dict)
 
@@ -80,6 +81,7 @@ class EvaluationResult:
         model_format: str,
         metric_name: str,
         repeat_results: List[RepeatResult],
+        zero_shot_baseline: float = 0.0,
         feature_importances: Optional[pd.DataFrame] = None,
         model_metadata: Optional[Dict[str, Any]] = None,
     ) -> "EvaluationResult":
@@ -100,6 +102,7 @@ class EvaluationResult:
             model_format=model_format,
             metric_name=metric_name,
             repeat_results=repeat_results,
+            zero_shot_baseline=zero_shot_baseline,
             overall_mean=overall_mean,
             overall_std=overall_std,
             total_count=total_count,
@@ -113,8 +116,9 @@ class EvaluationResult:
             "Model": self.model_name,
             "Format": self.model_format.upper(),
             "Metric": self.metric_name.upper(),
-            "Score": f"{self.overall_mean:.1%}",
-            "± Std": f"{self.overall_std:.1%}",
+            "Score": self.overall_mean,
+            "Zero-shot Baseline": self.zero_shot_baseline,
+            "± Std": self.overall_std,
             "Count": self.total_count,
             "Feature Importances": self.feature_importances,
             "Metadata": self.model_metadata,

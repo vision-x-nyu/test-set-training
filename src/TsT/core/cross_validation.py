@@ -52,21 +52,12 @@ class UnifiedCrossValidator:
             case "rf":
                 if llm_config is not None:
                     raise ValueError(f"RF mode does not require llm_config, got: {llm_config}")
-                return self.cross_validate_rf(model, df, resolved_target_col)
+                evaluator = RandomForestEvaluator()
             case "llm":
-                return self.cross_validate_llm(model, df, resolved_target_col, llm_config)
+                evaluator = LLMEvaluator(model, df, resolved_target_col, llm_config)
             case _:
                 raise ValueError(f"Unknown mode: {mode}")
-
-    def cross_validate_rf(self, model: BiasModel, df: pd.DataFrame, target_col: str) -> EvaluationResult:
-        evaluator = RandomForestEvaluator()
-        return self.run_cross_validation_repeats(model, evaluator, df, target_col)
-
-    def cross_validate_llm(
-        self, model: BiasModel, df: pd.DataFrame, target_col: str, llm_config: LLMRunConfig
-    ) -> EvaluationResult:
-        evaluator = LLMEvaluator(model, df, target_col, llm_config)
-        return self.run_cross_validation_repeats(model, evaluator, df, target_col)
+        return self.run_cross_validation_repeats(model, evaluator, df, resolved_target_col)
 
     def run_cross_validation_repeats(
         self,

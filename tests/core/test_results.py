@@ -19,7 +19,7 @@ class TestFoldResult:
         result = FoldResult(fold_id=1, score=0.85, train_size=20, test_size=20, metadata={"test": True})
 
         assert result.fold_id == 1
-        assert result.score == 0.85
+        assert np.isclose(result.score, 0.85, atol=1e-6), result.score
         assert result.train_size == 20
         assert result.test_size == 20
         assert result.metadata["test"] is True
@@ -54,8 +54,8 @@ class TestRepeatResult:
 
         assert result.repeat_id == 0
         assert len(result.fold_results) == 3
-        assert result.mean_score == 0.8
-        assert result.std_score == 0.1
+        assert np.isclose(result.mean_score, 0.8, atol=1e-6), result.mean_score
+        assert np.isclose(result.std_score, 0.1, atol=1e-6), result.std_score
 
     def test_total_instances(self):
         """Test total_instances property"""
@@ -85,8 +85,8 @@ class TestRepeatResult:
         expected_mean = (0.8 + 0.6 + 1.0) / 3
         expected_std = np.std([0.8, 0.6, 1.0])
 
-        assert abs(result.mean_score - expected_mean) < 1e-6
-        assert abs(result.std_score - expected_std) < 1e-6
+        assert np.isclose(result.mean_score, expected_mean, atol=1e-6), result.mean_score
+        assert np.isclose(result.std_score, expected_std, atol=1e-6), result.std_score
 
     def test_empty_fold_results(self):
         """Test RepeatResult with empty fold results"""
@@ -96,8 +96,8 @@ class TestRepeatResult:
         assert len(result.fold_results) == 0
         assert result.total_instances == 0
         # Mean and std of empty list should be 0
-        assert result.mean_score == 0.0
-        assert result.std_score == 0.0
+        assert np.isclose(result.mean_score, 0.0, atol=1e-6), result.mean_score
+        assert np.isclose(result.std_score, 0.0, atol=1e-6), result.std_score
 
 
 class TestEvaluationResult:
@@ -139,8 +139,8 @@ class TestEvaluationResult:
         assert result.model_format == "mc"
         assert result.metric_name == "acc"
         assert len(result.repeat_results) == 2
-        assert result.overall_mean == 0.825
-        assert result.overall_std == 0.025
+        assert np.isclose(result.overall_mean, 0.825, atol=1e-6), result.overall_mean
+        assert np.isclose(result.overall_std, 0.025, atol=1e-6), result.overall_std
         assert result.total_count == 100
 
     def test_from_repeat_results(self):
@@ -157,8 +157,8 @@ class TestEvaluationResult:
         # Overall mean: (0.85 + 0.75) / 2 = 0.8
         # Overall std: std([0.85, 0.75]) = 0.05
 
-        assert abs(result.overall_mean - 0.8) < 1e-6
-        assert abs(result.overall_std - 0.05) < 1e-6
+        assert np.isclose(result.overall_mean, 0.8, atol=1e-6), result.overall_mean
+        assert np.isclose(result.overall_std, 0.05, atol=1e-6), result.overall_std
         assert result.total_count == 50  # 25 * 2 folds
 
     def test_to_summary_dict(self):
@@ -174,8 +174,8 @@ class TestEvaluationResult:
         assert summary["Model"] == "test_model"
         assert summary["Format"] == "MC"
         assert summary["Metric"] == "ACC"
-        assert summary["Score"] == "80.0%"  # 0.8 formatted as percentage
-        assert summary["± Std"] == "5.0%"  # 0.05 formatted as percentage
+        assert np.isclose(summary["Score"], 0.8, atol=1e-6), summary["Score"]
+        assert np.isclose(summary["± Std"], 0.05, atol=1e-6), summary["± Std"]
         assert summary["Count"] == 50
 
     def test_to_legacy_tuple(self):
@@ -196,8 +196,8 @@ class TestEvaluationResult:
         legacy_tuple = result.to_legacy_tuple()
 
         assert len(legacy_tuple) == 4
-        assert abs(legacy_tuple[0] - 0.8) < 1e-6  # mean_score
-        assert abs(legacy_tuple[1] - 0.05) < 1e-6  # std_score
+        assert np.isclose(legacy_tuple[0], 0.8, atol=1e-6), legacy_tuple[0]
+        assert np.isclose(legacy_tuple[1], 0.05, atol=1e-6), legacy_tuple[1]
         assert isinstance(legacy_tuple[2], pd.DataFrame)  # feature_importances
         assert legacy_tuple[3] == 50  # count
 
@@ -224,8 +224,8 @@ class TestEvaluationResult:
             model_name="empty_model", model_format="mc", metric_name="acc", repeat_results=[]
         )
 
-        assert result.overall_mean == 0.0
-        assert result.overall_std == 0.0
+        assert np.isclose(result.overall_mean, 0.0, atol=1e-6), result.overall_mean
+        assert np.isclose(result.overall_std, 0.0, atol=1e-6), result.overall_std
         assert result.total_count == 0
 
 
@@ -278,8 +278,8 @@ class TestResultsIntegration:
         expected_mean = np.mean(scores)
         expected_std = np.std(scores)
 
-        assert abs(repeat_result.mean_score - expected_mean) < 1e-10
-        assert abs(repeat_result.std_score - expected_std) < 1e-10
+        assert np.isclose(repeat_result.mean_score, expected_mean, atol=1e-10), repeat_result.mean_score
+        assert np.isclose(repeat_result.std_score, expected_std, atol=1e-10), repeat_result.std_score
 
         # Create evaluation result
         eval_result = EvaluationResult.from_repeat_results(
@@ -287,8 +287,8 @@ class TestResultsIntegration:
         )
 
         # Overall statistics should match repeat statistics for single repeat
-        assert abs(eval_result.overall_mean - expected_mean) < 1e-10
-        assert abs(eval_result.overall_std - 0.0) < 1e-10  # Single repeat -> std = 0
+        assert np.isclose(eval_result.overall_mean, expected_mean, atol=1e-10), eval_result.overall_mean
+        assert np.isclose(eval_result.overall_std, 0.0, atol=1e-10), eval_result.overall_std  # Single repeat -> std = 0
 
     def test_large_scale_results(self):
         """Test results with many folds and repeats"""

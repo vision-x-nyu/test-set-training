@@ -201,7 +201,7 @@ class TestUnifiedFrameworkIntegration:
         assert len(results) == 1
         assert results.iloc[0]["Model"] == "broken_model"
         # Score should be 0 for failed evaluation
-        assert results.iloc[0]["Score"] == "0.0%"
+        assert results.iloc[0]["Score"] == 0.0
 
     def test_different_target_columns(self):
         """Test evaluation with different target columns"""

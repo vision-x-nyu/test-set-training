@@ -123,6 +123,7 @@ class LLMEvaluator(ModelEvaluator):
             config=TrainableLLMPredictorConfig(reset_predictor_before_training=True),
         )
 
+        # Get zero-shot baseline
         self.zero_shot_baseline = self.evaluate_zero_shot_baseline()
 
     def evaluate_zero_shot_baseline(self) -> float:
@@ -204,14 +205,15 @@ class LLMEvaluator(ModelEvaluator):
         improvement = evaluation_result.overall_mean - self.zero_shot_baseline
 
         # Mock feature importances for compatibility
-        feature_importances = pd.DataFrame(
-            {
-                "feature": ["llm_finetuning", "zero_shot_baseline", "improvement"],
-                "importance": [evaluation_result.overall_mean, self.zero_shot_baseline, improvement],
-            }
-        )
+        # feature_importances = pd.DataFrame(
+        #     {
+        #         "feature": ["llm_finetuning", "zero_shot_baseline", "improvement"],
+        #         "importance": [evaluation_result.overall_mean, self.zero_shot_baseline, improvement],
+        #     }
+        # )
 
-        evaluation_result.feature_importances = feature_importances
+        evaluation_result.feature_importances = None  # TODO?
+        evaluation_result.zero_shot_baseline = self.zero_shot_baseline
         evaluation_result.model_metadata.update(
             {
                 "zero_shot_baseline": self.zero_shot_baseline,

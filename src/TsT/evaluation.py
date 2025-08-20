@@ -1,4 +1,4 @@
-from typing import List, Union, Optional, Literal
+from typing import List, Union, Optional, Literal, Dict
 
 import pandas as pd
 from ezcolorlog import root_logger as logger
@@ -101,9 +101,8 @@ def run_evaluation(
     summary_data = [r.to_summary_dict() for r in results]
     summary = pd.DataFrame(summary_data)
 
-    # Sort by score (need to convert percentage strings back to float for sorting)
-    summary["_sort_score"] = summary["Score"].str.rstrip("%").astype(float) / 100
-    summary = summary.sort_values("_sort_score", ascending=False).drop("_sort_score", axis=1)
+    # Sort by score
+    summary = summary.sort_values("Score", ascending=False)
 
     # Calculate and log overall statistics
     _log_overall_statistics(summary, results)
@@ -133,33 +132,63 @@ def _create_error_result(model: BiasModel, error_msg: str) -> EvaluationResult:
     )
 
 
-def _log_overall_statistics(summary: pd.DataFrame, results: List[EvaluationResult]):
-    """Log overall evaluation statistics"""
+def get_overall_eval_stats(summary: pd.DataFrame) -> Dict[str, float]:
+    """Get overall statistics"""
     if summary.empty:
         logger.warning("No evaluation results to summarize")
-        return
+        return {}
 
     # Convert percentage strings back to float for calculations
-    scores = summary["Score"].str.rstrip("%").astype(float) / 100
+    scores = summary["Score"]
     counts = summary["Count"]
+    zs_baselines = summary["Zero-shot Baseline"]
 
-    # Calculate overall statistics
-    overall_avg = scores.mean()
-    overall_std = scores.std()
+    score_mean = scores.mean()
+    score_std = scores.std()
     total_count = counts.sum()
-
-    # Weighted mean and std calculation
+    zs_mean = zs_baselines.mean()
+    zs_std = zs_baselines.std()
     weighted_avg, weighted_std = weighted_mean_std(scores.values, counts.values)
+    zs_weighted_avg, zs_weighted_std = weighted_mean_std(zs_baselines.values, counts.values)
+
+    return dict(
+        score_mean=score_mean,
+        score_std=score_std,
+        total_count=total_count,
+        zs_mean=zs_mean,
+        zs_std=zs_std,
+        weighted_avg=weighted_avg,
+        weighted_std=weighted_std,
+        zs_weighted_avg=zs_weighted_avg,
+        zs_weighted_std=zs_weighted_std,
+    )
+
+
+def _log_overall_statistics(summary: pd.DataFrame, results: List[EvaluationResult]):
+    """Log overall evaluation statistics"""
+    overall_stats = get_overall_eval_stats(summary)
+    score_mean = overall_stats["score_mean"]
+    score_std = overall_stats["score_std"]
+    total_count = overall_stats["total_count"]
+    zs_mean = overall_stats["zs_mean"]
+    zs_std = overall_stats["zs_std"]
+    weighted_avg = overall_stats["weighted_avg"]
+    weighted_std = overall_stats["weighted_std"]
+    zs_weighted_avg = overall_stats["zs_weighted_avg"]
+    zs_weighted_std = overall_stats["zs_weighted_std"]
 
     # Print pretty table
     table_summary = "\n" * 3 + "=" * 80 + "\n"
     table_summary += "UNIFIED EVALUATION SUMMARY\n"
     table_summary += "=" * 80 + "\n"
-    table_summary += summary[["Model", "Format", "Metric", "Score", "± Std", "Count"]].to_string(index=False) + "\n"
-    table_summary += "=" * 80 + "\n"
-    table_summary += f"OVERALL AVERAGE SCORE: {overall_avg:.1%} ± {overall_std:.1%}\n"
     table_summary += (
-        f"WEIGHTED AVERAGE SCORE: {weighted_avg:.1%} ± {weighted_std:.1%} (total examples: {total_count})\n"
+        summary[["Model", "Format", "Metric", "Score", "± Std", "Count", "Zero-shot Baseline"]].to_string(index=False)
+        + "\n"
     )
+    table_summary += "=" * 80 + "\n"
+    table_summary += f"OVERALL MEAN SCORE: {score_mean:.1%} ± {score_std:.1%}\n"
+    table_summary += f"ZERO-SHOT BASELINE: {zs_mean:.1%} ± {zs_std:.1%}\n"
+    table_summary += f"WEIGHTED MEAN SCORE: {weighted_avg:.1%} ± {weighted_std:.1%} (total examples: {total_count})\n"
+    table_summary += f"WEIGHTED ZERO-SHOT BASELINE: {zs_weighted_avg:.1%} ± {zs_weighted_std:.1%}\n"
     table_summary += "=" * 80 + "\n"
     logger.info(table_summary)
