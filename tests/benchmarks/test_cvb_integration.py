@@ -84,12 +84,13 @@ class TestCVBBenchmarkFunctionality:
     def test_get_qa_model(self):
         """Test that CVB provides QA model"""
         cvb = BenchmarkRegistry.get_benchmark("cvb")
+        assert isinstance(cvb, CVBBenchmark)
 
         qa_model = cvb.get_qa_models()[0]
 
         # Check basic attributes
         assert qa_model.benchmark_name == "cvb"
-        assert qa_model.name == "cvb_all"
+        assert qa_model.name == "cvb_mc"
         assert qa_model.format == "mc"
         assert qa_model.question_types is None  # Should evaluate all types
 
@@ -203,7 +204,6 @@ class TestCVBModelInterfaces:
         # Create mock data
         mock_data = pd.DataFrame(
             {
-                "question_type": ["count_2d", "relation_2d", "depth_3d", "distance_3d"],
                 "question": ["How many?", "What relation?", "How deep?", "How far?"],
                 "gt_idx": ["A", "B", "C", "A"],
                 "options": [
@@ -212,6 +212,8 @@ class TestCVBModelInterfaces:
                     ["A: near", "B: far", "C: very far"],
                     ["A: close", "B: medium", "C: far"],
                 ],
+                "question_type": ["count_2d", "relation_2d", "depth_3d", "distance_3d"],
+                "question_format": ["mc"] * 4,
             }
         )
 
@@ -295,10 +297,11 @@ class TestCVBEndToEnd:
         # This is a mock test since we don't have full evaluation here
         mock_data = pd.DataFrame(
             {
-                "question_type": ["count_2d", "relation_2d"],
                 "question": ["How many circles are in the image?", "Where is the circle relative to the square?"],
                 "gt_idx": [0, 1],
                 "gt_option": ["1", "left"],  # Add the required column
+                "question_type": ["count_2d", "relation_2d"],
+                "question_format": ["mc"] * 2,
             }
         )
 

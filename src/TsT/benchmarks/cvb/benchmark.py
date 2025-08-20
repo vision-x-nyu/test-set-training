@@ -1,5 +1,5 @@
 """
-Compositional Visual Biases (CVB) benchmark implementation.
+Cambrian Vision-Centric Benchmark (CV-Bench) benchmark implementation.
 """
 
 from typing import List
@@ -8,13 +8,13 @@ from datasets import load_dataset, Dataset
 
 from ...core.benchmark import Benchmark, BenchmarkRegistry
 from ...core.protocols import FeatureBasedBiasModel
-from ...core.qa_models import GlobalBenchmarkQAModel
+from ...core.qa_models import MCBenchmarkQAModel
 from .models import Count2DModel, Relation2DModel, Depth3DModel, Distance3DModel
 
 
 @BenchmarkRegistry.register
 class CVBBenchmark(Benchmark):
-    """Compositional Visual Biases benchmark for spatial reasoning evaluation."""
+    """Cambrian Vision-Centric Benchmark for spatial reasoning evaluation."""
 
     name = "cvb"
     description = "Evaluates spatial reasoning biases in vision-language models"
@@ -33,6 +33,8 @@ class CVBBenchmark(Benchmark):
         df["gt_option"] = df.apply(lambda row: row["choices"][row["gt_idx"]], axis=1)
         df["n_options"] = df["choices"].apply(len)
 
+        df["question_format"] = "mc"
+
         return df
 
     def get_feature_based_models(self) -> List[FeatureBasedBiasModel]:
@@ -44,13 +46,9 @@ class CVBBenchmark(Benchmark):
             Distance3DModel(),
         ]
 
-    def get_qa_models(self) -> List[GlobalBenchmarkQAModel]:
-        """Get single model for LLM evaluation of entire benchmark."""
-        return [
-            GlobalBenchmarkQAModel(
-                benchmark_name=self.name,
-                name=f"{self.name}_all",
-                format="mc",  # All CVB questions are multiple choice
-                question_types=None,  # Evaluate all types together
-            )
-        ]
+    def get_qa_models(self) -> List[MCBenchmarkQAModel]:
+        """Get QA models for LLM evaluation of entire benchmark.
+
+        NOTE: CV-Bench has only multiple choice questions with 4 options.
+        """
+        return [MCBenchmarkQAModel(benchmark_name=self.name)]

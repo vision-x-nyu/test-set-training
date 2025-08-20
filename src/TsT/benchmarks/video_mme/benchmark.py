@@ -8,7 +8,7 @@ from datasets import load_dataset, Dataset
 
 from ...core.benchmark import Benchmark, BenchmarkRegistry
 from ...core.protocols import FeatureBasedBiasModel
-from ...core.qa_models import GlobalBenchmarkQAModel
+from ...core.qa_models import MCBenchmarkQAModel
 from .models import VideoMMEModel
 
 
@@ -37,6 +37,8 @@ class VideoMMEBenchmark(Benchmark):
 
         df["question_type"] = df["task_type"]
 
+        df["question_format"] = "mc"
+
         return df
 
     def get_feature_based_models(self) -> List[FeatureBasedBiasModel]:
@@ -45,13 +47,9 @@ class VideoMMEBenchmark(Benchmark):
             VideoMMEModel(),  # Global model for all video questions
         ]
 
-    def get_qa_models(self) -> List[GlobalBenchmarkQAModel]:
-        """Get single model for LLM evaluation of entire benchmark."""
-        return [
-            GlobalBenchmarkQAModel(
-                benchmark_name=self.name,
-                name=f"{self.name}_all",
-                format="mc",  # All Video-MME questions are multiple choice
-                question_types=None,  # Evaluate all types together
-            )
-        ]
+    def get_qa_models(self) -> List[MCBenchmarkQAModel]:
+        """Get QA models for LLM evaluation of entire benchmark.
+
+        NOTE: Video-MME has only multiple choice questions with 4 options.
+        """
+        return [MCBenchmarkQAModel(benchmark_name=self.name)]

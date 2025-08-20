@@ -278,11 +278,12 @@ class TestEndToEndWorkflow:
             # Create very minimal mock data that should work for any benchmark
             mock_data = pd.DataFrame(
                 {
-                    "question_type": ["test_type"],
                     "question": ["Test question?"],
                     "gt_idx": [0],
                     "ground_truth": ["test_answer"],
                     "options": [["A: option1", "B: option2"]],
+                    "question_type": ["test_type"],
+                    "question_format": ["mc"],
                 }
             )
 

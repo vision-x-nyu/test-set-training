@@ -71,6 +71,7 @@ class TestRealBenchmarkSystemIntegration:
                 "question": ["How many?", "Where is it?"],
                 "gt_idx": ["A", "B"],
                 "options": [["A: 1", "B: 2"], ["A: left", "B: right"]],
+                "question_format": ["mc"] * 2,
             }
         )
 

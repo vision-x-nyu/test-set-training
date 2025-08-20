@@ -8,7 +8,7 @@ from datasets import load_dataset, Dataset
 
 from ...core.benchmark import Benchmark, BenchmarkRegistry
 from ...core.protocols import FeatureBasedBiasModel
-from ...core.qa_models import GlobalBenchmarkQAModel
+from ...core.qa_models import GlobalBenchmarkQAModel, MCBenchmarkQAModel, NumericalBenchmarkQAModel
 from .models import (
     ObjCountModel,
     ObjAbsDistModel,
@@ -48,6 +48,9 @@ class VSIBenchmark(Benchmark):
             lambda row: row["options"][int(row["gt_idx"])].split(". ")[-1], axis=1
         )
 
+        df["question_format"] = "num"
+        df.loc[mc_mask, "question_format"] = "mc"
+
         return df
 
     def get_feature_based_models(self) -> List[FeatureBasedBiasModel]:
@@ -66,21 +69,25 @@ class VSIBenchmark(Benchmark):
         ]
 
     def get_qa_models(self) -> List[GlobalBenchmarkQAModel]:
-        """Get single model for LLM evaluation of entire benchmark (mixed format)."""
-        # Since VSI has both numerical and MC questions, we'll handle as mixed
-        # But for simplicity, let's focus on MC questions for LLM evaluation
         return [
-            GlobalBenchmarkQAModel(
+            MCBenchmarkQAModel(
                 benchmark_name=self.name,
-                name=f"{self.name}_mc",
-                format="mc",  # Focus on MC questions for LLM evaluation
                 question_types=[
                     "object_rel_distance",
                     "object_rel_direction",
                     "route_planning",
                     "obj_appearance_order",
-                ],  # Only MC question types
-            )
+                ],
+            ),
+            NumericalBenchmarkQAModel(
+                benchmark_name=self.name,
+                question_types=[
+                    "object_counting",
+                    "object_abs_distance",
+                    "object_size_estimation",
+                    "room_size_estimation",
+                ],
+            ),
         ]
 
     def get_metadata(self) -> dict:

@@ -82,7 +82,7 @@ def run_evaluation(
     # Evaluate all models
     results: List[EvaluationResult] = []
     for model in question_models:
-        logger.info(f"\n================  {model.name.upper()}  ================")
+        logger.error(f"\n================  {model.name.upper()}  ================\n\n")
         try:
             result = cross_validator.cross_validate(
                 model=model,

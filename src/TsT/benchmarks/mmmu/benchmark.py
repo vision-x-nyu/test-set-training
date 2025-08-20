@@ -6,12 +6,14 @@ from typing import List
 import json
 import os
 import ast
+import warnings
+
 import pandas as pd
 from datasets import load_dataset, Dataset
 
 from ...core.benchmark import Benchmark, BenchmarkRegistry
-from ...core.protocols import FeatureBasedBiasModel
-from ...core.qa_models import GlobalBenchmarkQAModel
+from ...core.protocols import FeatureBasedBiasModel, QAFormat
+from ...core.qa_models import GlobalBenchmarkQAModel, MCBenchmarkQAModel
 from .models import MMMUMCModel
 
 
@@ -26,6 +28,16 @@ class MMMUBenchmark(Benchmark):
 
     name = "mmmu"
     description = "Evaluates multimodal understanding across multiple academic disciplines"
+
+    @staticmethod
+    def _get_question_format(mmmu_question_type: str) -> QAFormat:
+        match mmmu_question_type:
+            case "multiple-choice":
+                return "mc"
+            case "open":
+                return "oe"
+            case _:
+                raise ValueError(f"Unknown question type: {mmmu_question_type}")
 
     @staticmethod
     def load_data() -> pd.DataFrame:
@@ -59,6 +71,13 @@ class MMMUBenchmark(Benchmark):
             lambda row: row["options"][row["gt_idx"]] if 0 <= row["gt_idx"] < len(row["options"]) else None, axis=1
         )
 
+        # get question format from mmmu question type
+        df["question_format"] = df["question_type"].apply(MMMUBenchmark._get_question_format)
+
+        # set "subfield_truncated" as new "question_type"
+        df["question_type_original"] = df["question_type"].copy()
+        df["question_type"] = df["subfield_truncated"]
+
         return df
 
     def get_feature_based_models(self) -> List[FeatureBasedBiasModel]:
@@ -68,12 +87,16 @@ class MMMUBenchmark(Benchmark):
         ]
 
     def get_qa_models(self) -> List[GlobalBenchmarkQAModel]:
-        """Get single model for LLM evaluation of entire benchmark."""
+        """Get QA models for LLM evaluation of entire benchmark.
+
+        NOTE: MMMU has "multiple-choice" and "open" questions.
+        TODO: add open-ended support.
+        """
+        warnings.warn(
+            "MMMU has 'multiple-choice' and 'open' questions. Only 'multiple-choice' is currently evaluated. TODO: add open-ended questions."
+        )
         return [
-            GlobalBenchmarkQAModel(
-                benchmark_name=self.name,
-                name=f"{self.name}_all",
-                format="mc",  # All MMMU questions are multiple choice
-                question_types=None,  # Evaluate all types together
-            )
+            # Only evaluate multiple-choice questions for now
+            MCBenchmarkQAModel(benchmark_name=self.name),
+            # TODO: add other question types
         ]
