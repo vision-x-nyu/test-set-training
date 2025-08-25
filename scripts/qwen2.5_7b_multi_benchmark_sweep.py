@@ -23,7 +23,7 @@ def main():
         train_batch_size=8,
         eval_batch_size=16,
         lora_rank=8,
-        num_epochs=12,
+        num_epochs=8,
         max_seq_length=1024,
         temperature=0.0,
         max_tokens=10,
@@ -36,18 +36,8 @@ def main():
     # 1. Core configurations around the best settings found in single-benchmark sweeps
     core_configs = [
         # Best performer from single-benchmark (baseline)
-        dict(learning_rate=6e-4, train_batch_size=8, lora_rank=8, num_epochs=12),
-        dict(learning_rate=8e-4, train_batch_size=8, lora_rank=8, num_epochs=12),
-        # dict(learning_rate=4e-4, train_batch_size=8, lora_rank=8, num_epochs=12),
-        # # Higher capacity
-        # dict(learning_rate=4e-4, train_batch_size=8, lora_rank=16, num_epochs=12),
-        # dict(learning_rate=3e-4, train_batch_size=8, lora_rank=16, num_epochs=16),
-        # # More training
-        # dict(learning_rate=3e-4, train_batch_size=8, lora_rank=8, num_epochs=20),
-        # dict(learning_rate=2e-4, train_batch_size=8, lora_rank=8, num_epochs=24),
-        # # Different batch sizes
-        # dict(learning_rate=6e-4, train_batch_size=4, lora_rank=8, num_epochs=16),
-        # dict(learning_rate=4e-4, train_batch_size=16, lora_rank=8, num_epochs=8),
+        dict(learning_rate=6e-4, train_batch_size=8, lora_rank=8, num_epochs=4),
+        dict(learning_rate=6e-4, train_batch_size=8, lora_rank=8, num_epochs=8),
     ]
 
     for config_dict in core_configs:

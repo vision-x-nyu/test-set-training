@@ -96,7 +96,7 @@ def main():
     configs = deduped
 
     # Define benchmarks to test across
-    benchmarks = ["cv-bench", "vsi", "mmmu", "video_mme"]
+    benchmarks = ["cvb", "vsi", "mmmu", "video_mme"]
 
     print(f"🚀 Starting multi-benchmark sweep (v3) with {len(configs)} configurations")
     print(f"   Benchmarks: {', '.join(benchmarks)}")
