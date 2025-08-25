@@ -1,4 +1,6 @@
 import pytest
+import numpy as np
+
 from TsT import utils
 
 
@@ -87,18 +89,18 @@ def test_fuzzy_cleanup_numeric(pred, expected):
     assert utils.fuzzy_cleanup_numeric(pred) == expected
 
 
-# Edge case: input that cannot be converted should raise ValueError
+# Edge case: input that cannot be converted should return np.nan
 @pytest.mark.parametrize(
     "pred",
     [
         "not a number",
         "",
         "foo bar",
+        "I don't know",
     ],
 )
 def test_fuzzy_cleanup_numeric_invalid(pred):
-    with pytest.raises(ValueError):
-        utils.fuzzy_cleanup_numeric(pred)
+    assert np.isnan(utils.fuzzy_cleanup_numeric(pred))
 
 
 @pytest.mark.parametrize(

@@ -149,15 +149,15 @@ def get_overall_eval_stats(summary: pd.DataFrame) -> Dict[str, float]:
     zs_weighted_avg, zs_weighted_std = weighted_mean_std(zs_baselines.values, counts.values)
 
     return dict(
-        score_mean=score_mean,
-        score_std=score_std,
-        total_count=total_count,
-        zs_mean=zs_mean,
-        zs_std=zs_std,
-        weighted_avg=weighted_avg,
-        weighted_std=weighted_std,
-        zs_weighted_avg=zs_weighted_avg,
-        zs_weighted_std=zs_weighted_std,
+        score_mean=float(score_mean),
+        score_std=float(score_std),
+        total_count=int(total_count),
+        zs_mean=float(zs_mean),
+        zs_std=float(zs_std),
+        weighted_avg=float(weighted_avg),
+        weighted_std=float(weighted_std),
+        zs_weighted_avg=float(zs_weighted_avg),
+        zs_weighted_std=float(zs_weighted_std),
     )
 
 

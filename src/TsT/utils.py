@@ -184,7 +184,10 @@ def fuzzy_cleanup_numeric(pred: str) -> float:
     # Extract the first numeric pattern (supports commas and decimals)
     match = re.search(r"-?\d[\d,]*\.?\d*", converted_pred)
     if not match:
-        raise ValueError(f"No numeric value found in '{pred}'")
+        # raise ValueError(f"No numeric value found in '{pred}'")
+        # NOTE: an arbitrary model may return a non-numeric value. o/p NaN instead of raising an error
+        return np.nan
+
     numeric_str = match.group(0).replace(",", "")
     result = float(numeric_str)
     # Apply negation if original input started with 'minus' or 'negative'
@@ -193,13 +196,19 @@ def fuzzy_cleanup_numeric(pred: str) -> float:
     return result
 
 
-def mean_relative_accuracy(pred, target, start=0.5, end=0.95, step=0.05) -> float:
+def mean_relative_accuracy(
+    pred: float, target: float, start: float = 0.5, end: float = 0.95, step: float = 0.05
+) -> float:
     """Compute mean relative accuracy across thresholds.
 
     Handles division-by-zero cases gracefully by defining:
     - If target == 0 and pred == 0 -> relative error = 0
     - If target == 0 and pred != 0 -> relative error = inf
     """
+
+    if np.isnan(pred) or np.isnan(target):
+        return np.nan
+
     thresholds = np.linspace(start, end, int((end - start) / step) + 2)
 
     # Convert inputs to numpy arrays (supports scalars and arrays) with broadcasting
