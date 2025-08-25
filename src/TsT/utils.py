@@ -247,10 +247,13 @@ def weighted_mean_std(scores: np.ndarray, counts: np.ndarray) -> tuple[float, fl
         weighted_std = sqrt(weighted_var)
     Only models with count > 0 are included.
     """
+    scores = np.array(scores)
+    counts = np.array(counts)
+
     mask = counts > 0
     scores = scores[mask]
     counts = counts[mask]
-    weighted_avg = (scores * counts).sum() / counts.sum() if counts.sum() > 0 else 0
-    weighted_var = ((counts * (scores - weighted_avg) ** 2).sum() / counts.sum()) if counts.sum() > 0 else 0
+    weighted_mean = (scores * counts).sum() / counts.sum() if counts.sum() > 0 else 0
+    weighted_var = ((counts * (scores - weighted_mean) ** 2).sum() / counts.sum()) if counts.sum() > 0 else 0
     weighted_std = weighted_var**0.5
-    return weighted_avg, weighted_std
+    return weighted_mean, weighted_std

@@ -5,7 +5,7 @@ These tests ensure the result data structures work correctly and provide
 expected functionality for aggregating and converting evaluation results.
 """
 
-import pandas as pd
+import pytest
 import numpy as np
 
 from TsT.core.results import FoldResult, RepeatResult, EvaluationResult
@@ -132,7 +132,9 @@ class TestEvaluationResult:
             repeat_results=repeat_results,
             overall_mean=0.825,
             overall_std=0.025,
-            total_count=100,
+            count=100,
+            repeats=2,
+            total_count=200,
         )
 
         assert result.model_name == "test_model"
@@ -141,7 +143,8 @@ class TestEvaluationResult:
         assert len(result.repeat_results) == 2
         assert np.isclose(result.overall_mean, 0.825, atol=1e-6), result.overall_mean
         assert np.isclose(result.overall_std, 0.025, atol=1e-6), result.overall_std
-        assert result.total_count == 100
+        assert result.count == 100
+        assert result.total_count == 100 * 2  # 100 samples * 2 repeats
 
     def test_from_repeat_results(self):
         """Test creating EvaluationResult from repeat results with calculated statistics"""
@@ -154,12 +157,13 @@ class TestEvaluationResult:
         # Check calculated statistics
         # Repeat 1 mean: (0.8 + 0.9) / 2 = 0.85
         # Repeat 2 mean: (0.7 + 0.8) / 2 = 0.75
-        # Overall mean: (0.85 + 0.75) / 2 = 0.8
-        # Overall std: std([0.85, 0.75]) = 0.05
+        # Overall mean: (0.8 + 0.9 + 0.7 + 0.8) / 4 = 0.8
+        # Overall std: std([0.8, 0.9, 0.7, 0.8]) = 0.0816 (pop) 0.0707 (sample)
 
-        assert np.isclose(result.overall_mean, 0.8, atol=1e-6), result.overall_mean
-        assert np.isclose(result.overall_std, 0.05, atol=1e-6), result.overall_std
-        assert result.total_count == 50  # 25 * 2 folds
+        assert np.isclose(result.overall_mean, 0.8, atol=1e-4), result.overall_mean
+        assert np.isclose(result.overall_std, 0.0707, atol=1e-4), result.overall_std
+        assert result.count == 25 * 2  # 25 * 2 folds
+        assert result.total_count == 25 * 2 * 2  # 25 * 2 folds * 2 repeats
 
     def test_to_summary_dict(self):
         """Test conversion to summary dictionary"""
@@ -174,32 +178,9 @@ class TestEvaluationResult:
         assert summary["Model"] == "test_model"
         assert summary["Format"] == "MC"
         assert summary["Metric"] == "ACC"
-        assert np.isclose(summary["Score"], 0.8, atol=1e-6), summary["Score"]
-        assert np.isclose(summary["± Std"], 0.05, atol=1e-6), summary["± Std"]
-        assert summary["Count"] == 50
-
-    def test_to_legacy_tuple(self):
-        """Test conversion to legacy tuple format"""
-        repeat_results = self.create_sample_repeat_results()
-
-        # Add some feature importances
-        feature_importances = pd.DataFrame({"feature": ["feat1", "feat2"], "importance": [0.6, 0.4]})
-
-        result = EvaluationResult.from_repeat_results(
-            model_name="test_model",
-            model_format="mc",
-            metric_name="acc",
-            repeat_results=repeat_results,
-            feature_importances=feature_importances,
-        )
-
-        legacy_tuple = result.to_legacy_tuple()
-
-        assert len(legacy_tuple) == 4
-        assert np.isclose(legacy_tuple[0], 0.8, atol=1e-6), legacy_tuple[0]
-        assert np.isclose(legacy_tuple[1], 0.05, atol=1e-6), legacy_tuple[1]
-        assert isinstance(legacy_tuple[2], pd.DataFrame)  # feature_importances
-        assert legacy_tuple[3] == 50  # count
+        assert np.isclose(summary["Score"], 0.8, atol=1e-4), summary["Score"]
+        assert np.isclose(summary["± Std"], 0.0707, atol=1e-4), summary["± Std"]
+        assert summary["Count"] == 25 * 2
 
     def test_with_metadata(self):
         """Test EvaluationResult with model metadata"""
@@ -219,14 +200,12 @@ class TestEvaluationResult:
         assert result.model_metadata["model_type"] == "random_forest"
 
     def test_empty_repeat_results(self):
-        """Test EvaluationResult with empty repeat results"""
-        result = EvaluationResult.from_repeat_results(
-            model_name="empty_model", model_format="mc", metric_name="acc", repeat_results=[]
-        )
+        """Test EvaluationResult with empty repeat results should raise AssertionError"""
 
-        assert np.isclose(result.overall_mean, 0.0, atol=1e-6), result.overall_mean
-        assert np.isclose(result.overall_std, 0.0, atol=1e-6), result.overall_std
-        assert result.total_count == 0
+        with pytest.raises(AssertionError, match="at least one repeat"):
+            EvaluationResult.from_repeat_results(
+                model_name="empty_model", model_format="mc", metric_name="acc", repeat_results=[]
+            )
 
 
 class TestResultsIntegration:
@@ -260,7 +239,8 @@ class TestResultsIntegration:
         assert len(eval_result.repeat_results) == 2
         assert eval_result.repeat_results[0].total_instances == 90  # 3 folds * 30
         assert eval_result.repeat_results[1].total_instances == 90
-        assert eval_result.total_count == 90  # From first repeat
+        assert eval_result.count == 90  # From first repeat
+        assert eval_result.total_count == 90 * 2  # 90 samples * 2 repeats
 
         # Check that metadata is preserved
         assert eval_result.repeat_results[0].fold_results[0].metadata["estimator"] == "rf_1"
@@ -288,7 +268,7 @@ class TestResultsIntegration:
 
         # Overall statistics should match repeat statistics for single repeat
         assert np.isclose(eval_result.overall_mean, expected_mean, atol=1e-10), eval_result.overall_mean
-        assert np.isclose(eval_result.overall_std, 0.0, atol=1e-10), eval_result.overall_std  # Single repeat -> std = 0
+        assert np.isclose(eval_result.overall_std, expected_std, atol=1e-10), eval_result.overall_std
 
     def test_large_scale_results(self):
         """Test results with many folds and repeats"""
@@ -311,6 +291,7 @@ class TestResultsIntegration:
 
         # Verify structure
         assert len(eval_result.repeat_results) == 10
-        assert eval_result.total_count == 250  # 5 folds * 50 samples
+        assert eval_result.count == 250  # 5 folds * 50 samples
+        assert eval_result.total_count == 250 * 10  # 250 samples * 10 repeats
         assert 0.0 <= eval_result.overall_mean <= 1.0
         assert eval_result.overall_std >= 0.0

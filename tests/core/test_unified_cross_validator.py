@@ -373,35 +373,11 @@ class TestUnifiedCrossValidatorIntegration:
         # Check statistics are reasonable
         assert 0.0 <= result.overall_mean <= 1.0
         assert result.overall_std >= 0.0
-        assert result.total_count == 100
+        assert result.count == 100
+        assert result.total_count == 100 * 2  # 100 samples * 2 repeats
 
         # Check feature importances (RF evaluator should add these)
         assert result.feature_importances is not None
 
         # Check metadata (RF evaluator should add these)
         assert "total_samples" in result.model_metadata
-
-    def test_comparison_with_legacy_approach(self):
-        """Test that unified approach produces consistent results"""
-        # This is a conceptual test - in practice you'd compare with actual legacy results
-
-        model = MockBiasModel()
-        df = create_test_data(50, 2)
-
-        config = CrossValidationConfig(n_folds=5, repeats=1, verbose=False, show_progress=False)
-        cv = UnifiedCrossValidator(config)
-
-        result = cv.cross_validate(model, df, "gt_idx", mode="rf")
-
-        # Convert to legacy format for comparison
-        legacy_tuple = result.to_legacy_tuple()
-
-        # Verify legacy compatibility
-        assert len(legacy_tuple) == 4
-        assert legacy_tuple[0] == result.overall_mean  # mean_score
-        assert legacy_tuple[1] == result.overall_std  # std_score
-        assert legacy_tuple[3] == result.total_count  # count
-
-        # Check that results are reasonable
-        assert 0.0 <= result.overall_mean <= 1.0
-        assert result.overall_std >= 0.0

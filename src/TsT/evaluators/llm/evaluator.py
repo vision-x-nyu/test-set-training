@@ -207,14 +207,6 @@ class LLMEvaluator(ModelEvaluator):
 
         improvement = evaluation_result.overall_mean - self.zero_shot_baseline
 
-        # Mock feature importances for compatibility
-        # feature_importances = pd.DataFrame(
-        #     {
-        #         "feature": ["llm_finetuning", "zero_shot_baseline", "improvement"],
-        #         "importance": [evaluation_result.overall_mean, self.zero_shot_baseline, improvement],
-        #     }
-        # )
-
         evaluation_result.feature_importances = None  # TODO?
         evaluation_result.zero_shot_baseline = self.zero_shot_baseline
         evaluation_result.model_metadata.update(

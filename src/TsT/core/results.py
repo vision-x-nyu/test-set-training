@@ -8,7 +8,8 @@ from cross-validation evaluation, including fold-level metadata and aggregated s
 from dataclasses import dataclass, field
 from typing import List, Dict, Any, Optional
 import pandas as pd
-import numpy as np
+
+from TsT.utils import weighted_mean_std
 
 
 @dataclass
@@ -38,11 +39,12 @@ class RepeatResult:
     @classmethod
     def from_fold_results(cls, repeat_id: int, fold_results: List[FoldResult]) -> "RepeatResult":
         """Create RepeatResult from fold results with calculated statistics"""
-        scores = [f.score for f in fold_results]
 
-        if scores:
-            mean_score = float(np.mean(scores))
-            std_score = float(np.std(scores))
+        scores = [f.score for f in fold_results]
+        counts = [f.test_size for f in fold_results]
+
+        if scores and counts:
+            mean_score, std_score = weighted_mean_std(scores, counts)
         else:
             mean_score = 0.0
             std_score = 0.0
@@ -67,6 +69,8 @@ class EvaluationResult:
     # Aggregated statistics
     overall_mean: float
     overall_std: float
+    count: int
+    repeats: int
     total_count: int
 
     # Model-specific metadata
@@ -86,16 +90,26 @@ class EvaluationResult:
         model_metadata: Optional[Dict[str, Any]] = None,
     ) -> "EvaluationResult":
         """Create EvaluationResult from repeat results with calculated statistics"""
-        repeat_means = [r.mean_score for r in repeat_results]
+        # repeat_means = [r.mean_score for r in repeat_results]
 
-        if repeat_means:
-            overall_mean = float(np.mean(repeat_means))
-            overall_std = float(np.std(repeat_means))
+        assert len(repeat_results) > 0, "Must have at least one repeat"
+        assert all(len(repeat.fold_results) > 0 for repeat in repeat_results), "Each repeat must have at least one fold"
+
+        flat_scores = [fold.score for repeat in repeat_results for fold in repeat.fold_results]
+        flat_counts = [fold.test_size for repeat in repeat_results for fold in repeat.fold_results]
+
+        if flat_scores and flat_counts:
+            overall_mean, overall_std = weighted_mean_std(flat_scores, flat_counts)
         else:
             overall_mean = 0.0
             overall_std = 0.0
 
-        total_count = repeat_results[0].total_instances if repeat_results else 0
+        total_count = sum(flat_counts)
+        repeats = len(repeat_results)
+        count = total_count // repeats
+        assert count == repeat_results[0].total_instances, (
+            f"Overall count {count} does not match repeat {repeat_results[0].repeat_id} total instances {repeat_results[0].total_instances}"
+        )
 
         return cls(
             model_name=model_name,
@@ -105,6 +119,8 @@ class EvaluationResult:
             zero_shot_baseline=zero_shot_baseline,
             overall_mean=overall_mean,
             overall_std=overall_std,
+            count=count,
+            repeats=repeats,
             total_count=total_count,
             feature_importances=feature_importances,
             model_metadata=model_metadata or {},
@@ -116,14 +132,12 @@ class EvaluationResult:
             "Model": self.model_name,
             "Format": self.model_format.upper(),
             "Metric": self.metric_name.upper(),
-            "Score": self.overall_mean,
             "Zero-shot Baseline": self.zero_shot_baseline,
+            "Score": self.overall_mean,
             "± Std": self.overall_std,
-            "Count": self.total_count,
+            "Count": self.count,
+            "Repeats": self.repeats,
+            "Total Count": self.total_count,
             "Feature Importances": self.feature_importances,
             "Metadata": self.model_metadata,
         }
-
-    def to_legacy_tuple(self) -> tuple[float, float, Optional[pd.DataFrame], int]:
-        """Convert to legacy format for backward compatibility"""
-        return (self.overall_mean, self.overall_std, self.feature_importances, self.total_count)
