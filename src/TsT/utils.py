@@ -196,9 +196,7 @@ def fuzzy_cleanup_numeric(pred: str) -> float:
     return result
 
 
-def mean_relative_accuracy(
-    pred: float, target: float, start: float = 0.5, end: float = 0.95, step: float = 0.05
-) -> float:
+def mean_relative_accuracy(pred, target, start: float = 0.5, end: float = 0.95, step: float = 0.05) -> float:
     """Compute mean relative accuracy across thresholds.
 
     Handles division-by-zero cases gracefully by defining:
@@ -206,14 +204,15 @@ def mean_relative_accuracy(
     - If target == 0 and pred != 0 -> relative error = inf
     """
 
-    if np.isnan(pred) or np.isnan(target):
-        return np.nan
-
-    thresholds = np.linspace(start, end, int((end - start) / step) + 2)
-
     # Convert inputs to numpy arrays (supports scalars and arrays) with broadcasting
     pred_arr = np.asarray(pred, dtype=float)
     target_arr = np.asarray(target, dtype=float)
+
+    # Check for NaN values in the arrays
+    if np.any(np.isnan(pred_arr)) or np.any(np.isnan(target_arr)):
+        return np.nan
+
+    thresholds = np.linspace(start, end, int((end - start) / step) + 2)
 
     pred_b, target_b = np.broadcast_arrays(pred_arr, target_arr)
     diff = np.abs(pred_b - target_b)
