@@ -71,9 +71,6 @@ def run_evaluation(
             if llm_config is not None:
                 raise ValueError(f"RF mode does not require llm_config, got: {llm_config}")
         case "llm":
-            if len(question_models) > 1:
-                # TODO: make a single LLM model type
-                raise ValueError("LLM evaluation only supports a single model")
             if llm_config is None:
                 raise ValueError("llm_config is required for LLM evaluation")
         case _:
