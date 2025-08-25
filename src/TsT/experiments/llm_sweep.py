@@ -145,16 +145,6 @@ def run_llm_sweep(
 
     logger.info(f"Sweep results will be saved to: {sweep_dir}")
 
-    # Load benchmark and data once using new system
-    benchmark_obj = load_benchmark(benchmark)
-    logger.info(f"Loading {benchmark} data and models...")
-    df_full = benchmark_obj.load_data()
-    models = benchmark_obj.get_qa_models()  # Use QA model for LLM evaluation
-    target_col = get_target_column(benchmark)
-
-    logger.info(f"Loaded {len(df_full)} examples from {benchmark}")
-    logger.info(f"Found {len(models)} models: {[m.name for m in models]}")
-
     # Run each configuration (skip completed ones)
     start_time = datetime.now()
     run_results = []
@@ -203,8 +193,8 @@ def run_llm_sweep(
         try:
             # Run single configuration
             run_start = datetime.now()
-            _, stats = _run_single_config(
-                config, benchmark, df_full, models, target_col, run_dir, n_splits, random_state, question_types, verbose
+            _, stats = _run_single_benchmark_config(
+                config, benchmark, run_dir, n_splits, random_state, question_types, verbose
             )
             run_end = datetime.now()
 
@@ -454,7 +444,7 @@ def run_llm_multi_benchmark_sweep(
             try:
                 # Run single (config, benchmark) combination
                 run_start = datetime.now()
-                summary, stats = _run_single_config_benchmark(
+                _, stats = _run_single_benchmark_config(
                     config, benchmark, run_dir, n_splits, random_state, question_types, verbose
                 )
                 run_end = datetime.now()
@@ -522,63 +512,6 @@ def run_llm_multi_benchmark_sweep(
     )
 
     return sweep_dir
-
-
-def _run_single_config(
-    config: LLMRunConfig,
-    benchmark: str,
-    df_full: pd.DataFrame,
-    models: list,
-    target_col: str,
-    run_dir: Path,
-    n_splits: int,
-    random_state: int,
-    question_types: Optional[list],
-    verbose: bool,
-) -> Tuple[pd.DataFrame, Dict[str, float]]:
-    """Run evaluation for a single configuration."""
-    # Save config for this run
-    save_llm_config(config, run_dir)
-
-    # Run evaluation with log capture
-    run_start = datetime.now()
-
-    with capture_output() as (stdout_capture, stderr_capture):
-        summary = run_evaluation(
-            question_models=models,
-            df_full=df_full,
-            n_splits=n_splits,
-            random_state=random_state,
-            verbose=verbose,
-            repeats=1,
-            question_types=question_types,
-            target_col=target_col,
-            mode="llm",
-            llm_config=config,
-        )
-
-    run_end = datetime.now()
-
-    # Save logs and results
-    save_logs(stdout_capture, stderr_capture, run_dir)
-
-    if summary is not None:
-        summary_path = run_dir / "summary.csv"
-        summary.to_csv(summary_path, index=False)
-
-        overall_stats_path = run_dir / "overall_stats.json"
-        overall_stats = get_overall_eval_stats(summary)
-        save_json(overall_stats, overall_stats_path, "overall_stats.json")
-
-    # Save run metadata
-    run_metadata = {
-        "benchmark": benchmark,
-        "mode": "llm",
-        "success": True,
-    }
-    save_metadata(run_dir, run_start, run_end, run_metadata)
-
-    return summary, overall_stats
 
 
 def _config_to_dict(config: LLMRunConfig) -> Dict[str, Any]:
@@ -773,7 +706,7 @@ def _find_completed_multi_benchmark_runs(experiment_dir: Path, benchmarks: List[
     return sorted(completed_runs)
 
 
-def _run_single_config_benchmark(
+def _run_single_benchmark_config(
     config: LLMRunConfig,
     benchmark: str,
     run_dir: Path,
@@ -781,7 +714,7 @@ def _run_single_config_benchmark(
     random_state: int,
     question_types: Optional[list],
     verbose: bool,
-) -> pd.DataFrame:
+) -> Tuple[pd.DataFrame, Dict[str, float]]:
     """Run evaluation for a single (config, benchmark) combination."""
     # Save config for this run
     save_llm_config(config, run_dir)
@@ -821,9 +754,8 @@ def _run_single_config_benchmark(
         summary_path = run_dir / "summary.csv"
         summary.to_csv(summary_path, index=False)
 
-        overall_stats_path = run_dir / "overall_stats.json"
         overall_stats = get_overall_eval_stats(summary)
-        save_json(overall_stats, overall_stats_path, "overall_stats.json")
+        save_json(overall_stats, run_dir, "overall_stats.json")
 
     # Save run metadata
     run_metadata = {
@@ -833,7 +765,7 @@ def _run_single_config_benchmark(
     }
     save_metadata(run_dir, run_start, run_end, run_metadata)
 
-    return summary
+    return summary, overall_stats
 
 
 def _create_multi_benchmark_summaries(
@@ -843,8 +775,13 @@ def _create_multi_benchmark_summaries(
     # Convert to DataFrame for easier manipulation
     results_df = pd.DataFrame(all_run_results)
 
+    assert "weighted_avg" in results_df.columns, f"weighted_avg column not found in results_df: {results_df.columns}"
+    assert "zs_weighted_avg" in results_df.columns, (
+        f"zs_weighted_avg column not found in results_df: {results_df.columns}"
+    )
+
     # 1. Create overall sweep summary (all runs)
-    sweep_summary = results_df.sort_values(["benchmark", "final_acc"], ascending=[True, False])
+    sweep_summary = results_df.sort_values(["benchmark", "weighted_avg"], ascending=[True, False])
     sweep_summary.to_csv(sweep_dir / "sweep_summary.csv", index=False)
     logger.info(f"Saved complete sweep summary to: {sweep_dir / 'sweep_summary.csv'}")
 
@@ -854,14 +791,15 @@ def _create_multi_benchmark_summaries(
         benchmark_runs = results_df[results_df["benchmark"] == benchmark]
         if not benchmark_runs.empty:
             # Find the run with maximum final accuracy for this benchmark
-            best_run = benchmark_runs.loc[benchmark_runs["final_acc"].idxmax()]
+            best_run = benchmark_runs.loc[benchmark_runs["weighted_avg"].idxmax()]
+            improvement = best_run["weighted_avg"] - best_run["zs_weighted_avg"]
             benchmark_summary.append(
                 {
                     "benchmark": benchmark,
                     "best_run": best_run["run_name"],
-                    "best_final_acc": best_run["final_acc"],
-                    "best_baseline_acc": best_run["baseline_acc"],
-                    "best_improvement": best_run["improvement"],
+                    "best_score": best_run["weighted_avg"],
+                    "best_baseline": best_run["zs_weighted_avg"],
+                    "best_improvement": improvement,
                     "best_config_lr": best_run["learning_rate"],
                     "best_config_bs": best_run["train_batch_size"],
                     "best_config_rank": best_run["lora_rank"],
@@ -880,7 +818,7 @@ def _create_multi_benchmark_summaries(
         config_runs = results_df[results_df["run_name"] == run_name]
 
         if not config_runs.empty:
-            improvements = config_runs["improvement"].values
+            improvements = config_runs["weighted_avg"] - config_runs["zs_weighted_avg"]
             config_summary.append(
                 {
                     "run_name": run_name,
@@ -922,7 +860,7 @@ def _print_multi_benchmark_summary(
     if benchmark_summary_path.exists():
         benchmark_df = pd.read_csv(benchmark_summary_path)
         print("\n🏆 BEST PERFORMANCE PER BENCHMARK:")
-        display_cols = ["benchmark", "best_final_acc", "best_improvement", "best_run"]
+        display_cols = ["benchmark", "best_score", "best_baseline", "best_improvement", "best_run"]
         print(benchmark_df[display_cols].to_string(index=False))
 
     # Load and display top configs

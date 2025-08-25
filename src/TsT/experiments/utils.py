@@ -7,6 +7,7 @@ Common functions for experiment management, logging, and result capture.
 import json
 import sys
 import contextlib
+from functools import lru_cache
 from datetime import datetime
 from io import StringIO
 from pathlib import Path
@@ -130,6 +131,7 @@ def save_json(data: Dict[str, Any], results_dir: Path, filename: str) -> Path:
     return file_path
 
 
+@lru_cache(maxsize=None)
 def load_benchmark(benchmark_name: str):
     """Load a benchmark using the registry system."""
     from ..core.benchmark import BenchmarkRegistry

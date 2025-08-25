@@ -174,7 +174,10 @@ class LLMEvaluator(ModelEvaluator):
             # Evaluate on test fold using the same predictor with loaded adapter
             logger.info(f"Evaluating on fold #{fold_id} with {len(test_instances)} samples")
             fold_score = evaluate_llm(self.predictor, test_instances, self.model.format)
+            improvement = fold_score - self.zero_shot_baseline
             logger.info(f"Fold #{fold_id} score: {fold_score:.2%}")
+            logger.info(f"Fold #{fold_id} improvement: {improvement:.2%}")
+            logger.info(f"Zero-shot baseline: {self.zero_shot_baseline:.2%}")
 
         return FoldResult(
             fold_id=fold_id,
