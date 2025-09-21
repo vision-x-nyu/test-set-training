@@ -53,7 +53,7 @@ def main():
     sweep_dir = run_llm_multi_benchmark_sweep(
         configs=configs,
         benchmarks=benchmarks,
-        experiment_name="qwen2.5_7b_multi_benchmark_test_v2",
+        experiment_name="qwen2.5_7b_multi_benchmark_test",
         n_splits=2,
         random_state=42,
         verbose=True,
