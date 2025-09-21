@@ -240,9 +240,9 @@ def fuzzy_mra(pred, target, start=0.5, end=0.95, step=0.05) -> float:
 def weighted_mean_std(scores: np.ndarray, counts: np.ndarray) -> tuple[float, float]:
     """
     Weighted mean:
-        weighted_avg = sum(score_i * count_i) / sum(count_i)
+        wgt_mean = sum(score_i * count_i) / sum(count_i)
     Weighted variance:
-        weighted_var = sum(count_i * (score_i - weighted_avg)**2) / sum(count_i)
+        weighted_var = sum(count_i * (score_i - wgt_mean)**2) / sum(count_i)
     Weighted std:
         weighted_std = sqrt(weighted_var)
     Only models with count > 0 are included.
@@ -253,7 +253,7 @@ def weighted_mean_std(scores: np.ndarray, counts: np.ndarray) -> tuple[float, fl
     mask = counts > 0
     scores = scores[mask]
     counts = counts[mask]
-    weighted_mean = (scores * counts).sum() / counts.sum() if counts.sum() > 0 else 0
-    weighted_var = ((counts * (scores - weighted_mean) ** 2).sum() / counts.sum()) if counts.sum() > 0 else 0
-    weighted_std = weighted_var**0.5
-    return weighted_mean, weighted_std
+    wgt_mean = (scores * counts).sum() / counts.sum() if counts.sum() > 0 else 0
+    wgt_var = ((counts * (scores - wgt_mean) ** 2).sum() / counts.sum()) if counts.sum() > 0 else 0
+    wgt_std = wgt_var**0.5
+    return wgt_mean, wgt_std

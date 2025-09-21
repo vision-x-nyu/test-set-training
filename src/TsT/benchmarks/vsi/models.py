@@ -244,7 +244,6 @@ class ObjSizeEstModel(FeatureBasedBiasModel):
         "object",
         "obj_count",
         "obj_freq_score",
-        "obj_val_log_ratio",
         "obj_val_log_mean",
         "obj_val_log_std",
         "obj_val_log_ratio",
