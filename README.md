@@ -18,7 +18,7 @@ cd test-set-training
 # 2. Run the "bootstrapping" setup script to initialize the env with torch
 bash scripts/bootstrap.sh
 
-# 4. Activate the environment
+# 3. Activate the environment
 source .venv/bin/activate
 ```
 
