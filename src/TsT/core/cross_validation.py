@@ -195,3 +195,11 @@ class UnifiedCrossValidator:
                 f"Repeat {result.metric_name.upper()}s: "
                 f"{[f'{s:.2%}' for s in repeat_scores]}"
             )
+
+        # print the feature importances
+        if result.feature_importances is not None:
+            logger.info(f"[{result.model_name.upper()}] Feature importances:\n{result.feature_importances}")
+
+        # print the model metadata
+        if result.model_metadata is not None:
+            logger.info(f"[{result.model_name.upper()}] Model metadata:\n{result.model_metadata}")
