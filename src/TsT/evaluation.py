@@ -4,6 +4,7 @@ import dataclasses
 import numpy as np
 import pandas as pd
 from ezcolorlog import root_logger as logger
+from scipy.stats import t
 
 from .core.protocols import BiasModel
 from .core.cross_validation import UnifiedCrossValidator, CrossValidationConfig
@@ -125,31 +126,71 @@ def _create_error_result(model: BiasModel, error_msg: str) -> EvaluationResult:
 
 
 def get_overall_eval_stats(results: List[EvaluationResult]) -> Dict[str, float]:
-    """Get overall statistics"""
+    """Get overall statistics across all evaluation results.
+
+    Computes both macro and micro averages:
+    - 'macro': Averaging the metric independently for each model and then taking the
+      arithmetic mean, giving equal weight to each model.
+    - 'micro': Aggregating the contributions of all models to compute the metric globally,
+      treating every instance equally—this is effectively a global weighted mean over
+      the entire dataset.
+
+    Uncertainty Measures:
+    - 'se': Standard Error of the mean
+    - 't_95ci': 95% t-confidence interval
+    """
     if not results or len(results) == 0:
         logger.warning("No evaluation results to summarize")
         return {}
 
     # Convert percentage strings back to float for calculations
 
+    # assert that all evaluation results have the same number of repeats
+    num_repeats = results[0].repeats
+    assert all(r.repeats == results[0].repeats for r in results), (
+        f"All evaluation results must have the same number of repeats, got {dataclasses.asdict(results)}"
+    )
+
+    repeat_scores = np.array([r.repeat_scores for r in results])  # (models, repeats)
+    repeat_scores_macro_avg = repeat_scores.mean(axis=0)  # (repeats,)
+    print(f"repeat_scores_macro_avg: {repeat_scores_macro_avg}")
+
+    # calculate macro stats over repeats
+    score_macro_avg = repeat_scores_macro_avg.mean()
+    if num_repeats < 2:
+        logger.warning(f"got {num_repeats} repeats. std, se, & t-CI are ill-defined for <2 repeats")
+        score_macro_std = np.nan
+        score_macro_se = np.nan
+        score_macro_t_95ci = (np.nan, np.nan)
+    else:
+        score_macro_std = repeat_scores_macro_avg.std(ddof=1)  # sample SD (unbiased)
+        score_macro_se = score_macro_std / np.sqrt(repeat_scores_macro_avg.shape[0])  # sample Std Error of the mean
+        score_macro_t_95ci = t.interval(
+            0.95, repeat_scores_macro_avg.shape[0] - 1, loc=score_macro_avg, scale=score_macro_se
+        )
+
+    # NOTE: zs baseline is computed once per model. is not repeated. cannot run t-CI on it.
+    zs_baselines = np.array([r.zero_shot_baseline for r in results])
+    zs_macro_avg = zs_baselines.mean()
+
+    # todo: do "micro" average properly
     scores = np.array([r.overall_mean for r in results])
     counts = np.array([r.count for r in results])
-    zs_baselines = np.array([r.zero_shot_baseline for r in results])
-
-    score_mean = scores.mean()
-    score_std = scores.std()
     total_count = counts.sum()
-    zs_mean = zs_baselines.mean()
-    zs_std = zs_baselines.std()
     weighted_avg, weighted_std = weighted_mean_std(scores, counts)
     zs_weighted_avg, zs_weighted_std = weighted_mean_std(zs_baselines, counts)
 
     return dict(
         total_count=int(total_count),
-        score_mean=float(score_mean),
-        score_std=float(score_std),
-        zs_mean=float(zs_mean),
-        zs_std=float(zs_std),
+        score_macro=dict(
+            n=repeat_scores_macro_avg.shape[0],
+            avg=float(score_macro_avg),
+            std=float(score_macro_std),
+            se=float(score_macro_se),
+            t_95ci=(float(score_macro_t_95ci[0]), float(score_macro_t_95ci[1])),
+        ),
+        zs_macro_avg=float(zs_macro_avg),
+        # TODO: micro
         weighted_avg=float(weighted_avg),
         weighted_std=float(weighted_std),
         zs_weighted_avg=float(zs_weighted_avg),
@@ -161,11 +202,9 @@ def log_overall_statistics(results: List[EvaluationResult]):
     """Log overall evaluation statistics"""
 
     overall_stats = get_overall_eval_stats(results)
-    score_mean = overall_stats["score_mean"]
-    score_std = overall_stats["score_std"]
     total_count = overall_stats["total_count"]
-    zs_mean = overall_stats["zs_mean"]
-    zs_std = overall_stats["zs_std"]
+    score_macro = overall_stats["score_macro"]
+    zs_macro_avg = overall_stats["zs_macro_avg"]
     weighted_avg = overall_stats["weighted_avg"]
     weighted_std = overall_stats["weighted_std"]
     zs_weighted_avg = overall_stats["zs_weighted_avg"]
@@ -179,7 +218,7 @@ def log_overall_statistics(results: List[EvaluationResult]):
             "model_format": "Format",
             "metric_name": "Metric",
             "overall_mean": "Score",
-            "overall_std": "± Std",
+            "overall_std": "Std Dev",
             "count": "Count",
             "repeats": "Repeats",
             "zero_shot_baseline": "ZS Baseline",
@@ -191,14 +230,19 @@ def log_overall_statistics(results: List[EvaluationResult]):
     table_summary += "UNIFIED EVALUATION SUMMARY\n"
     table_summary += "=" * 80 + "\n"
     table_summary += (
-        summary_df[["Model", "Format", "Metric", "Score", "± Std", "Count", "Repeats", "ZS Baseline"]].to_string(
+        summary_df[["Model", "Format", "Metric", "Score", "Std Dev", "Count", "Repeats", "ZS Baseline"]].to_string(
             index=False
         )
         + "\n"
     )
     table_summary += "=" * 80 + "\n"
-    table_summary += f"OVERALL MEAN SCORE: {score_mean:.1%} ± {score_std:.1%}\n"
-    table_summary += f"ZERO-SHOT BASELINE: {zs_mean:.1%} ± {zs_std:.1%}\n"
+    table_summary += f"""SCORE MACRO AVERAGE: {score_macro["avg"]:.1%}
+    n: {score_macro["n"]}
+    std: {score_macro["std"]:.1%}
+    se: {score_macro["se"]:.1%}
+    95% t-CI: ({score_macro["t_95ci"][0]:.1%}, {score_macro["t_95ci"][1]:.1%})
+"""
+    table_summary += f"ZERO-SHOT BASELINE MACRO AVERAGE: {zs_macro_avg:.1%}\n"
     table_summary += f"WEIGHTED MEAN SCORE: {weighted_avg:.1%} ± {weighted_std:.1%} (total examples: {total_count})\n"
     table_summary += f"WEIGHTED ZERO-SHOT BASELINE: {zs_weighted_avg:.1%} ± {zs_weighted_std:.1%}\n"
     table_summary += "=" * 80 + "\n"
