@@ -11,7 +11,7 @@ from unittest.mock import Mock, patch
 
 from TsT.evaluators import RandomForestEvaluator, LLMEvaluator
 from TsT.evaluators.llm.config import LLMRunConfig
-from TsT.core.results import FoldResult, EvaluationResult
+from TsT.core.protocols import FoldResult, EvaluationResult
 
 
 class MockFeatureBasedBiasModel:
@@ -176,7 +176,7 @@ class TestRandomForestPostProcessing:
 
     def create_mock_evaluation_result(self):
         """Create mock evaluation result for testing"""
-        from TsT.core.results import RepeatResult, FoldResult
+        from TsT.core.protocols import RepeatResult, FoldResult
 
         fold_results = [
             FoldResult(1, 0.8, 20, 20),
@@ -330,7 +330,7 @@ class TestLLMPostProcessing:
 
     def create_mock_evaluation_result(self):
         """Create mock evaluation result for testing"""
-        from TsT.core.results import RepeatResult, FoldResult
+        from TsT.core.protocols import RepeatResult, FoldResult
 
         fold_results = [FoldResult(1, 0.75, 25, 25)]
         repeat_result = RepeatResult.from_fold_results(0, fold_results)
@@ -398,7 +398,7 @@ class TestEvaluatorIntegration:
         )
 
         # Create evaluation result for post-processing
-        from TsT.core.results import RepeatResult
+        from TsT.core.protocols import RepeatResult
 
         repeat_result = RepeatResult.from_fold_results(0, [fold_result])
         evaluation_result = EvaluationResult.from_repeat_results(
@@ -454,7 +454,7 @@ class TestEvaluatorIntegration:
                         )
 
         # Create evaluation result
-        from TsT.core.results import RepeatResult
+        from TsT.core.protocols import RepeatResult
 
         repeat_result = RepeatResult.from_fold_results(0, [fold_result])
         evaluation_result = EvaluationResult.from_repeat_results(

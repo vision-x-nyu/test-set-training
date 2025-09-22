@@ -8,7 +8,7 @@ expected functionality for aggregating and converting evaluation results.
 import pytest
 import numpy as np
 
-from TsT.core.results import FoldResult, RepeatResult, EvaluationResult
+from TsT.core.protocols import FoldResult, RepeatResult, EvaluationResult
 
 
 class TestFoldResult:

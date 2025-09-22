@@ -11,7 +11,7 @@ import numpy as np
 
 from TsT.core.cross_validation import UnifiedCrossValidator, CrossValidationConfig
 from TsT.core.protocols import ModelEvaluator
-from TsT.core.results import FoldResult, EvaluationResult
+from TsT.core.protocols import FoldResult, EvaluationResult
 
 
 class MockBiasModel:

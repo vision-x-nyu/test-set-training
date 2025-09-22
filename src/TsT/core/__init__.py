@@ -6,11 +6,11 @@ model types (Random Forest, LLM, etc.) to work with a unified evaluation system.
 """
 
 from .protocols import BiasModel, FeatureBasedBiasModel, QuestionAnswerBiasModel, ModelEvaluator
+from .protocols import FoldResult, RepeatResult, EvaluationResult
 from .cross_validation import (
     UnifiedCrossValidator,
     CrossValidationConfig,
 )
-from .results import FoldResult, RepeatResult, EvaluationResult
 from .benchmark import Benchmark, BenchmarkRegistry
 from .qa_models import GlobalBenchmarkQAModel
 

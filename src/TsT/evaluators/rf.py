@@ -11,7 +11,7 @@ from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.preprocessing import LabelEncoder
 
 from ..core.protocols import ModelEvaluator, FeatureBasedBiasModel
-from ..core.results import FoldResult, EvaluationResult
+from ..core.protocols import FoldResult, EvaluationResult
 from ..utils import mean_relative_accuracy
 
 

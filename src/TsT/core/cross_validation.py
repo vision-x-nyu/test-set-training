@@ -14,7 +14,7 @@ from sklearn.model_selection import StratifiedKFold, KFold
 from ezcolorlog import root_logger as logger
 
 from .protocols import BiasModel, ModelEvaluator
-from .results import EvaluationResult, RepeatResult
+from .protocols import EvaluationResult, RepeatResult
 from ..evaluators import RandomForestEvaluator, LLMEvaluator
 from ..evaluators.llm.config import LLMRunConfig
 

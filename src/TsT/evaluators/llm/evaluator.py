@@ -21,7 +21,7 @@ from ..llm.trainers.llamafactory import create_llamafactory_trainer
 from ..llm.trainable.predictor import TrainableLLMPredictor, TrainableLLMPredictorConfig
 from ..llm.config import LLMRunConfig
 from ...core.protocols import ModelEvaluator, BiasModel
-from ...core.results import FoldResult, EvaluationResult
+from ...core.protocols import FoldResult, EvaluationResult
 from ...utils import fuzzy_match, fuzzy_mra, parse_multi_choice_response
 
 
