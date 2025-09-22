@@ -7,8 +7,7 @@ This module defines the complete interface hierarchy for the TsT evaluation fram
 - ModelEvaluator: Abstract base for evaluation strategies
 """
 
-from typing import Protocol, Optional, List, runtime_checkable, Literal
-from typing import Dict, Any
+from typing import Protocol, Optional, List, runtime_checkable, Literal, Dict, Any
 from abc import ABC, abstractmethod
 
 from dataclasses import dataclass, field
@@ -116,6 +115,7 @@ class EvaluationResult:
         flat_scores = [fold.score for repeat in repeat_results for fold in repeat.fold_results]
         flat_counts = [fold.test_size for repeat in repeat_results for fold in repeat.fold_results]
 
+        # TODO: not doing flat scores
         if flat_scores and flat_counts:
             overall_mean, overall_std = weighted_mean_std(flat_scores, flat_counts)
         else:
@@ -143,22 +143,6 @@ class EvaluationResult:
             feature_importances=feature_importances,
             model_metadata=model_metadata or {},
         )
-
-    def to_summary_dict(self) -> Dict[str, Any]:
-        """Convert to dictionary for summary table"""
-        return {
-            "Model": self.model_name,
-            "Format": self.model_format.upper(),
-            "Metric": self.metric_name.upper(),
-            "Zero-shot Baseline": self.zero_shot_baseline,
-            "Score": self.overall_mean,
-            "± Std": self.overall_std,
-            "Count": self.count,
-            "Repeats": self.repeats,
-            "Total Count": self.total_count,
-            "Feature Importances": self.feature_importances,
-            "Metadata": self.model_metadata,
-        }
 
 
 ########################################################

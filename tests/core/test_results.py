@@ -165,22 +165,28 @@ class TestEvaluationResult:
         assert result.count == 25 * 2  # 25 * 2 folds
         assert result.total_count == 25 * 2 * 2  # 25 * 2 folds * 2 repeats
 
-    def test_to_summary_dict(self):
+    def test_to_from_dict(self):
         """Test conversion to summary dictionary"""
+        import dataclasses
+
         repeat_results = self.create_sample_repeat_results()
 
         result = EvaluationResult.from_repeat_results(
             model_name="test_model", model_format="mc", metric_name="acc", repeat_results=repeat_results
         )
 
-        summary = result.to_summary_dict()
+        summary = dataclasses.asdict(result)
 
-        assert summary["Model"] == "test_model"
-        assert summary["Format"] == "MC"
-        assert summary["Metric"] == "ACC"
-        assert np.isclose(summary["Score"], 0.8, atol=1e-4), summary["Score"]
-        assert np.isclose(summary["± Std"], 0.0707, atol=1e-4), summary["± Std"]
-        assert summary["Count"] == 25 * 2
+        assert summary["model_name"] == "test_model"
+        assert summary["model_format"] == "MC"
+        assert summary["metric_name"] == "ACC"
+        assert np.isclose(summary["overall_mean"], 0.8, atol=1e-4), summary["overall_mean"]
+        assert np.isclose(summary["overall_std"], 0.0707, atol=1e-4), summary["overall_std"]
+        assert summary["count"] == 25 * 2
+
+        result_from_dict = EvaluationResult(**summary)
+        assert isinstance(result_from_dict, EvaluationResult)
+        assert result_from_dict == result
 
     def test_with_metadata(self):
         """Test EvaluationResult with model metadata"""

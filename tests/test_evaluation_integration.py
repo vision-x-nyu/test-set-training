@@ -11,6 +11,7 @@ import numpy as np
 
 from TsT.evaluation import run_evaluation
 from TsT.core.cross_validation import UnifiedCrossValidator, CrossValidationConfig
+from TsT.core.protocols import EvaluationResult
 
 
 class SimpleTestModel:
@@ -98,18 +99,19 @@ class TestUnifiedFrameworkIntegration:
         )
 
         # Verify results structure
-        assert isinstance(results, pd.DataFrame)
+        assert isinstance(results, list)
+        assert isinstance(results[0], EvaluationResult)
         assert len(results) == 1  # One model
-        assert "Model" in results.columns
-        assert "Score" in results.columns
-        assert "Count" in results.columns
+        assert "model_name" in results[0]
+        assert "overall_mean" in results[0]
+        assert "count" in results[0]
 
         # Verify result values
-        assert results.iloc[0]["Model"] == "simple_test"
-        assert results.iloc[0]["Count"] == 50
+        assert results[0].model_name == "simple_test"
+        assert results[0].count == 50
 
         # Score should be reasonable (model is learnable)
-        score_str = results.iloc[0]["Score"]
+        score_str = results[0].overall_mean
         if isinstance(score_str, str):
             score = float(score_str.rstrip("%")) / 100
         else:
@@ -162,8 +164,8 @@ class TestUnifiedFrameworkIntegration:
         )
 
         # Results should be identical
-        assert results1.iloc[0]["Score"] == results2.iloc[0]["Score"]
-        assert results1.iloc[0]["Count"] == results2.iloc[0]["Count"]
+        assert results1[0].overall_mean == results2[0].overall_mean
+        assert results1[0].count == results2[0].count
 
     def test_multiple_models_evaluation(self):
         """Test evaluation with multiple models"""
@@ -181,8 +183,8 @@ class TestUnifiedFrameworkIntegration:
 
         # Verify results
         assert len(results) == 2
-        assert "model_1" in results["Model"].values
-        assert "model_2" in results["Model"].values
+        assert "model_1" in results[0].model_name
+        assert "model_2" in results[1].model_name
 
     def test_error_handling(self):
         """Test that evaluation handles errors gracefully"""
@@ -199,9 +201,9 @@ class TestUnifiedFrameworkIntegration:
 
         # Should still return results (with error info)
         assert len(results) == 1
-        assert results.iloc[0]["Model"] == "broken_model"
+        assert results[0].model_name == "broken_model"
         # Score should be 0 for failed evaluation
-        assert results.iloc[0]["Score"] == 0.0
+        assert results[0].overall_mean == 0.0
 
     def test_different_target_columns(self):
         """Test evaluation with different target columns"""
@@ -241,7 +243,7 @@ class TestUnifiedFrameworkIntegration:
 
         # Should only have one result
         assert len(results) == 1
-        assert results.iloc[0]["Model"] == "keep_this"
+        assert results[0].model_name == "keep_this"
 
 
 class TestBackwardCompatibility:
@@ -276,9 +278,11 @@ class TestBackwardCompatibility:
 
             # Verify basic structure
             assert len(results) == 1
-            assert isinstance(results, pd.DataFrame)
-            assert "Score" in results.columns
-            assert results.iloc[0]["Count"] == 30
+            assert isinstance(results, list)
+            assert isinstance(results[0], EvaluationResult)
+            assert "model_name" in results[0]
+            assert "overall_mean" in results[0]
+            assert "count" in results[0]
 
         except ImportError:
             pytest.skip("Video-MME benchmark not available")
@@ -309,8 +313,8 @@ class TestBackwardCompatibility:
         # Both should succeed
         assert len(clf_results) == 1
         assert len(reg_results) == 1
-        assert clf_results.iloc[0]["Metric"] == "ACC"
-        assert reg_results.iloc[0]["Metric"] == "MRA"
+        assert clf_results[0].metric_name == "ACC"
+        assert reg_results[0].metric_name == "MRA"
 
 
 class TestPerformanceAndMemory:

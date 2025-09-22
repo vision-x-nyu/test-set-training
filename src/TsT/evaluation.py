@@ -1,5 +1,7 @@
 from typing import List, Union, Optional, Literal, Dict
+import dataclasses
 
+import numpy as np
 import pandas as pd
 from ezcolorlog import root_logger as logger
 
@@ -94,17 +96,10 @@ def run_evaluation(
             # Create error result
             results.append(_create_error_result(model, str(e)))
 
-    # Convert to summary DataFrame
-    summary_data = [r.to_summary_dict() for r in results]
-    summary = pd.DataFrame(summary_data)
-
-    # Sort by score
-    summary = summary.sort_values("Score", ascending=False)
-
     # Calculate and log overall statistics
-    _log_overall_statistics(summary, results)
+    log_overall_statistics(results)
 
-    return summary
+    return results
 
 
 # =============================================================================
@@ -129,29 +124,30 @@ def _create_error_result(model: BiasModel, error_msg: str) -> EvaluationResult:
     )
 
 
-def get_overall_eval_stats(summary: pd.DataFrame) -> Dict[str, float]:
+def get_overall_eval_stats(results: List[EvaluationResult]) -> Dict[str, float]:
     """Get overall statistics"""
-    if summary.empty:
+    if not results or len(results) == 0:
         logger.warning("No evaluation results to summarize")
         return {}
 
     # Convert percentage strings back to float for calculations
-    scores = summary["Score"]
-    counts = summary["Count"]
-    zs_baselines = summary["Zero-shot Baseline"]
+
+    scores = np.array([r.overall_mean for r in results])
+    counts = np.array([r.count for r in results])
+    zs_baselines = np.array([r.zero_shot_baseline for r in results])
 
     score_mean = scores.mean()
     score_std = scores.std()
     total_count = counts.sum()
     zs_mean = zs_baselines.mean()
     zs_std = zs_baselines.std()
-    weighted_avg, weighted_std = weighted_mean_std(scores.values, counts.values)
-    zs_weighted_avg, zs_weighted_std = weighted_mean_std(zs_baselines.values, counts.values)
+    weighted_avg, weighted_std = weighted_mean_std(scores, counts)
+    zs_weighted_avg, zs_weighted_std = weighted_mean_std(zs_baselines, counts)
 
     return dict(
+        total_count=int(total_count),
         score_mean=float(score_mean),
         score_std=float(score_std),
-        total_count=int(total_count),
         zs_mean=float(zs_mean),
         zs_std=float(zs_std),
         weighted_avg=float(weighted_avg),
@@ -161,9 +157,10 @@ def get_overall_eval_stats(summary: pd.DataFrame) -> Dict[str, float]:
     )
 
 
-def _log_overall_statistics(summary: pd.DataFrame, results: List[EvaluationResult]):
+def log_overall_statistics(results: List[EvaluationResult]):
     """Log overall evaluation statistics"""
-    overall_stats = get_overall_eval_stats(summary)
+
+    overall_stats = get_overall_eval_stats(results)
     score_mean = overall_stats["score_mean"]
     score_std = overall_stats["score_std"]
     total_count = overall_stats["total_count"]
@@ -174,12 +171,29 @@ def _log_overall_statistics(summary: pd.DataFrame, results: List[EvaluationResul
     zs_weighted_avg = overall_stats["zs_weighted_avg"]
     zs_weighted_std = overall_stats["zs_weighted_std"]
 
+    summary_df = pd.DataFrame([dataclasses.asdict(r) for r in results])
+    summary_df = summary_df.sort_values("overall_mean", ascending=False)
+    summary_df = summary_df.rename(
+        columns={
+            "model_name": "Model",
+            "model_format": "Format",
+            "metric_name": "Metric",
+            "overall_mean": "Score",
+            "overall_std": "± Std",
+            "count": "Count",
+            "repeats": "Repeats",
+            "zero_shot_baseline": "ZS Baseline",
+        }
+    )
+
     # Print pretty table
     table_summary = "\n" * 3 + "=" * 80 + "\n"
     table_summary += "UNIFIED EVALUATION SUMMARY\n"
     table_summary += "=" * 80 + "\n"
     table_summary += (
-        summary[["Model", "Format", "Metric", "Score", "± Std", "Count", "Zero-shot Baseline"]].to_string(index=False)
+        summary_df[["Model", "Format", "Metric", "Score", "± Std", "Count", "Repeats", "ZS Baseline"]].to_string(
+            index=False
+        )
         + "\n"
     )
     table_summary += "=" * 80 + "\n"

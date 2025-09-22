@@ -167,6 +167,8 @@ class TestRealBenchmarkSystemIntegration:
 
     def test_rf_evaluation_with_new_system(self):
         """Test RF evaluation workflow with new system"""
+        from TsT.core.protocols import EvaluationResult
+
         cvb = load_benchmark("cvb")
 
         # Get RF models
@@ -197,10 +199,11 @@ class TestRealBenchmarkSystemIntegration:
             )
 
             # If it succeeds, check basic structure
-            assert isinstance(results, pd.DataFrame)
+            assert isinstance(results, list)
+            assert isinstance(results[0], EvaluationResult)
             assert len(results) == 1
-            assert "Model" in results.columns
-            assert "Score" in results.columns
+            assert "model_name" in results[0]
+            assert "overall_mean" in results[0]
 
         except Exception as e:
             # Feature engineering might fail with mock data - that's okay for integration test

@@ -6,11 +6,13 @@ proper logging, result capture, and metadata management.
 """
 
 from datetime import datetime
+import dataclasses
 from pathlib import Path
 from typing import Optional
+import json
 
 from ezcolorlog import root_logger as logger
-from ..evaluation import run_evaluation
+from ..evaluation import log_overall_statistics, run_evaluation
 from ..evaluators.llm.config import LLMRunConfig
 from .utils import (
     capture_output,
@@ -78,11 +80,11 @@ def run_single_llm_experiment(
 
     success = True
     error_msg = None
-    summary = None
+    results = None
 
     try:
         with capture_output() as (stdout_capture, stderr_capture):
-            summary = run_evaluation(
+            results = run_evaluation(
                 question_models=models,
                 df_full=df_full,
                 n_splits=n_splits,
@@ -102,9 +104,11 @@ def run_single_llm_experiment(
         save_logs(stdout_capture, stderr_capture, results_dir)
 
         # Save results
-        if summary is not None:
-            results_path = results_dir / "results.csv"
-            summary.to_csv(results_path, index=False)
+        if results is not None:
+            results_path = results_dir / "results.jsonl"
+            with open(results_path, "w") as f:
+                for result in results:
+                    f.write(json.dumps(dataclasses.asdict(result)) + "\n")
             logger.info(f"Saved results to: {results_path}")
 
     except Exception as e:
@@ -144,8 +148,8 @@ def run_single_llm_experiment(
     print("EXPERIMENT SUMMARY")
     print("=" * 80)
 
-    if success and summary is not None:
-        print(summary.to_string(index=False))
+    if success and results is not None:
+        log_overall_statistics(results)
     else:
         print(f"❌ Experiment failed: {error_msg}")
 
