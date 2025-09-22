@@ -179,8 +179,8 @@ class TestRandomForestPostProcessing:
         from TsT.core.protocols import RepeatResult, FoldResult
 
         fold_results = [
-            FoldResult(1, 0.8, 20, 20),
-            FoldResult(2, 0.9, 20, 20),
+            FoldResult(1, 0.8, 20, list(range(20)), "acc"),
+            FoldResult(2, 0.9, 20, list(range(20)), "acc"),
         ]
         repeat_result = RepeatResult.from_fold_results(0, fold_results)
 
@@ -332,7 +332,7 @@ class TestLLMPostProcessing:
         """Create mock evaluation result for testing"""
         from TsT.core.protocols import RepeatResult, FoldResult
 
-        fold_results = [FoldResult(1, 0.75, 25, 25)]
+        fold_results = [FoldResult(1, 0.75, 25, list(range(25)), "acc")]
         repeat_result = RepeatResult.from_fold_results(0, fold_results)
 
         return EvaluationResult.from_repeat_results(

@@ -183,7 +183,8 @@ class LLMEvaluator(ModelEvaluator):
             fold_id=fold_id,
             score=fold_score,
             train_size=len(train_df),
-            test_size=len(test_df),
+            test_idx=list(test_df.index),
+            metric=self.model.metric,
             metadata={
                 "model_name": self.llm_config.model_name,
                 "llm_config": self.llm_config,

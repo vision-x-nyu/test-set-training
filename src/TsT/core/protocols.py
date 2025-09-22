@@ -12,6 +12,7 @@ from abc import ABC, abstractmethod
 
 from dataclasses import dataclass, field
 import pandas as pd
+import numpy as np
 from TsT.utils import weighted_mean_std
 
 
@@ -31,8 +32,9 @@ class FoldResult:
 
     fold_id: int
     score: float
-    train_size: int
-    test_idx: int
+    train_size: int  # dont need train_idx
+    test_idx: List[int]
+    metric: Metric
     metadata: Dict[str, Any] = field(default_factory=dict)
 
     @property
@@ -49,9 +51,15 @@ class RepeatResult:
     mean_score: float
     std_score: float
 
+    # idx_to_scores
+
     @property
     def total_instances(self) -> int:
         return sum(f.test_size for f in self.fold_results)
+
+    @property
+    def num_folds(self) -> int:
+        return len(self.fold_results)
 
     @classmethod
     def from_fold_results(cls, repeat_id: int, fold_results: List[FoldResult]) -> "RepeatResult":
@@ -62,6 +70,7 @@ class RepeatResult:
 
         if scores and counts:
             mean_score, std_score = weighted_mean_std(scores, counts)
+            # num_correct = np.round(mean_score @ counts)
         else:
             mean_score = 0.0
             std_score = 0.0
@@ -94,6 +103,16 @@ class EvaluationResult:
     zero_shot_baseline: float = 0.0
     feature_importances: Optional[pd.DataFrame] = None
     model_metadata: Dict[str, Any] = field(default_factory=dict)
+
+    @property
+    def fold_scores_per_repeat(self) -> np.ndarray:
+        """Get scores per repeat. Shape: (#repeats, #folds)"""
+        return np.array([[fold.score for fold in repeat.fold_results] for repeat in self.repeat_results])
+
+    @property
+    def repeat_scores(self) -> np.ndarray:
+        """Get scores per repeat. Shape: (#repeats,)"""
+        return np.array([repeat.mean_score for repeat in self.repeat_results])
 
     @classmethod
     def from_repeat_results(
@@ -143,6 +162,106 @@ class EvaluationResult:
             feature_importances=feature_importances,
             model_metadata=model_metadata or {},
         )
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "EvaluationResult":
+        """Create EvaluationResult from dictionary (e.g., loaded from JSON)"""
+        # Convert nested dictionaries back to objects
+        repeat_results = []
+        for repeat_data in data["repeat_results"]:
+            fold_results = []
+            for fold_data in repeat_data["fold_results"]:
+                fold_result = FoldResult(
+                    fold_id=int(fold_data["fold_id"]),  # Ensure Python int
+                    score=float(fold_data["score"]),  # Ensure Python float
+                    train_size=int(fold_data["train_size"]),  # Ensure Python int
+                    test_idx=[int(x) for x in fold_data["test_idx"]],  # Convert to list of Python ints
+                    metric=fold_data["metric"],
+                    metadata=fold_data.get("metadata", {}),
+                )
+                fold_results.append(fold_result)
+
+            repeat_result = RepeatResult(
+                repeat_id=int(repeat_data["repeat_id"]),  # Ensure Python int
+                fold_results=fold_results,
+                mean_score=float(repeat_data["mean_score"]),  # Ensure Python float
+                std_score=float(repeat_data["std_score"]),  # Ensure Python float
+            )
+            repeat_results.append(repeat_result)
+
+        # Handle feature_importances if present
+        feature_importances = data.get("feature_importances")
+        if feature_importances is not None:
+            feature_importances = pd.DataFrame(feature_importances)
+
+        return cls(
+            model_name=data["model_name"],
+            model_format=data["model_format"],
+            metric_name=data["metric_name"],
+            repeat_results=repeat_results,
+            overall_mean=float(data["overall_mean"]),  # Ensure Python float
+            overall_std=float(data["overall_std"]),  # Ensure Python float
+            count=int(data["count"]),  # Ensure Python int
+            repeats=int(data["repeats"]),  # Ensure Python int
+            total_count=int(data["total_count"]),  # Ensure Python int
+            zero_shot_baseline=float(data.get("zero_shot_baseline", 0.0)),  # Ensure Python float
+            feature_importances=feature_importances,
+            model_metadata=data.get("model_metadata", {}),
+        )
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert EvaluationResult to dict with proper type handling"""
+        import dataclasses
+
+        def convert_numpy_types(obj):
+            """Convert numpy types to Python native types for JSON serialization"""
+            if isinstance(obj, np.integer):
+                return int(obj)
+            elif isinstance(obj, np.floating):
+                return float(obj)
+            elif isinstance(obj, np.ndarray):
+                return obj.tolist()
+            elif isinstance(obj, dict):
+                return {key: convert_numpy_types(value) for key, value in obj.items()}
+            elif isinstance(obj, list):
+                return [convert_numpy_types(item) for item in obj]
+            else:
+                return obj
+
+        # Convert to dictionary and handle numpy types
+        result_dict = dataclasses.asdict(self)
+        result_dict = convert_numpy_types(result_dict)
+        return result_dict
+
+    def to_json(self) -> str:
+        """Convert EvaluationResult to JSON string with proper type handling"""
+        import json
+
+        return json.dumps(self.to_dict())
+
+    def save_to_file(self, filepath: str) -> None:
+        """Save EvaluationResult to a JSON file"""
+        import json
+        from pathlib import Path
+
+        result_dict = self.to_dict()
+
+        # Ensure directory exists
+        Path(filepath).parent.mkdir(parents=True, exist_ok=True)
+
+        # Write to file
+        with open(filepath, "w") as f:
+            json.dump(result_dict, f, indent=2)
+
+    @classmethod
+    def load_from_file(cls, filepath: str) -> "EvaluationResult":
+        """Load EvaluationResult from a JSON file"""
+        import json
+
+        with open(filepath, "r") as f:
+            data = json.load(f)
+
+        return cls.from_dict(data)
 
 
 ########################################################

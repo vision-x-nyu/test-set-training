@@ -81,7 +81,8 @@ class RandomForestEvaluator(ModelEvaluator):
             fold_id=fold_id,
             score=score,
             train_size=len(train_df),
-            test_size=len(test_df),
+            test_idx=test_df.index.tolist(),
+            metric=model.metric,
             metadata={
                 "estimator_params": estimator.get_params(),
                 "n_features": len(model.feature_cols),

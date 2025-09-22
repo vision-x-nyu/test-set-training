@@ -17,9 +17,9 @@ from TsT.core.protocols import EvaluationResult
 class SimpleTestModel:
     """Simple test model for integration testing"""
 
-    def __init__(self, name="simple_test"):
+    def __init__(self, name="simple_test", format="mc"):
         self.name = name
-        self.format = "mc"
+        self.format = format
         self.feature_cols = ["feature1", "feature2"]
         self.target_col_override = None
 
@@ -62,7 +62,7 @@ class SimpleTestModel:
         return df_copy
 
 
-def create_learnable_data(n_samples=100, n_classes=2, seed=42):
+def create_learnable_classification_data(n_samples=100, n_classes=2, seed=42):
     """Create synthetic data that's actually learnable"""
     np.random.seed(seed)
 
@@ -84,6 +84,18 @@ def create_learnable_data(n_samples=100, n_classes=2, seed=42):
     return df
 
 
+def create_learnable_regression_data(n_samples=100, seed=42):
+    """Create synthetic data that's actually learnable"""
+    np.random.seed(seed)
+    df = pd.DataFrame(
+        {
+            "id": range(n_samples),
+            "ground_truth": np.random.randn(n_samples),
+        }
+    )
+    return df
+
+
 class TestUnifiedFrameworkIntegration:
     """Test integration of unified evaluation framework"""
 
@@ -91,7 +103,7 @@ class TestUnifiedFrameworkIntegration:
         """Test that basic evaluation pipeline works end-to-end"""
         # Setup
         model = SimpleTestModel()
-        df = create_learnable_data(50, 4)
+        df = create_learnable_classification_data(50, 4)
 
         # Test unified framework
         results = run_evaluation(
@@ -102,27 +114,20 @@ class TestUnifiedFrameworkIntegration:
         assert isinstance(results, list)
         assert isinstance(results[0], EvaluationResult)
         assert len(results) == 1  # One model
-        assert "model_name" in results[0]
-        assert "overall_mean" in results[0]
-        assert "count" in results[0]
 
         # Verify result values
         assert results[0].model_name == "simple_test"
         assert results[0].count == 50
 
         # Score should be reasonable (model is learnable)
-        score_str = results[0].overall_mean
-        if isinstance(score_str, str):
-            score = float(score_str.rstrip("%")) / 100
-        else:
-            score = float(score_str)
+        score = results[0].overall_mean
         assert 0.0 <= score <= 1.0
 
     def test_cross_validation_with_evaluator(self):
         """Test cross-validation with UnifiedCrossValidator directly"""
         # Setup
         model = SimpleTestModel()
-        df = create_learnable_data(40, 4)
+        df = create_learnable_classification_data(40, 4)
 
         # Create cross-validator
         config = CrossValidationConfig(n_folds=2, random_state=42, verbose=False, repeats=1, show_progress=False)
@@ -147,7 +152,7 @@ class TestUnifiedFrameworkIntegration:
     def test_deterministic_results(self):
         """Test that same parameters produce same results"""
         model = SimpleTestModel()
-        df = create_learnable_data(30, 2, seed=42)
+        df = create_learnable_classification_data(30, 2, seed=42)
 
         # Run evaluation twice with same parameters
         results1 = run_evaluation(
@@ -174,7 +179,7 @@ class TestUnifiedFrameworkIntegration:
         model2 = SimpleTestModel("model_2")
         models = [model1, model2]
 
-        df = create_learnable_data(40, 2)
+        df = create_learnable_classification_data(40, 2)
 
         # Evaluate multiple models
         results = run_evaluation(
@@ -194,7 +199,7 @@ class TestUnifiedFrameworkIntegration:
                 raise ValueError("Simulated model error")
 
         model = BrokenModel("broken_model")
-        df = create_learnable_data(20, 2)
+        df = create_learnable_classification_data(20, 2)
 
         # Should handle error gracefully
         results = run_evaluation(question_models=[model], df_full=df, n_splits=2, verbose=False, mode="rf")
@@ -208,7 +213,7 @@ class TestUnifiedFrameworkIntegration:
     def test_different_target_columns(self):
         """Test evaluation with different target columns"""
         model = SimpleTestModel()
-        df = create_learnable_data(30, 2)
+        df = create_learnable_classification_data(30, 2)
 
         # Test with gt_idx
         results1 = run_evaluation(
@@ -234,7 +239,7 @@ class TestUnifiedFrameworkIntegration:
         model2 = SimpleTestModel("filter_this")
         models = [model1, model2]
 
-        df = create_learnable_data(20, 2)
+        df = create_learnable_classification_data(20, 2)
 
         # Filter to only one model
         results = run_evaluation(
@@ -246,8 +251,8 @@ class TestUnifiedFrameworkIntegration:
         assert results[0].model_name == "keep_this"
 
 
-class TestBackwardCompatibility:
-    """Test backward compatibility with existing functionality"""
+class TestCompatibility:
+    """Test compatibility with existing functionality"""
 
     def test_video_mme_integration(self):
         """Test integration with actual Video-MME models"""
@@ -280,9 +285,9 @@ class TestBackwardCompatibility:
             assert len(results) == 1
             assert isinstance(results, list)
             assert isinstance(results[0], EvaluationResult)
-            assert "model_name" in results[0]
-            assert "overall_mean" in results[0]
-            assert "count" in results[0]
+            assert hasattr(results[0], "model_name")
+            assert hasattr(results[0], "overall_mean")
+            assert hasattr(results[0], "count")
 
         except ImportError:
             pytest.skip("Video-MME benchmark not available")
@@ -296,10 +301,12 @@ class TestBackwardCompatibility:
         assert clf_model.metric == "acc"
 
         # Regression model
-        reg_model = SimpleTestModel("reg_test")
-        reg_model.format = "num"  # Change to numerical format
+        reg_model = SimpleTestModel("reg_test", format="num")
+        reg_model.format = "num"
+        assert reg_model.task == "reg"
+        assert reg_model.metric == "mra"
 
-        df = create_learnable_data(25, 2)
+        df = create_learnable_regression_data(25)
 
         # Test both
         clf_results = run_evaluation(
@@ -313,8 +320,8 @@ class TestBackwardCompatibility:
         # Both should succeed
         assert len(clf_results) == 1
         assert len(reg_results) == 1
-        assert clf_results[0].metric_name == "ACC"
-        assert reg_results[0].metric_name == "MRA"
+        assert clf_results[0].metric_name == "acc"
+        assert reg_results[0].metric_name == "mra"
 
 
 class TestPerformanceAndMemory:
@@ -325,7 +332,7 @@ class TestPerformanceAndMemory:
         import time
 
         model = SimpleTestModel()
-        df = create_learnable_data(100, 2)
+        df = create_learnable_classification_data(100, 2)
 
         # Time the evaluation
         start_time = time.time()
@@ -345,7 +352,7 @@ class TestPerformanceAndMemory:
         """Test that evaluation doesn't consume excessive memory"""
         # This is a basic smoke test - in production you'd use memory profilers
         model = SimpleTestModel()
-        df = create_learnable_data(20000, 2)
+        df = create_learnable_classification_data(20000, 2)
 
         # Should complete without memory errors
         results = run_evaluation(question_models=[model], df_full=df, n_splits=2, verbose=False, mode="rf")

@@ -113,7 +113,9 @@ def _create_error_result(model: BiasModel, error_msg: str) -> EvaluationResult:
     from .core.protocols import EvaluationResult, RepeatResult, FoldResult
 
     # Create dummy fold and repeat results
-    error_fold = FoldResult(fold_id=1, score=0.0, train_size=0, test_size=0, metadata={"error": error_msg})
+    error_fold = FoldResult(
+        fold_id=1, score=0.0, train_size=0, test_idx=[], metric="acc", metadata={"error": error_msg}
+    )
     error_repeat = RepeatResult.from_fold_results(0, [error_fold])
 
     return EvaluationResult.from_repeat_results(
