@@ -5,7 +5,7 @@ from ezcolorlog import root_logger as logger
 
 from .core.protocols import BiasModel
 from .core.cross_validation import UnifiedCrossValidator, CrossValidationConfig
-from .core.results import EvaluationResult
+from .core.protocols import EvaluationResult
 from .evaluators.llm.config import LLMRunConfig
 from .utils import weighted_mean_std
 
