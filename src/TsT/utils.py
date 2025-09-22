@@ -1,9 +1,11 @@
 import re
 import random
 from functools import lru_cache
-from typing import Any
+from typing import Any, Iterable
 import numpy as np
 import numbers
+from scipy.stats import norm
+from tqdm import trange
 
 # https://github.com/ShailChoksi/text2digits
 from text2digits import text2digits
@@ -257,3 +259,104 @@ def weighted_mean_std(scores: np.ndarray, counts: np.ndarray) -> tuple[float, fl
     wgt_var = ((counts * (scores - wgt_mean) ** 2).sum() / counts.sum()) if counts.sum() > 0 else 0
     wgt_std = wgt_var**0.5
     return wgt_mean, wgt_std
+
+
+# =============================================================================
+# CONFIDENCE INTERVALS --------------------------------------------------------
+# =============================================================================
+
+
+def wilson_ci(num_correct: int, num_samples: int, alpha: float = 0.05) -> tuple[float, tuple[float, float]]:
+    """Wilson CI (no continuity correction) on micro accuracy
+
+    NOTE: only applicable to binary classification (e.g., accuracy)
+
+    Args:
+        num_correct: number correct from ONE out-of-fold prediction per sample (possibly after averaging probs across repeats)
+        num_samples: total samples
+        alpha: significance level (default: 0.05)
+
+    Returns:
+        p: proportion correct
+        ci: tuple of lower and upper bounds of the Wilson CI
+    """
+    z = norm.ppf(1 - alpha / 2)
+    p = num_correct / num_samples  # proportion correct
+    denom = 1 + z**2 / num_samples
+    center = (p + z**2 / (2 * num_samples)) / denom
+    half = (z / denom) * np.sqrt(p * (1 - p) / num_samples + z**2 / (4 * num_samples**2))
+    ci = (center - half, center + half)
+    return p, ci
+
+
+def bootstrap_mean_ci(values: Iterable[float], B=10_000, alpha=0.05, seed=0) -> tuple[float, tuple[float, float]]:
+    """Two-sided bootstrap mean confidence interval
+
+    NOTE: applicable to any metric
+
+    Args:
+        values: array of values
+        B: number of bootstrap samples (default: 10_000)
+        alpha: significance level (default: 0.05)
+        seed: random seed (default: 0)
+
+    Returns:
+        m: mean of values
+        ci: tuple of lower and upper bounds of the bootstrap confidence interval
+    """
+    rng = np.random.default_rng(seed)
+    values = np.array(values)
+    n = len(values)
+    boots = np.empty(B)  # store bootstrap sample means
+
+    # generate B bootstrap samples by resampling w/ replacement
+    for b in trange(B, desc="Bootstrap CI"):
+        idx = rng.integers(0, n, size=n)  # n random indices w/ replacement
+        boots[b] = values[idx].mean()  # mean of bootstrap sample
+
+    # compute percentile-based confidence interval
+    lo, hi = np.percentile(boots, [100 * alpha / 2, 100 * (1 - alpha / 2)])
+    return values.mean(), (lo, hi)
+
+
+def stratified_bootstrap_mean_ci(
+    groups: Iterable[Any], values: Iterable[float], B: int = 10_000, alpha: float = 0.05, seed: int = 0
+) -> tuple[float, tuple[float, float]]:
+    """Stratified two-sided bootstrap mean confidence interval
+
+    NOTE: applicable to any metric
+
+    Args:
+        groups: array of group labels. Shape: (n,)
+        values: array of values. Shape: (n,)
+        B: number of bootstrap samples (default: 10_000)
+        alpha: significance level (default: 0.05)
+        seed: random seed (default: 0)
+
+    Returns:
+        m: mean of values
+        ci: tuple of lower and upper bounds of the stratified bootstrap confidence interval
+    """
+    rng = np.random.default_rng(seed)
+    groups = np.asarray(groups)
+    values = np.asarray(values)
+
+    assert len(groups) == len(values), (
+        f"groups and values must have the same length, got {len(groups)} and {len(values)}"
+    )
+
+    uniq = np.unique(groups)
+    boots = np.empty(B)
+
+    for b in trange(B, desc=f"Stratified Bootstrap CI ({len(uniq)} groups)"):
+        parts = []
+        # resample within each group (stratum)
+        for g in uniq:
+            idx = np.where(groups == g)[0]  # indices for this group
+            bs = rng.choice(idx, size=len(idx), replace=True)  # n random indices w/ replacement
+            parts.append(values[bs])
+        boots[b] = np.concatenate(parts).mean()  # combine groups and compute mean
+
+    # compute confidence interval from bootstrap distribution
+    lo, hi = np.percentile(boots, [100 * alpha / 2, 100 * (1 - alpha / 2)])
+    return values.mean(), (lo, hi)
