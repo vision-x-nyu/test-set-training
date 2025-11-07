@@ -2,7 +2,7 @@
 <html lang="en">
     <head>
         <title>TsT: Test-Set Stress-Test</title>
-        <link rel="icon" type="image/x-icon" href="figs/header.png">
+        <link rel="icon" type="image/x-icon" href="static/img/header.png">
 
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -150,7 +150,7 @@
                         </div>
                     </div>
                     <div class="button-container">
-                        <a href="#abstract" class="button">
+                        <a href="https://arxiv.org/abs/2511.04655" class="button">
                             <span class="icon is-small">
                                 <i class="ai ai-arxiv"></i>
                             </span>
@@ -233,7 +233,7 @@
             <p class="text">
                 We focus on <em>non-visual shortcuts</em>:
                 cases where questions can be answered correctly without using the visual input at all.
-                These shortcuts can come from natural world knowledge (e.g., “fridges are usually around 170–180cm tall”),
+                These shortcuts can come from natural world knowledge (e.g., "fridges are usually around 170–180cm tall"),
                 or from statistical quirks of the benchmark (e.g., certain answers appearing disproportionately often,
                 or specific templates almost always mapping to the same label).
                 Either way, when the goal is to measure <em>visual</em> understanding, such patterns undermine evaluation.
@@ -245,9 +245,29 @@
                         <img src="static/img/teaser.png" alt="TsT overview teaser" class="pdf-figure" style="width: auto; height: auto; border: none;" data-zoomable="" draggable="false">
                         <figcaption>
                             <strong>Figure:</strong>
-                            From “blind” shortcuts to stress-tested benchmarks.
+                            From "blind" shortcuts to stress-tested benchmarks.
                             TsT trains on the test set text in a \(k\)-fold manner to expose how much of a benchmark can be solved without vision,
                             and uses those insights to build more robust versions that truly require visual reasoning.
+                        </figcaption>
+                    </figure>
+                </d-figure>
+            </section>
+
+            <section id="bias-examples" style="margin-top: 2rem; margin-bottom: 4rem;">
+                <h2 class="text">Statistical Biases Create Non-Visual Shortcuts</h2>
+                <p class="text">
+                    To make this concrete, here are four types of statistical biases we discovered across real benchmarks.
+                    These patterns enable models to achieve high accuracy without visual reasoning:
+                </p>
+                <d-figure>
+                    <figure>
+                        <img src="static/img/bias_examples.png" alt="Statistical bias examples" class="pdf-figure" style="width: 100%; height: auto; border: none;" data-zoomable="" draggable="false">
+                        <figcaption>
+                            <strong>Figure:</strong>
+                            <strong>(a) Counting:</strong> VSI-Bench shows severe answer skew—over 50% of questions have ground truth ≤3, enabling high accuracy by always guessing "2".
+                            <strong>(b) Spatial Relation:</strong> In CV-Bench depth, certain categories like "keyboard" and "clothes" appear as the correct answer 100% of the time.
+                            <strong>(c) Appearance Order:</strong> "Clock" appears in the 4th position in 100% of VSI-Bench questions where it appears.
+                            <strong>(d) Size Estimation:</strong> Room sizes cluster around typical dimensions (log μ ≈ 17m²), making them predictable without seeing the room.
                         </figcaption>
                     </figure>
                 </d-figure>
@@ -283,6 +303,31 @@
         
             <section id="shortcuts">
                 <h1 class="text">Non-Visual Shortcuts Undermine Multimodal Evaluation</h1>
+                
+                <h3 class="text" style="margin-top: 2rem;">Knowledge-Based Shortcuts</h3>
+                <p class="text">
+                    The first category of shortcuts comes from world knowledge embedded in LLMs during pretraining.
+                    As shown below, benchmarks like MMMU benefit more from scaling the LLM backbone than from enabling vision,
+                    suggesting they rely heavily on linguistic knowledge. In contrast, VSI-Bench shows negligible gains from 
+                    LLM scaling in blind settings but substantial improvements when vision is enabled—demonstrating greater 
+                    robustness to knowledge-based shortcuts.
+                </p>
+                
+                <d-figure style="margin: 2rem 0;">
+                    <figure>
+                        <img src="static/img/blind_ov.png" alt="Knowledge-based shortcuts" class="pdf-figure" style="width: 95%; height: auto; border: none;" data-zoomable="" draggable="false">
+                        <figcaption>
+                            <strong>Figure:</strong>
+                            <strong>Knowledge-based shortcuts in multimodal benchmarks.</strong>
+                            Blind (red squares) vs. vision-enabled (blue circles) performance across LLaVA-OneVision model scales.
+                            MMMU shows substantial gains from scaling the LLM backbone (x-axis) but minimal improvement from enabling vision (y-axis),
+                            indicating reliance on linguistic knowledge. VSI-Bench demonstrates the opposite pattern—large vision gains with negligible 
+                            blind scaling—confirming robustness to knowledge-based shortcuts.
+                        </figcaption>
+                    </figure>
+                </d-figure>
+                
+                <h3 class="text" style="margin-top: 2rem;">Statistical Shortcuts</h3>
                 <p class="text">
                     Not every pattern in a dataset is a shortcut.
                     The key question is not where a pattern comes from (world statistics vs. annotation artifacts),
@@ -291,7 +336,7 @@
                     then for a vision-centric benchmark, that pattern is a problem.
                 </p>
                 <p class="text">
-                    For example, consider questions like “Which item is closest to the bed?” where “lamp”
+                    For example, consider questions like "Which item is closest to the bed?" where "lamp"
                     happens to be the correct answer far more often than chance.
                     Even if this reflects some real-world regularity, in a benchmark that is supposed to probe spatial reasoning,
                     it lets models answer correctly by leaning on text-only priors rather than the actual image.
@@ -338,12 +383,14 @@
         
                 <d-figure>
                     <figure>
-                        <img src="static/img/TsT_overview_bias_space.png" alt="Bias Space" class="pdf-figure" style="width: 50%; height: auto; border: none;" data-zoomable="" draggable="false">
-                        <img src="static/img/TsT_overview.png" alt="TsT framework overview" class="pdf-figure" style="width: 50%; height: auto; border: none;" data-zoomable="" draggable="false">
+                        <div style="display: flex; gap: 1rem; align-items: center; justify-content: center; flex-wrap: wrap;">
+                            <img src="static/img/TsT_overview_bias_space.png" alt="Bias Space" class="pdf-figure" style="width: 38%; height: auto; border: none;" data-zoomable="" draggable="false">
+                            <img src="static/img/TsT_overview.png" alt="TsT framework overview" class="pdf-figure" style="width: 58%; height: auto; border: none;" data-zoomable="" draggable="false">
+                        </div>
                         <figcaption>
                             <strong>Figure:</strong>
-                            The TsT pipeline.
-                            The test set is partitioned into \(k\) folds, a blind diagnostic model is trained on \(k{-}1\) folds and evaluated on the held-out fold,
+                            <strong>(Left)</strong> TsT directly probes biases intrinsic to the specific test set (pink region), rather than approximating them via external training data.
+                            <strong>(Right)</strong> The test set is partitioned into \(k\) folds, a blind diagnostic model is trained on \(k{-}1\) folds and evaluated on the held-out fold,
                             and this is repeated until all samples are covered.
                             Aggregating across folds yields both a global non-visual solvability estimate and per-sample bias scores \(s(x)\).
                         </figcaption>
