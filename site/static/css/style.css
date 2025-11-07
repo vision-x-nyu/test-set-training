@@ -234,7 +234,7 @@ body {
 
   .header-content h2 {
     margin-top: -0.75em; /* Reduce space between headers */
-    font-size: 2em; /* Increase font size for larger screens */
+    font-size: 1.75em; /* Increase font size for larger screens */
   }
 
   .teaser-video {
