@@ -109,7 +109,7 @@
                 <div class="header-content">
                     <h1 style="margin-top: 0px"><i>Test-Set Stress-Test (TsT)</i></h1>
                     <!-- <h2>“Train on the Test Set” ...<br> to Stress-Test Multimodal Benchmarks</h2> -->
-                    <h2>Benchmark Designers Should "Train on the Test Set"...<br> to Expose Exploitable Non-Visual Shortcuts
+                    <h2>Benchmark Designers Should "Train on the Test Set"<br> to Expose Exploitable Non-Visual Shortcuts
                     </h2>
                   
                     <p class="header-lede">
@@ -121,35 +121,35 @@
                         <img src="./static/img/icons/positioning.png" alt="Principle icon">
                         <div>
                           <strong>Principle.</strong>
-                          If a benchmark can be gamed, TsT makes you game it first to surface non-visual shortcuts.
+                          If a benchmark can be gamed, it will be, so designers should proactively try to "game" their own benchmarks first.
                         </div>
                       </div>
                       <div class="icon-item">
                         <img src="./static/img/icons/eval.svg" alt="Diagnostic icon">
                         <div>
                           <strong>TsT Diagnostic.</strong>
-                          A \(k\)-fold blind model trained on test-set text only, measuring how much of the benchmark is solvable without visuals.
+                          Fine-tuning a powerful LLM via \(k\)-fold cross-validation on exclusively the non-visual, textual inputs of the test set to unveil shortcut performance
                         </div>
                       </div>
                       <div class="icon-item">
                         <img src="./static/img/icons/data_v2.svg" alt="Interpretability icon" class="icon">
                         <div>
                           <strong>Interpretable Audit.</strong>
-                          A lightweight Random Forest version with hand-crafted features shows which lexical and structural patterns drive shortcuts.
+                          A lightweight Random Forest version (TsT-RF) with hand-crafted features shows which lexical and structural patterns drive shortcuts.
                         </div>
                       </div>
                       <div class="icon-item">
                         <img src="./static/img/icons/nn_model.svg" alt="Mitigation icon" class="icon">
                         <div>
                           <strong>Iterative Bias Pruning.</strong>
-                          Per-sample bias scores \(s(x)\) let you iteratively filter shortcut-prone questions and harden the benchmark.
+                          Per-sample bias scores \(s(x)\) enables iterative pruning of shortcut-prone questions.
                         </div>
                       </div>
                       <div class="icon-item">
                         <img src="./static/img/icons/visual.svg" alt="Benchmarks icon" class="icon">
                         <div>
                           <strong>Real Benchmarks.</strong>
-                          On VSI-Bench, CV-Bench, MMMU, and VideoMME, TsT exposes +30-point blind gains and yields a debiased VSI-Bench with a much larger vision–blind gap.
+                          On VSI-Bench, CV-Bench, MMMU, and VideoMME, TsT exposes +30% blind gains and yields a debiased VSI-Bench with a much larger vision–blind gap.
                         </div>
                       </div>
                     </div>
@@ -204,7 +204,7 @@
             <section id="abstract">
                 <h1 class="text">Abstract</h1>
                 <p class="text">
-                    Robust multimodal benchmarks are the backbone of progress in Multimodal Large Language Models (MLLMs).
+                    Robust multimodal benchmarks are the foundation of progress in Multimodal Large Language Models (MLLMs).
                     Yet we show that many modern “vision-centric” benchmarks can be <em>aced</em> by models that ignore the visual input entirely,
                     simply by exploiting non-visual shortcuts encoded in the test set’s questions, answer distributions, and templates.
                 </p>
@@ -215,8 +215,8 @@
                     <em>train on the test set</em> to probe its intrinsic vulnerabilities.
                 </p>
                 <p class="text">
-                    We introduce the <strong>Test-set Stress-Test (TsT)</strong>, which uses \(k\)-fold training on non-visual test-set information
-                    to (i) estimate a benchmark’s global non-visual solvability and (ii) assign sample-level bias scores \(s(x)\).
+                    We introduce the <strong>Test-set Stress-Test (TsT)</strong>, which uses \(k\)-fold cross-validation on non-visual test-set information
+                    to (<em>i</em>) estimate a benchmark’s global non-visual solvability and (<em>ii</em>) assign sample-level bias scores \(s(x)\).
                     We instantiate TsT with a powerful LLM-based diagnostic (TsT-LLM) and an interpretable Random Forest diagnostic (TsT-RF).
                     Finally, we propose <strong>Iterative Bias Pruning (IBP)</strong>, which uses TsT’s bias scores to iteratively filter high-bias samples
                     and construct more robust datasets.
@@ -252,9 +252,7 @@
                         <img src="static/img/teaser.png" alt="TsT overview teaser" class="pdf-figure" style="width: auto; height: auto; border: none;" data-zoomable="" draggable="false">
                         <figcaption>
                             <strong>Figure:</strong>
-                            From "blind" shortcuts to stress-tested benchmarks.
-                            TsT trains on the test set text in a \(k\)-fold manner to expose how much of a benchmark can be solved without vision,
-                            and uses those insights to build more robust versions that truly require visual reasoning.
+                            The Evolving Landscape of Visual Understanding Benchmarks. As benchmarks evolved from controlled, narrow tasks to open-ended VQA, they gained expressivity but became vulnerable to non-visual shortcuts. Language-driven evaluation enables flexible querying but risks models exploiting linguistic patterns rather than visual understanding.
                         </figcaption>
                     </figure>
                 </d-figure>
@@ -328,8 +326,7 @@
                             <strong>Knowledge-based shortcuts in multimodal benchmarks.</strong>
                             Blind (red squares) vs. vision-enabled (blue circles) performance across LLaVA-OneVision model scales.
                             MMMU shows substantial gains from scaling the LLM backbone (x-axis) but minimal improvement from enabling vision (y-axis),
-                            indicating reliance on linguistic knowledge. VSI-Bench demonstrates the opposite pattern—large vision gains with negligible 
-                            blind scaling—confirming robustness to knowledge-based shortcuts.
+                            indicating reliance on linguistic knowledge. VSI-Bench demonstrates the opposite pattern—large vision gains with negligible blind scaling—confirming robustness to knowledge-based shortcuts. VideoMME shows roughly equal gains from both sources, while CV-Bench benefits more from vision but still exhibits significant gains from LLM scaling.
                         </figcaption>
                     </figure>
                 </d-figure>
@@ -426,7 +423,7 @@
             <section id="tst-variants">
                 <h1 class="text">TsT-LLM and TsT-RF: Two Complementary Diagnostics</h1>
                 <p class="text">
-                    We instantiate TsT with two complementary diagnostics:
+                    We instantiate TsT with two complementary diagnostics here.
                 </p>
                 <h3 class="text">TsT-LLM: Power from the Same Model Class</h3>
                 <p class="text">
@@ -458,7 +455,7 @@
             <section id="ibp">
                 <h1 class="text">Iterative Bias Pruning (IBP)</h1>
                 <p class="text">
-                    TsT does more than say “your benchmark has shortcuts.”
+                    TsT does more than say “your benchmark has shortcuts”.
                     Its sample-level bias scores \(s(x)\) provide a <em>ranking</em> of which questions are most vulnerable.
                     <strong>Iterative Bias Pruning (IBP)</strong> turns this into a systematic procedure for improving a benchmark.
                 </p>
