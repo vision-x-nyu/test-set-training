@@ -111,82 +111,78 @@
                     <!-- <h2>“Train on the Test Set” ...<br> to Stress-Test Multimodal Benchmarks</h2> -->
                     <h2>Benchmark Designers Should "Train on the Test Set"<br> to Expose Exploitable Non-Visual Shortcuts
                     </h2>
-                  
                     <p class="header-lede">
-                      TsT is a “train on the test set” stress-test for multimodal benchmarks: it reveals how much can be solved without vision and helps rebuild datasets that truly require visual reasoning.
+                        <!-- TsT reveals how much can be solved without vision and helps designers ensure that their benchmarks truly require visual reasoning. -->
+                        TsT helps multimodal benchmark designers <i>diagnose</i> and <i>mitigate</i> non-visual shortcuts in their benchmarks.
                     </p>
-                  
                     <div class="icon-container">
-                      <div class="icon-item">
-                        <img src="./static/img/icons/positioning.png" alt="Principle icon">
-                        <div>
-                          <strong>Principle.</strong>
-                          If a benchmark can be gamed, it will be, so designers should proactively try to "game" their own benchmarks first.
+                        <div class="icon-item">
+                            <img src="./static/img/icons/positioning.png" alt="Principle icon">
+                            <div>
+                                <strong>Principle.</strong>
+                                If a benchmark can be gamed, it will be, so designers should proactively try to "game" their own benchmarks first.
+                            </div>
                         </div>
-                      </div>
-                      <div class="icon-item">
-                        <img src="./static/img/icons/eval.svg" alt="Diagnostic icon">
-                        <div>
-                          <strong>TsT Diagnostic.</strong>
-                          Fine-tuning a powerful LLM via \(k\)-fold cross-validation on exclusively the non-visual, textual inputs of the test set to unveil shortcut performance
+                        <div class="icon-item">
+                            <img src="./static/img/icons/eval.svg" alt="Diagnostic icon">
+                            <div>
+                                <strong>TsT Diagnostic.</strong>
+                                Fine-tuning a powerful LLM via \(k\)-fold cross-validation on exclusively the non-visual, textual inputs of the test set to unveil shortcut performance
+                            </div>
                         </div>
-                      </div>
-                      <div class="icon-item">
-                        <img src="./static/img/icons/data_v2.svg" alt="Interpretability icon" class="icon">
-                        <div>
-                          <strong>Interpretable Audit.</strong>
-                          A lightweight Random Forest version (TsT-RF) with hand-crafted features shows which lexical and structural patterns drive shortcuts.
+                        <div class="icon-item">
+                            <img src="./static/img/icons/data_v2.svg" alt="Interpretability icon" class="icon">
+                            <div>
+                                <strong>Interpretable Audit.</strong>
+                                A lightweight Random Forest version (TsT-RF) with hand-crafted features shows which lexical and structural patterns drive shortcuts.
+                            </div>
                         </div>
-                      </div>
-                      <div class="icon-item">
-                        <img src="./static/img/icons/nn_model.svg" alt="Mitigation icon" class="icon">
-                        <div>
-                          <strong>Iterative Bias Pruning.</strong>
-                          Per-sample bias scores \(s(x)\) enables iterative pruning of shortcut-prone questions.
+                        <div class="icon-item">
+                            <img src="./static/img/icons/nn_model.svg" alt="Mitigation icon" class="icon">
+                            <div>
+                                <strong>Iterative Bias Pruning.</strong>
+                                Per-sample bias scores \(s(x)\) enables iterative pruning of shortcut-prone questions.
+                            </div>
                         </div>
-                      </div>
-                      <div class="icon-item">
-                        <img src="./static/img/icons/visual.svg" alt="Benchmarks icon" class="icon">
-                        <div>
-                          <strong>Real Benchmarks.</strong>
-                          On VSI-Bench, CV-Bench, MMMU, and VideoMME, TsT exposes +30% blind gains and yields a debiased VSI-Bench with a much larger vision–blind gap.
+                        <div class="icon-item">
+                            <img src="./static/img/icons/visual.svg" alt="Benchmarks icon" class="icon">
+                            <div>
+                                <strong>Real Benchmarks.</strong>
+                                On VSI-Bench, CV-Bench, MMMU, and VideoMME, TsT exposes +30% blind gains and yields a debiased VSI-Bench with a much larger vision-blind gap.
+                            </div>
                         </div>
-                      </div>
                     </div>
-                  
                     <div class="button-container">
-                      <a href="https://arxiv.org/abs/2511.04655" class="button">
-                        <span class="icon is-small">
-                          <i class="ai ai-arxiv"></i>
-                        </span>
-                        <span>arXiv</span>
-                      </a>
-                      <a href="https://github.com/vision-x-nyu/test-set-training" class="button" target="_blank">
-                        <span class="icon is-small">
-                          <i class="fab fa-github"></i>
-                        </span>
-                        <span>Code</span>
-                      </a>
-                      
-                      <a href="https://hf.co/datasets/nyu-visionx/VSI-Bench" class="button" target="_blank">
-                        <span class="icon is-small">
-                          <img src="https://huggingface.co/front/assets/huggingface_logo-noborder.svg"
-                               alt="Hugging Face logo" style="height: 1em;">
-                        </span>
-                        <span>VSI-Bench (Debiased)</span>
-                      </a>
+                        <a href="https://arxiv.org/abs/2511.04655" class="button">
+                            <span class="icon is-small">
+                                <i class="ai ai-arxiv"></i>
+                            </span>
+                            <span>arXiv</span>
+                        </a>
+                        <a href="https://github.com/vision-x-nyu/test-set-training" class="button" target="_blank">
+                            <span class="icon is-small">
+                                <i class="fab fa-github"></i>
+                            </span>
+                            <span>Code</span>
+                        </a>
+                        
+                        <a href="https://hf.co/datasets/nyu-visionx/VSI-Bench" class="button" target="_blank">
+                            <span class="icon is-small">
+                                <img src="https://huggingface.co/front/assets/huggingface_logo-noborder.svg"
+                                    alt="Hugging Face logo" style="height: 1em;">
+                            </span>
+                            <span>VSI-Bench (Debiased)</span>
+                        </a>
 
-                      <a href="https://hf.co/datasets/nyu-visionx/VSI-Train-10k" class="button" target="_blank">
-                        <span class="icon is-small">
-                          <img src="https://huggingface.co/front/assets/huggingface_logo-noborder.svg"
-                               alt="Hugging Face logo" style="height: 1em;">
-                        </span>
-                        <span>VSI-Train-10k</span>
-                      </a>
-                     
+                        <a href="https://hf.co/datasets/nyu-visionx/VSI-Train-10k" class="button" target="_blank">
+                            <span class="icon is-small">
+                                <img src="https://huggingface.co/front/assets/huggingface_logo-noborder.svg"
+                                    alt="Hugging Face logo" style="height: 1em;">
+                            </span>
+                            <span>VSI-Train-10k</span>
+                        </a>
                     </div>
-                  </div>
-                  
+                </div>
                 <div class="header-image">
                     <img src="static/img/header.png" class="header-hero-image" alt="Test-set Stress-Test illustration" draggable="false" loading="eager" fetchpriority="high" decoding="async">
                 </div>
