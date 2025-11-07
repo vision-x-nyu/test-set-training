@@ -1,0 +1,585 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <title>Towards Spatial Supersensing in Video</title>
+        <link rel="icon" type="image/x-icon" href="figs/header.png">
+
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <!-- Open Graph -->
+        <meta property="og:url" content="https://cambrian-s.github.io/" />
+        <meta property="og:image" content="https://cambrian-s.github.io/new_header.webp" />
+        <meta property="og:title" content="Spatial Supersensing" />
+        <meta property="og:description" content="We introduce VSI-Super and predictive sensing for continual spatial intelligence in multimodal models." />
+
+        <!-- Twitter -->
+        <meta name="twitter:url" content="https://cambrian-s.github.io/" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:image" content="https://cambrian-s.github.io/new_header.webp" />
+        <meta name="twitter:title" content="Spatial Supersensing" />
+        <meta name="twitter:description" content="We introduce VSI-Super and predictive sensing for continual spatial intelligence in multimodal models." />
+
+        <script src="./static/js/distill_template.v2.js"></script>
+        <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+        <script src="https://d3js.org/d3.v5.min.js"></script>
+        <script src="https://d3js.org/d3-collection.v1.min.js"></script>
+        <script src="https://rawgit.com/nstrayer/slid3r/master/dist/slid3r.js"></script>
+
+        <script defer="" src="./static/js/hider.js"></script>
+        <script src="./static/js/image_interact.js"></script>
+        <script src="./static/js/switch_videos.js"></script>
+
+        <link rel="preload" as="image" href="figs/new_header.png" fetchpriority="high">
+        <link rel="stylesheet" href="./static/css/style.css">
+        <link rel="stylesheet" href="./static/css/fontawesome.all.min.css">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.10.2/dist/katex.min.css" integrity="sha384-yFRtMMDnQtDRO8rLpMIKrtPCD5jdktao2TV19YiZYWMDkUR5GQZR/NOVTdquEx1j" crossorigin="anonymous">
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.10.2/dist/katex.min.js" integrity="sha384-9Nhn55MVVN0/4OFx7EE5kpFBPsEMZxKTCnA+4fqDmg12eCTqGi6+BB2LjY8brQxJ" crossorigin="anonymous"></script>
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.10.2/dist/contrib/auto-render.min.js" integrity="sha384-kWPLUVMOks5AQFrykwIup5lo0m3iMkkHrD0uJ4H5cjeGihAutqP0yW0J6dpFiVkI" crossorigin="anonymous"
+            onload="renderMathInElement(document.body);"></script>
+        <script defer src="./static/js/fontawesome.all.min.js"></script>
+
+        <!-- medium zoom -->
+        <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+        <script defer src="./static/js/medium-zoom.min.js"></script>
+        
+        <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+
+        <script defer src="./static/js/zoom.js"></script>
+        <script>
+            function toggleAnswer(answerId, element) {
+                var answerDiv = document.getElementById(answerId);
+                if (answerDiv.style.display === "none" || answerDiv.style.display === "") {
+                    answerDiv.style.display = "block";
+                    element.textContent = "Click to hide answer";
+                } else {
+                    answerDiv.style.display = "none";
+                    element.textContent = "Click to view Ground Truth";
+                }
+            }
+            
+            // Set default playback speed to 2x for video_46
+            document.addEventListener('DOMContentLoaded', function() {
+                var video46 = document.getElementById('video_46');
+                if (video46) {
+                    video46.addEventListener('loadedmetadata', function() {
+                        this.playbackRate = 2.0;
+                    });
+                    // Also set it immediately if video is already loaded
+                    if (video46.readyState >= 1) {
+                        video46.playbackRate = 2.0;
+                    }
+                }
+            });
+        </script>
+        <style>
+            .authors a,
+            .authors a * {
+                text-decoration: none !important;
+                border-bottom: none !important;
+                text-decoration-line: none !important;
+                text-decoration-style: none !important;
+                text-decoration-color: transparent !important;
+            }
+            .authors a:visited,
+            .authors a:focus,
+            .authors a:active,
+            .authors a:visited *,
+            .authors a:focus *,
+            .authors a:active * {
+                text-decoration: none !important;
+                border-bottom: none !important;
+                text-decoration-line: none !important;
+                text-decoration-style: none !important;
+                text-decoration-color: transparent !important;
+            }
+            .authors a:hover,
+            .authors a:hover * {
+                color: #007bff !important;
+                text-decoration: underline !important;
+                text-decoration-line: underline !important;
+                text-decoration-style: solid !important;
+                text-decoration-color: #007bff !important;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="header-wrapper">
+            <div class="header-container" id="header-container">
+                <div class="header-content">
+                    <h1 style="margin-top: 0px"><i>Test-Set Stress-Test (TsT)</i></h1>
+                    <h2>Benchmark Designers Should “Train on the Test Set”</h2>
+                    <p class="header-lede">
+                        Test-set Stress-Test (TsT) is a diagnostic and debiasing framework that literally “trains on the test set” — in a controlled way — to expose exploitable non-visual shortcuts in multimodal benchmarks and turn illusionary progress into genuine visual evaluation.
+                    </p>
+                    <div class="icon-container">
+                        <div class="icon-item">
+                            <img src="./static/img/icons/positioning.png" alt="Principle icon">
+                            <div>
+                                <strong>Principle.</strong>
+                                If a benchmark <em>can</em> be gamed, it <em>will</em> be. TsT argues that designers should proactively try to game their own test sets to uncover non-visual shortcuts before models in the wild do.
+                            </div>
+                        </div>
+                        <div class="icon-item">
+                            <img src="./static/img/icons/eval.svg" alt="Diagnostic icon">
+                            <div>
+                                <strong>TsT Diagnostic.</strong>
+                                We introduce the <em>Test-set Stress-Test</em>: a \(k\)-fold diagnostic that trains a <em>blind</em> model on test-set text only to quantify how much of a benchmark can be solved without ever looking at the visuals.
+                            </div>
+                        </div>
+                        <div class="icon-item">
+                            <img src="./static/img/icons/data_v2.svg" alt="Interpretability icon" class="icon">
+                            <div>
+                                <strong>Interpretable Audit.</strong>
+                                Alongside an LLM-based TsT, a lightweight Random Forest variant on hand-crafted features reveals which lexical and structural patterns drive shortcut behavior.
+                            </div>
+                        </div>
+                        <div class="icon-item">
+                            <img src="./static/img/icons/nn_model.svg" alt="Mitigation icon" class="icon">
+                            <div>
+                                <strong>Iterative Bias Pruning.</strong>
+                                We introduce <em>Iterative Bias Pruning</em> (IBP), which uses TsT’s sample-level bias scores \(s(x)\) to iteratively remove the most shortcut-prone questions and construct more robust benchmarks.
+                            </div>
+                        </div>
+                        <div class="icon-item">
+                            <img src="./static/img/icons/visual.svg" alt="Benchmarks icon" class="icon">
+                            <div>
+                                <strong>Real Benchmarks.</strong>
+                                Applying TsT to VSI-Bench, CV-Bench, MMMU, and VideoMME reveals up to <strong>+33 point</strong> gains in blind accuracy from learning test-set patterns alone, and yields a debiased variant of VSI-Bench with a much larger vision–blind gap.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="button-container">
+                        <a href="#abstract" class="button">
+                            <span class="icon is-small">
+                                <i class="ai ai-arxiv"></i>
+                            </span>
+                            <span>arXiv</span>
+                        </a>
+                        <a href="https://github.com/vision-x-nyu/test-set-training" class="button" target="_blank">
+                            <span class="icon is-small">
+                                <i class="fab fa-github"></i>
+                            </span>
+                            <span>Code</span>
+                        </a>
+                        <a href="https://hf.co/datasets/nyu-visionx/VSI-Bench-Debiased" class="button" target="_blank">
+                            <span class="icon is-small">
+                                <img src="https://huggingface.co/front/assets/huggingface_logo-noborder.svg" alt="Hugging Face logo" style="height: 1em;">
+                            </span>
+                            <span>VSI-Bench-Debiased</span>
+                        </a>
+                    </div>
+                </div>
+                <div class="header-image">
+                    <img src="static/img/header.png" class="header-hero-image" alt="Test-set Stress-Test illustration" draggable="false" loading="eager" fetchpriority="high" decoding="async">
+                </div>
+            </div>
+        </div>
+        
+        <d-article>
+            <div class="byline">
+                <div class="byline-container">
+                    <div class="authors" style="text-align: center; margin-bottom: 1rem;">
+                        <div style="margin-bottom: 0.5rem;">
+                            <a href="https://ellisbrown.github.io/" target="_blank" style="color: inherit; text-decoration: none !important;"><span class="author-name">Ellis Brown</span></a>,
+                            <a href="https://jihanyang.github.io/" target="_blank" style="color: inherit; text-decoration: none !important;"><span class="author-name">Jihan Yang</span></a>,
+                            <a href="https://github.com/vealocia" target="_blank" style="color: inherit; text-decoration: none !important;"><span class="author-name">Shusheng Yang</span></a>,
+                            <a href="https://cs.nyu.edu/~fergus/" target="_blank" style="color: inherit; text-decoration: none !important;"><span class="author-name">Rob Fergus</span></a>,
+                            <a href="https://www.sainingxie.com/" target="_blank" style="color: inherit; text-decoration: none !important;"><span class="author-name">Saining Xie</span></a>
+                        </div>
+                    </div>
+                    <div class="affiliations" style="text-align: center; font-size: 1.1rem; color: #666;">
+                        <span>New York University</span>
+                    </div>
+                </div>
+            </div>
+        
+            <section id="abstract">
+                <h1 class="text">Abstract</h1>
+                <p class="text">
+                    Robust multimodal benchmarks are the backbone of progress in Multimodal Large Language Models (MLLMs).
+                    Yet we show that many modern “vision-centric” benchmarks can be <em>aced</em> by models that ignore the visual input entirely,
+                    simply by exploiting non-visual shortcuts encoded in the test set’s questions, answer distributions, and templates.
+                </p>
+                <p class="text">
+                    We advocate a simple principle for benchmark design:
+                    <strong>if a benchmark can be gamed, it will be</strong>.
+                    Rather than hoping blind baselines remain low, we propose that benchmark designers should actively
+                    <em>train on the test set</em> to probe its intrinsic vulnerabilities.
+                </p>
+                <p class="text">
+                    We introduce the <strong>Test-set Stress-Test (TsT)</strong>, which uses \(k\)-fold training on non-visual test-set information
+                    to (i) estimate a benchmark’s global non-visual solvability and (ii) assign sample-level bias scores \(s(x)\).
+                    We instantiate TsT with a powerful LLM-based diagnostic (TsT-LLM) and an interpretable Random Forest diagnostic (TsT-RF).
+                    Finally, we propose <strong>Iterative Bias Pruning (IBP)</strong>, which uses TsT’s bias scores to iteratively filter high-bias samples
+                    and construct more robust datasets.
+                </p>
+                <p class="text">
+                    Applied to four widely used benchmarks&mdash;VSI-Bench, CV-Bench, MMMU, and VideoMME&mdash;TsT reveals
+                    <strong>pervasive non-visual shortcuts</strong>, including gains of more than <strong>+30 percentage points</strong> in blind accuracy
+                    by learning test-set patterns alone. As a case study, we use TsT + IBP to create a debiased variant of VSI-Bench that
+                    substantially widens the vision–blind performance gap and better compels genuine visual reasoning.
+                </p>
+            </section>
+        
+            <h1 class="text">Overview</h1>
+            <p class="text">
+                Modern multimodal benchmarks have evolved from tightly controlled visual tasks to open-ended question-answering
+                over images and videos. This increased expressivity comes with a hidden cost:
+                <strong>it is much harder to know what is actually being measured</strong>.
+                A model can score highly by exploiting world knowledge and textual regularities,
+                without truly understanding the visual content.
+            </p>
+            <p class="text">
+                We focus on <em>non-visual shortcuts</em>:
+                cases where questions can be answered correctly without using the visual input at all.
+                These shortcuts can come from natural world knowledge (e.g., “fridges are usually around 170–180cm tall”),
+                or from statistical quirks of the benchmark (e.g., certain answers appearing disproportionately often,
+                or specific templates almost always mapping to the same label).
+                Either way, when the goal is to measure <em>visual</em> understanding, such patterns undermine evaluation.
+            </p>
+        
+            <section id="teaser" style="margin-top: 2rem; margin-bottom: 4rem;">
+                <d-figure>
+                    <figure>
+                        <img src="static/img/teaser.png" alt="TsT overview teaser" class="pdf-figure" style="width: auto; height: auto; border: none;" data-zoomable="" draggable="false">
+                        <figcaption>
+                            <strong>Figure:</strong>
+                            From “blind” shortcuts to stress-tested benchmarks.
+                            TsT trains on the test set text in a \(k\)-fold manner to expose how much of a benchmark can be solved without vision,
+                            and uses those insights to build more robust versions that truly require visual reasoning.
+                        </figcaption>
+                    </figure>
+                </d-figure>
+            </section>
+        
+            <ul class="text">
+                <li>
+                    <strong>Definition of non-visual shortcuts.</strong>
+                    We formalize when a learnable pattern counts as an <em>exploitable shortcut</em>:
+                    whenever it allows models to bypass the visual modality in a benchmark intended to measure visual understanding.
+                </li>
+                <li>
+                    <strong>Test-set Stress-Test (TsT).</strong>
+                    We propose training a blind diagnostic model directly on the test set (via \(k\)-fold cross-validation)
+                    to <em>quantify</em> how much of the benchmark can be solved from non-visual signals alone.
+                </li>
+                <li>
+                    <strong>Sample-level bias scores.</strong>
+                    TsT yields per-question scores \(s(x)\) indicating how reliably each sample can be answered without vision,
+                    providing a concrete target for mitigation.
+                </li>
+                <li>
+                    <strong>Iterative Bias Pruning.</strong>
+                    Using \(s(x)\), IBP iteratively filters high-bias samples, re-diagnoses the remaining dataset,
+                    and repeats until non-visual shortcuts are substantially reduced.
+                </li>
+                <li>
+                    <strong>Case study on real benchmarks.</strong>
+                    Across VSI-Bench, CV-Bench, MMMU, and VideoMME, TsT exposes large gains in blind accuracy
+                    (up to +33 points), and IBP produces a debiased VSI-Bench variant that better isolates visual reasoning.
+                </li>
+            </ul>
+        
+            <section id="shortcuts">
+                <h1 class="text">Non-Visual Shortcuts Undermine Multimodal Evaluation</h1>
+                <p class="text">
+                    Not every pattern in a dataset is a shortcut.
+                    The key question is not where a pattern comes from (world statistics vs. annotation artifacts),
+                    but what <em>effect</em> it has on the evaluation.
+                    If a model can exploit a pattern to answer correctly without using the visual signal,
+                    then for a vision-centric benchmark, that pattern is a problem.
+                </p>
+                <p class="text">
+                    For example, consider questions like “Which item is closest to the bed?” where “lamp”
+                    happens to be the correct answer far more often than chance.
+                    Even if this reflects some real-world regularity, in a benchmark that is supposed to probe spatial reasoning,
+                    it lets models answer correctly by leaning on text-only priors rather than the actual image.
+                </p>
+        
+                <div style="margin: 2rem auto; max-width: auto; padding: 1.5rem; background-color: #f5f5f5; border: 2px solid #008080; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+                    <p style="margin: 0; color: #000; font-size: 1.05em; line-height: 1.6;">
+                        <i class="fas fa-bookmark" style="color: #000; margin-right: 10px;"></i>
+                        <strong>Litmus test:</strong>
+                        if a blind model can reach high accuracy on a “vision” benchmark, its scores no longer reliably reflect visual understanding.
+                    </p>
+                </div>
+        
+                <p class="text">
+                    We distinguish between two failure modes:
+                </p>
+                <ul class="text">
+                    <li>
+                        <strong>Training failures:</strong>
+                        biased or insufficient training data prevent models from learning the intended capability,
+                        even if the test set is well-designed.
+                    </li>
+                    <li>
+                        <strong>Evaluation failures:</strong>
+                        the test set itself contains patterns that allow models to score well for the wrong reasons,
+                        regardless of how they were trained.
+                    </li>
+                </ul>
+                <p class="text">
+                    TsT specifically targets <em>evaluation failures</em>:
+                    it asks how much of the test set can be solved by learning patterns in the test questions and answers alone.
+                </p>
+            </section>
+        
+            <section id="tst-framework">
+                <h1 class="text">The Test-set Stress-Test (TsT) Framework</h1>
+                <p class="text">
+                    At a high level, TsT performs \(k\)-fold cross-validation directly on the benchmark’s test set,
+                    using <em>only non-visual information</em> (text, metadata, templates).
+                    For each fold, we train a blind diagnostic model on the remaining folds and evaluate it on the held-out fold.
+                    Every test example is thus predicted by a model that has not seen that example during training,
+                    but <em>has</em> seen the rest of the test set.
+                </p>
+        
+                <d-figure>
+                    <figure>
+                        <img src="static/img/TsT_overview_bias_space.png" alt="Bias Space" class="pdf-figure" style="width: 50%; height: auto; border: none;" data-zoomable="" draggable="false">
+                        <img src="static/img/TsT_overview.png" alt="TsT framework overview" class="pdf-figure" style="width: 50%; height: auto; border: none;" data-zoomable="" draggable="false">
+                        <figcaption>
+                            <strong>Figure:</strong>
+                            The TsT pipeline.
+                            The test set is partitioned into \(k\) folds, a blind diagnostic model is trained on \(k{-}1\) folds and evaluated on the held-out fold,
+                            and this is repeated until all samples are covered.
+                            Aggregating across folds yields both a global non-visual solvability estimate and per-sample bias scores \(s(x)\).
+                        </figcaption>
+                    </figure>
+                </d-figure>
+        
+                <p class="text">
+                    TsT produces two key outputs:
+                </p>
+                <ul class="text">
+                    <li>
+                        <strong>TsT accuracy.</strong>
+                        The overall accuracy of the blind diagnostic across all folds.
+                        High TsT accuracy means a large fraction of the benchmark is solveable from non-visual signals alone,
+                        implying strong exploitable shortcuts.
+                    </li>
+                    <li>
+                        <strong>Sample-level bias score \(s(x)\).</strong>
+                        For each sample, \(s(x)\) is the empirical probability that TsT predicts the correct answer
+                        when that sample is in the validation fold.
+                        High \(s(x)\) indicates samples that are consistently answerable without vision and are prime candidates for pruning or rewriting.
+                    </li>
+                </ul>
+            </section>
+        
+            <section id="tst-variants">
+                <h1 class="text">TsT-LLM and TsT-RF: Two Complementary Diagnostics</h1>
+                <p class="text">
+                    We instantiate TsT with two complementary diagnostics:
+                </p>
+                <h3 class="text">TsT-LLM: Power from the Same Model Class</h3>
+                <p class="text">
+                    <strong>TsT-LLM</strong> uses a strong language model (e.g., Qwen2.5-7B) as the diagnostic.
+                    For each fold, we LoRA-tune the LLM on question-only inputs from the training folds
+                    and evaluate on held-out questions.
+                    This requires no hand-designed features and can capture both simple statistical patterns and complex knowledge-based shortcuts.
+                </p>
+                <p class="text">
+                    On template-based benchmarks like CV-Bench and VSI-Bench, TsT-LLM dramatically increases blind accuracy:
+                    from 40.1&nbsp;&rarr;&nbsp;73.4 on CV-Bench and 25.0&nbsp;&rarr;&nbsp;56.4 on VSI-Bench,
+                    revealing <strong>+33.3</strong> and <strong>+31.4</strong> point gains purely from learning test-set text.
+                    Even on more heterogeneous benchmarks like MMMU and VideoMME, TsT-LLM finds sizeable gains of +8.6 and +6.4 points.
+                </p>
+        
+                <h3 class="text">TsT-RF: Fast and Interpretable</h3>
+                <p class="text">
+                    <strong>TsT-RF</strong> uses a Random Forest classifier trained on lightweight, human-interpretable features
+                    (e.g., answer frequencies, template IDs, question length, lexical indicators).
+                    While less expressive than TsT-LLM, it is CPU-friendly and provides direct insight into <em>which</em> patterns
+                    the diagnostic is exploiting, via feature importances.
+                </p>
+                <p class="text">
+                    Together, TsT-LLM and TsT-RF deliver both strong detection of shortcut behavior and actionable explanations
+                    of how benchmark structure contributes to non-visual solvability.
+                </p>
+            </section>
+        
+            <section id="ibp">
+                <h1 class="text">Iterative Bias Pruning (IBP)</h1>
+                <p class="text">
+                    TsT does more than say “your benchmark has shortcuts.”
+                    Its sample-level bias scores \(s(x)\) provide a <em>ranking</em> of which questions are most vulnerable.
+                    <strong>Iterative Bias Pruning (IBP)</strong> turns this into a systematic procedure for improving a benchmark.
+                </p>
+        
+                <d-figure>
+                    <figure>
+                        <!-- TODO: replace with IBP algorithm / visualization figure -->
+                        <img src="static/img/IBP.png" alt="Iterative Bias Pruning overview" class="pdf-figure" style="width: 100%; height: auto; border: none;" data-zoomable="" draggable="false">
+                        <figcaption>
+                            <strong>Figure:</strong>
+                            IBP loop.
+                            At each iteration, TsT is re-run to compute \(s(x)\) on the current dataset,
+                            a batch of the most shortcut-prone samples is removed or revised,
+                            and the process repeats until non-visual solvability drops below a threshold or a removal budget is reached.
+                        </figcaption>
+                    </figure>
+                </d-figure>
+        
+                <p class="text">
+                    Concretely, IBP:
+                </p>
+                <ul class="text">
+                    <li>Runs TsT to compute \(s(x)\) for all samples in the dataset.</li>
+                    <li>Removes (or rewrites) a batch of the highest-\(s(x)\) samples.</li>
+                    <li>Repeats diagnosis on the remaining dataset, stopping early when all \(s(x)\) fall below a tolerance.</li>
+                </ul>
+                <p class="text">
+                    IBP is agnostic to the specific diagnostic (TsT-LLM or TsT-RF) and to the mitigation action
+                    (pruning, rewriting, rebalancing). In this work, we focus on pruning as a proof-of-concept.
+                </p>
+            </section>
+        
+            <section id="case-study">
+                <h1 class="text">Case Study: Debiasing VSI-Bench</h1>
+                <p class="text">
+                    As a concrete demonstration, we apply TsT + IBP to <strong>VSI-Bench</strong>, a spatial reasoning benchmark.
+                    TsT-LLM shows that a blind model can gain over 30 points of accuracy by training on test-set questions alone,
+                    indicating strong non-visual shortcuts.
+                </p>
+                <p class="text">
+                    IBP uses TsT-RF bias scores to prune shortcut-prone questions and produces a <strong>VSI-Bench-Debiased</strong> variant.
+                    We then re-evaluate LLaVA-Video-7B before and after fine-tuning on additional in-distribution data:
+                </p>
+        
+                <div class="table-container" style="margin: 1.5rem auto;">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th class="tb-hdr"></th>
+                                <th class="tb-hdr">Vis.</th>
+                                <th class="tb-hdr">Blind</th>
+                                <th class="tb-hdr">&Delta;<sub>\(V-B\)</sub></th>
+                                <th class="tb-hdr">Vis. (Debiased)</th>
+                                <th class="tb-hdr">Blind (Debiased)</th>
+                                <th class="tb-hdr">&Delta;<sub>\(V-B\)</sub> (Debiased)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>LLaVA-Video 7B (base)</td>
+                                <td>36.7</td>
+                                <td>25.9</td>
+                                <td><em>10.8</em></td>
+                                <td>31.3</td>
+                                <td>20.3</td>
+                                <td><em>11.0</em></td>
+                            </tr>
+                            <tr>
+                                <td>+ VSI-Train-10k FT</td>
+                                <td>57.1</td>
+                                <td>44.7</td>
+                                <td><em>12.4</em></td>
+                                <td>48.7</td>
+                                <td>32.0</td>
+                                <td><em>16.6</em></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <figcaption style="text-align: center; margin-top: 0.5rem;">
+                        <strong>Table:</strong>
+                        On the original VSI-Bench, fine-tuning boosts both vision and blind scores,
+                        masking how much progress is due to text-only shortcuts.
+                        On VSI-Bench-Debiased, the blind score falls more sharply,
+                        creating a significantly larger vision–blind gap and better reflecting true visual gains.
+                    </figcaption>
+                </div>
+        
+                <p class="text">
+                    This case study illustrates TsT’s full lifecycle:
+                    diagnose non-visual shortcuts, compute sample-level bias scores, prune the worst offenders,
+                    and re-evaluate to confirm that visual reasoning, not text-only priors, drives progress.
+                </p>
+            </section>
+        
+            <section id="diagnostics-summary">
+                <h1 class="text">Diagnostics Across Four Benchmarks</h1>
+                <p class="text">
+                    Beyond VSI-Bench, TsT reveals pervasive shortcuts across three additional benchmarks:
+                    <strong>CV-Bench</strong>, <strong>MMMU</strong>, and <strong>VideoMME</strong>.
+                    In each case, TsT-LLM significantly improves blind accuracy simply by training on the test questions and answers.
+                </p>
+        
+                <div style="margin: 2rem auto; max-width: auto; padding: 1.5rem; background-color: #f5f5f5; border: 2px solid #008080; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+                    <p style="margin: 0; color: #000; font-size: 1.05em; line-height: 1.6;">
+                        <i class="fas fa-bookmark" style="color: #000; margin-right: 10px;"></i>
+                        <strong>TsT-LLM results:</strong>
+                        blind accuracy climbs from 40.1&nbsp;&rarr;&nbsp;73.4 on CV-Bench and 25.0&nbsp;&rarr;&nbsp;56.4 on VSI-Bench,
+                        with additional gains of +8.6 on MMMU and +6.4 on VideoMME —
+                        all <em>without</em> using any visual input.
+                    </p>
+                </div>
+        
+                <p class="text">
+                    These findings highlight that shortcut behavior is not an isolated issue in any single dataset,
+                    but a structural risk across diverse benchmark designs, including template-based, human-authored,
+                    and LLM-generated questions.
+                </p>
+            </section>
+        
+            <section id="takeaways">
+                <h1 class="text">Takeaways for Benchmark Designers</h1>
+                <p class="text">
+                    TsT is meant to be a <em>practical</em> tool for anyone designing or maintaining multimodal benchmarks.
+                    From our analysis, we propose a set of actionable guidelines:
+                </p>
+                <ul class="text">
+                    <li>
+                        <strong>Always include a “trained blind” baseline.</strong>
+                        Zero-shot blind accuracy is not enough. Train a blind model on the test set via TsT and report its performance.
+                    </li>
+                    <li>
+                        <strong>Track both global and per-sample bias.</strong>
+                        Use TsT accuracy to quantify overall non-visual solvability, and \(s(x)\) to understand which samples are most affected.
+                    </li>
+                    <li>
+                        <strong>Iteratively refine the test set.</strong>
+                        Use IBP (or similar) to prune or rewrite the most shortcut-prone questions until TsT accuracy falls to an acceptable range.
+                    </li>
+                    <li>
+                        <strong>Distinguish training vs. evaluation failures.</strong>
+                        High TsT accuracy indicates that evaluation is compromised, even if models are trained “correctly.”
+                    </li>
+                    <li>
+                        <strong>Integrate TsT into the benchmark lifecycle.</strong>
+                        Treat stress-testing your test set as a standard step, not an afterthought.
+                    </li>
+                </ul>
+        
+                <div style="margin: 2rem auto; max-width: auto; padding: 1.5rem; background-color: #f5f5f5; border: 2px solid #008080; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+                    <p style="margin: 0; color: #000; font-size: 1.05em; line-height: 1.6;">
+                        <i class="fas fa-bookmark" style="color: #000; margin-right: 10px;"></i>
+                        Benchmark designers <strong>should</strong> “train on the test set” —
+                        not to inflate scores, but to adversarially audit evaluation instruments
+                        and ensure that reported progress reflects genuine multimodal understanding.
+                    </p>
+                </div>
+            </section>
+        </d-article>
+        <d-appendix>
+            <h3>BibTeX</h3>
+            <p class="bibtex">
+                @article{brown2025shortcuts,<br>
+                    &nbsp;&nbsp;author = {Brown, Ellis and Yang, Jihan and Yang, Shusheng and Fergus, Rob and Xie, Saining},<br>
+                    &nbsp;&nbsp;title = {Benchmark Designers Should ``Train on the Test Set'' to Expose Exploitable Non-Visual Shortcuts},<br>
+                    &nbsp;&nbsp;journal = {arXiv preprint arXiv:2511.04655},<br>
+                    &nbsp;&nbsp;year = {2025}<br>
+                }
+            </p>
+
+            <d-footnote-list></d-footnote-list>
+            <d-citation-list></d-citation-list>
+        </d-appendix>
+    </body>
+</html>
+</html>
