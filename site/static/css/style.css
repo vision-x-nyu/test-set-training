@@ -196,10 +196,13 @@ body {
   padding: 10px 20px; /* Increase tap area for touch screens */
 }
 
+/* #fbe9e186 0%,  soft cream */
+/* #f6d6c8 40%, gentle peach */
+/* #f1a996 100% muted coral */
 .button-container a.button {
-  background-color: rgba(244, 234, 203, 0.9); /* Cream matching banner background */
+  background-color: #f6d6c8c4; /* Gentle peach matching banner background */
   color: #0f2438; /* Darker blue text for contrast */
-  border: 2px solid rgba(139, 111, 71, 0.4); /* Muted gold border */
+  border: 2px solid #f09a82; /* Muted coral border */
   border-radius: 20px; /* Rounded borders */
   padding: 10px 20px; /* Top and bottom padding, left and right padding */
   margin: 5px 2px; /* Space between the buttons */
@@ -207,7 +210,7 @@ body {
   display: inline-block; /* Display links as inline blocks */
   font-weight: 600; /* Slightly lighter than bold for elegance */
   transition: all 0.3s ease; /* Smooth transition for all properties */
-  box-shadow: 0 2px 4px rgba(15, 36, 56, 0.15);
+  box-shadow: 0 2px 4px rgba(15, 36, 56, 0.15); /* Subtle shadow */
 }
 
 .button-container a.button:hover {
