@@ -3,16 +3,30 @@
 
 <!-- TITLE -->
 # TsT: Test-Set Stress-Test
+> Benchmark Designers Should "Train on the Test Set" to Expose Exploitable Non-Visual Shortcuts
 
 <!-- BADGES -->
 
 [![arXiv](https://img.shields.io/badge/cs.CV-arXiv:2511.04655-b31b1b.svg?style&logo=arXiv)](https://arxiv.org/abs/2511.04655)
 [![arXiv](https://img.shields.io/badge/📄_PDF-TsT-FDDEB3.svg)](https://arxiv.org/pdf/2511.04655)
 [![Project](https://img.shields.io/badge/🌎_Web-Test--Set_Stress--Test-blue.svg)](https://vision-x-nyu.github.io/test-set-training/)
-[![Home](https://img.shields.io/badge/HF-VSI--Bench_(Debiased)-FED123.svg?style&logo=HuggingFace)](https://hf.co/datasets/nyu-visionx/VSI-Bench)
+<br>
+[![VSI-Bench](https://img.shields.io/badge/HF-VSI--Bench_(Debiased)-FED123.svg?style&logo=HuggingFace)](https://hf.co/datasets/nyu-visionx/VSI-Bench)
+[![VSI-Train-10k](https://img.shields.io/badge/HF-VSI--Train--10k-FED123.svg?style&logo=HuggingFace)](https://hf.co/datasets/nyu-visionx/VSI-Train-10k)
+
+  <div style="font-family: charter;">
+      <a href="https://ellisbrown.github.io/" target="_blank">Ellis Brown</a> &emsp;
+      <a href="https://jihanyang.github.io/" target="_blank">Jihan Yang</a> &emsp;
+      <a href="https://github.com/vealocia" target="_blank">Shusheng Yang</a> &emsp;
+      <a href="https://cs.nyu.edu/~fergus" target="_blank">Rob Fergus</a> &emsp;
+      <a href="https://www.sainingxie.com/" target="_blank">Saining Xie</a>
+  </div>
+  
+  <b style="font-family: charter; font-size: 1.2em;">New York University</b>
 
 </div>
 
+---
 
 <!-- DESCRIPTION -->
 ## Abstract
@@ -37,3 +51,11 @@ Coming soon!
 }
 ```
 
+
+---
+### Related Projects
+
+- [Cambrian-1](https://cambrian-mllm.github.io/cambrian-1): A Fully Open, Vision-Centric Exploration of Multimodal LLMs
+- [Cambrian-S](https://cambrian-mllm.github.io/cambrian-s): Towards Spatial Supersensing in Video
+- [Thinking in Space](https://vision-x-nyu.github.io/thinking-in-space.github.io/): How Multimodal Large Language Models See, Remember and Recall Spaces - Introduces VSI-Bench for evaluating visual-spatial intelligence
+- [SIMS-V](https://ellisbrown.github.io/sims-v): Simulated Instruction-Tuning for Spatial Video Understanding
