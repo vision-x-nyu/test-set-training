@@ -3,9 +3,14 @@ body {
 }
 
 .header-wrapper {
-    /* Light gray-blue on left transitioning smoothly to darker blue on right, balanced blue coverage */
-    background: #F2F0E5;
-    /* background-image: url('../../figs/banner_bg.jpg'); */
+    /* background: #f9f1e5; */
+    background: linear-gradient(
+        105deg,
+        /* #fbe9e1 0%,   soft cream */
+        #fbe9e186 0%,   /* soft cream */
+        #f6d6c8 40%,  /* gentle peach */
+        #f1a996 100%  /* muted coral */
+    );
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;

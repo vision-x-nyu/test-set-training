@@ -502,7 +502,8 @@
                     IBP uses TsT-RF bias scores to prune shortcut-prone questions and produces a <strong>VSI-Bench-Debiased</strong> variant.
                     We then re-evaluate LLaVA-Video-7B before and after fine-tuning on additional in-distribution data:
                 </p>
-        
+                
+                <div id="tab:vsi-bench-debiased" style="display: flex; flex-direction: column; align-items: center;">
                 <div class="table-container" style="margin: 1.5rem auto;">
                     <table class="data-table">
                         <thead>
@@ -510,10 +511,10 @@
                                 <th class="tb-hdr"></th>
                                 <th class="tb-hdr">Vis.</th>
                                 <th class="tb-hdr">Blind</th>
-                                <th class="tb-hdr">&Delta;<sub>\(V-B\)</sub></th>
+                                <th class="tb-hdr">\(\Delta_{V-B}\)</sub></th>
                                 <th class="tb-hdr">Vis. (Debiased)</th>
                                 <th class="tb-hdr">Blind (Debiased)</th>
-                                <th class="tb-hdr">&Delta;<sub>\(V-B\)</sub> (Debiased)</th>
+                                <th class="tb-hdr">\(\Delta_{V-B}\)</sub> (Debiased)</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -537,13 +538,14 @@
                             </tr>
                         </tbody>
                     </table>
-                    <figcaption style="text-align: center; margin-top: 0.5rem;">
-                        <strong>Table:</strong>
-                        On the original VSI-Bench, fine-tuning boosts both vision and blind scores,
-                        masking how much progress is due to text-only shortcuts.
-                        On VSI-Bench-Debiased, the blind score falls more sharply,
-                        creating a significantly larger vision–blind gap and better reflecting true visual gains.
-                    </figcaption>
+                </div>
+                <figcaption style="text-align: center; margin-top: 0.5rem;">
+                    <strong>Table:</strong>
+                    On the original VSI-Bench, fine-tuning boosts both vision and blind scores,
+                    masking how much progress is due to text-only shortcuts.
+                    On VSI-Bench-Debiased, the blind score falls more sharply,
+                    creating a significantly larger vision–blind gap and better reflecting true visual gains.
+                </figcaption>
                 </div>
         
                 <p class="text">
