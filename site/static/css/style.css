@@ -162,15 +162,12 @@ body {
 }
 
 .header-image img {
-  width: 120%; /* Responsive width */
-  max-width: 1200px; /* Limit maximum width to reduce loading size */
-  max-height: 1125px; /* Limit maximum height to reduce file size needed */
-  height: auto; /* Maintain the aspect ratio of the image */
-  display: block; /* Prevent inline spacing issues */
-  margin: 0 auto 20px; /* Center the image horizontally and add margin below */
-  margin-left: -20px; /* Shift image slightly to the left */
-  object-fit: contain; /* Ensure image fits within constraints */
-  image-rendering: -webkit-optimize-contrast; /* Optimize rendering */
+    max-width: 100%; /* Ensure the image is never more than 100% of its container */
+    height: auto; /* Maintain the aspect ratio of the image */
+    display: block; /* Prevent inline spacing issues */
+    margin: 0 auto 20px; /* Center the image horizontally and add margin below */
+    object-fit: contain; /* Ensure image fits within constraints */
+    image-rendering: -webkit-optimize-contrast; /* Optimize rendering */
 }
 
 .header-hero-image {
@@ -250,7 +247,8 @@ body {
   }
 
   .header-image img {
-    max-width: 120%; /* Image should be responsive within the container */
+    max-width: 90%; /* Image should be responsive within the container */
+    height: auto; /* Maintain the aspect ratio */
     max-height: 1200px; /* Limit maximum height */
   }
 }
