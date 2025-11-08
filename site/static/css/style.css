@@ -138,14 +138,15 @@ body {
   }
 
   .header-content h1 {
-    font-size: 3em;
+    font-size: 2.5em;
     margin-bottom: 0.125em;
   }
   .header-content h2 {
-    font-size: 1.7em;
-    /* text no wrap */
-    white-space: nowrap;
+    font-size: 1.2em;
+    white-space: normal; /* Allow wrapping on mobile */
     margin-top: 0;
+    line-height: 1.4;
+    word-wrap: break-word;
   }
 
   .header-container p {
@@ -153,11 +154,28 @@ body {
   }
 
   .header-image {
-    /* 80% */
     max-width: 100%;
-    /* center */
     margin-left: auto;
     margin-right: auto;
+  }
+}
+
+/* Extra small screens (iPhone SE and similar) */
+@media (max-width: 400px) {
+  .header-content h1 {
+    font-size: 2em;
+  }
+  .header-content h2 {
+    font-size: 1em;
+    line-height: 1.3;
+  }
+  
+  .header-container p {
+    font-size: 0.95rem;
+  }
+  
+  .icon-item {
+    font-size: 0.9rem;
   }
 }
 
