@@ -464,7 +464,7 @@ from .core.evaluators import (
     RandomForestFoldEvaluator, RandomForestPostProcessor,
     LLMFoldEvaluator, LLMPostProcessor
 )
-from .core.results import EvaluationResult
+from .core.protocols import EvaluationResult
 
 def run_evaluation(
     models: List[BiasModel],

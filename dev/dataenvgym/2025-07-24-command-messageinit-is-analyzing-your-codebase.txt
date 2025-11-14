@@ -1,0 +1,231 @@
+╭───────────────────────────────────────────────────────────────────────────────────────╮
+│ ✻ Welcome to Claude Code!                                                             │
+│                                                                                       │
+│   /help for help, /status for your current setup                                      │
+│                                                                                       │
+│   cwd: /opt/hpcaas/.mounts/fs-072917c00f01ae1ba/home/ellisbrown/workspace/dataenvgym  │
+╰───────────────────────────────────────────────────────────────────────────────────────╯
+
+ Tips for getting started:
+
+ 1. Use Claude to help with file analysis, editing, bash commands and git
+ 2. Be as specific as you would with another engineer for the best results
+ 3. ✔ Run /init to create a CLAUDE.md file with instructions for Claude
+ 4. ✔ Run /terminal-setup to set up terminal integration
+
+> /init is analyzing your codebase… 
+
+● I'll analyze the codebase and create a CLAUDE.md file to help future instances of Claude Code work
+  effectively in this repository.
+
+● Update Todos
+  ⎿  ☐ Analyze codebase structure and architecture
+     ☐ Check for existing CLAUDE.md file
+     ☐ Identify build, test, and lint commands
+     ☐ Create CLAUDE.md file
+     ☐ Read README.md and other documentation
+     ☐ Check for Cursor/Copilot rules
+
+● List(.)
+  ⎿  Listed 587 paths (ctrl+r to expand)
+
+● Search(pattern: "CLAUDE.md")
+  ⎿  Found 0 files 
+
+● Read(README.md)
+  ⎿  Read 165 lines (ctrl+r to expand)
+
+● Search(pattern: "package.json")
+  ⎿  Found 0 files 
+
+● Search(pattern: "pyproject.toml")
+  ⎿  Found 0 files 
+
+● Update Todos
+  ⎿  ☒ Analyze codebase structure and architecture
+     ☒ Check for existing CLAUDE.md file
+     ☒ Read README.md and other documentation
+     ☐ Identify build, test, and lint commands
+     ☐ Create CLAUDE.md file
+     ☐ Check for Cursor/Copilot rules
+
+● Read(setup.py)
+  ⎿  Read 10 lines (ctrl+r to expand)
+
+● Read(pytest.ini)
+  ⎿  Read 4 lines (ctrl+r to expand)
+
+● Search(pattern: "**/.cursorrules")
+  ⎿  Found 0 files 
+
+● Search(pattern: "**/.cursor/rules/**")
+  ⎿  Found 0 files 
+
+● Search(pattern: "**/.github/copilot-instructions.md")
+  ⎿  Found 0 files 
+
+● Read(docs/components.md)
+  ⎿  Read 77 lines (ctrl+r to expand)
+
+● Search(pattern: "Makefile")
+  ⎿  Found 0 files 
+
+● Search(pattern: "**/Makefile")
+  ⎿  Found 1 file (ctrl+r to expand)
+
+● Update Todos
+  ⎿  ☒ Analyze codebase structure and architecture
+     ☒ Check for existing CLAUDE.md file
+     ☒ Identify build, test, and lint commands
+     ☒ Read README.md and other documentation
+     ☒ Check for Cursor/Copilot rules
+     ☐ Create CLAUDE.md file
+
+● Write(CLAUDE.md)
+  ⎿  Wrote 84 lines to CLAUDE.md                                                                        
+     # CLAUDE.md
+     This file provides guidance to Claude Code (claude.ai/code) when working with code in this
+     repository.
+     ## Commands
+     ### Installation
+     ```bash
+     # Install dependencies with uv
+     uv sync requirements.txt
+     … +74 lines (ctrl+r to expand)
+
+● Update Todos
+  ⎿  ☒ Analyze codebase structure and architecture
+     ☒ Check for existing CLAUDE.md file
+     ☒ Identify build, test, and lint commands
+     ☒ Create CLAUDE.md file
+     ☒ Read README.md and other documentation
+     ☒ Check for Cursor/Copilot rules
+
+● Created CLAUDE.md file with comprehensive guidance for working with the DataEnvGym codebase. The file
+  includes:
+
+  - Commands: Installation with uv, testing with pytest, running examples with GPU configuration, and
+  LiveCodeBench evaluation
+  - Architecture: Core interfaces (TaskInterface, TrainablePredictorInterface,
+  DataGenerationAgentInterface, EnvironmentInterface) and key components
+  - Environment Setup: Required API keys and Ray/GPU configuration
+  - Development Notes: Typing, dataset handling, and project structure
+
+  The framework is designed for creating data generation agents that improve student models through
+  iterative training across multiple domains (math, VQA, code, tool use).
+
+> how is llamafactory used in this project
+
+● Task(Find LLaMA-Factory usage)
+  ⎿  Done (13 tool uses · 48.0k tokens · 1m 25.9s)                                                      
+
+● LLaMA-Factory is deeply integrated into DataEnvGym as the primary training backend for fine-tuning
+  language models. Here's how it's used:
+
+  Integration Architecture
+
+  Wrapper Pattern: LLaMA-Factory is wrapped in generic classes that conform to the gym's
+  TrainablePredictorInterface, allowing seamless integration across different domains.
+
+  Key Components:
+  - Submodule: Complete LLaMA-Factory codebase in src/external/LLaMA-Factory/
+  - Wrapper Utilities: llama_factory_utils.py handles data formatting and training execution
+  - Domain Adapters: Specialized implementations for math, code generation, and tool use
+
+  Training Flow
+
+  1. Data Conversion: Training data is converted to LLaMA-Factory's Alpaca format
+  2. Configuration Generation: Hydra configs are created with model parameters, LoRA settings, and
+  training hyperparameters
+  3. Training Execution: Training runs via llamafactory-cli train command
+  4. Model Loading: Trained adapters are loaded into vLLM for distributed inference
+
+  Domain-Specific Usage
+
+  Math (math/local_llm.py): LlamaFactoryTrainer class for mathematical reasoning tasks
+  Code Generation (code/vllm_predictor.py): Pre-configured for code models like Llama3, Gemma2, Qwen2
+  Tool Use (tool_use/vllm_predictor.py): Specialized for MNMS tool-use evaluation
+
+  Key Features
+
+  - Multi-GPU Support: Automatic batch size calculation and GPU allocation
+  - Memory Management: Separate training/inference phases to avoid GPU conflicts
+  - Configuration Templates: Default LoRA SFT configs in configs/llama_factory/
+  - Flexible Overrides: Easy customization of training parameters per experiment
+
+  The integration allows DataEnvGym to leverage LLaMA-Factory's robust training capabilities while
+  maintaining clean abstractions for different task domains.
+
+> how are datasets passed to llamafactory on the fly during the runtime?
+
+● Task(Analyze dynamic dataset passing)
+  ⎿  Done (27 tool uses · 59.1k tokens · 2m 42.9s)                                                      
+
+● Based on my analysis of the codebase, here's how datasets are dynamically passed to LLaMA-Factory
+  during runtime:
+
+  Dynamic Dataset Flow
+
+  1. Training Data Generation
+
+  During gym episodes, data generation agents analyze task performance and create domain-specific
+  training data:
+  # Math example: generates MathTrainingDatum objects
+  training_data = data_generation_agent(completed_task_instances, predictor)
+  # Each datum has: instruction (problem) + response (solution)
+
+  2. On-the-Fly Dataset Creation
+
+  The key function format_records_for_llama_factory_sft() handles the dynamic conversion:
+
+  # Converts DataEnvGym training data to LLaMA-Factory format
+  sft_spec, _ = format_records_for_llama_factory_sft(
+      [datum.model_dump() for datum in training_data],  # Source data
+      llama_factory_dataset_dir=str(dataset_dir),       # Target directory
+      instruction_key="instruction",                     # Input field
+      response_key="response",                          # Output field
+      overwrite=True
+  )
+
+  3. File System Operations
+
+  The system writes two files dynamically:
+
+  dataset_info.json - Registers the dataset with LLaMA-Factory:
+  {
+    "custom_sft_dataset": {
+      "file_name": "custom_sft_dataset.jsonl",
+      "formatting": "alpaca",
+      "load_from": "file",
+      "columns": {"prompt": "instruction", "response": "output"}
+    }
+  }
+
+  custom_sft_dataset.jsonl - Contains the actual training records in Alpaca format
+
+  4. Configuration Generation
+
+  The training config is generated with the dataset reference:
+  overrides = [
+      f"+dataset_dir={dataset_dir}",           # Points to dataset directory
+      f"dataset=custom_sft_dataset",           # References the generated dataset
+      f"output_dir={output_dir}",              # Model output location
+      # ... other dynamic parameters
+  ]
+
+  5. Training Execution
+
+  Finally, LLaMA-Factory is invoked with the generated config:
+  sh.llamafactory_cli.train(config_path, _env=env_with_cuda_devices)
+
+  Key Characteristics
+
+  - No Pre-existing Datasets: Datasets are created fresh for each training cycle
+  - Experiment Isolation: Each experiment gets its own dataset directory
+  - Dynamic Naming: Uses consistent naming (custom_sft_dataset) but in separate directories
+  - Persistent Files: Files remain after training for debugging/reproducibility
+  - Runtime Flexibility: Can handle varying amounts of training data per cycle
+
+  This approach allows the gym framework to seamlessly feed dynamically generated training data to
+  LLaMA-Factory without requiring pre-registered datasets or manual configuration.
+
