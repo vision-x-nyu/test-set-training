@@ -64,7 +64,7 @@ def get_model_columns(df):
 
 def to_float(pred):
     try:
-        pred = float(pred)
+        pred = float(fuzzy_cleanup(pred))
     except BaseException:
         pred = None
     return pred
@@ -133,7 +133,8 @@ def evaluate_file(json_path):
 
         em = fuzzy_match(pred, target)
         try:
-            mra = fuzzy_MRA(pred, target)
+            # mra = fuzzy_MRA(pred, target)
+            mra = mean_relative_accuracy(pred, target)
         except Exception:
             mra = 0.0
 
@@ -149,7 +150,7 @@ def evaluate_file(json_path):
             raise ValueError(f"Unknown question type: {question_type}")
 
         # sanity check. max is equivalent
-        assert score == max(em, mra), f"Score mismatch: {score} != {max(em, mra)}"
+        assert score == max(em, mra), f"Score mismatch: {score} != {max(em, mra)}\nem: {em}, mra: {mra}\npred: {pred}, target: {target}"
 
         rows.append(
             {

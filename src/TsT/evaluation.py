@@ -203,6 +203,8 @@ def get_overall_eval_stats(results: List[EvaluationResult]) -> Dict[str, float]:
 def log_overall_statistics(results: List[EvaluationResult]):
     """Log overall evaluation statistics"""
 
+    # TODO: add in micro stats
+
     overall_stats = get_overall_eval_stats(results)
     total_count = overall_stats["total_count"]
     score_macro = overall_stats["score_macro"]
@@ -238,14 +240,20 @@ def log_overall_statistics(results: List[EvaluationResult]):
         + "\n"
     )
     table_summary += "=" * 80 + "\n"
-    table_summary += f"""SCORE MACRO AVERAGE: {score_macro["avg"]:.1%}
-    n: {score_macro["n"]}
-    std: {score_macro["std"]:.1%}
-    se: {score_macro["se"]:.1%}
-    95% t-CI: ({score_macro["t_95ci"][0]:.1%}, {score_macro["t_95ci"][1]:.1%})
+    table_summary += "OVERALL STATISTICS:\n"
+    table_summary += "=" * 80 + "\n"
+    table_summary += f"""
+MICRO (incomplete):
+    WEIGHTED MEAN SCORE: {weighted_avg:.1%} ± {weighted_std:.1%} (total examples: {total_count})
+    WEIGHTED ZERO-SHOT BASELINE: {zs_weighted_avg:.1%} ± {zs_weighted_std:.1%}
+
+MACRO:
+    SCORE AVERAGE: {score_macro["avg"]:.1%}
+        n: {score_macro["n"]}
+        std: {score_macro["std"]:.1%}
+        se: {score_macro["se"]:.1%}
+        95% t-CI: ({score_macro["t_95ci"][0]:.1%}, {score_macro["t_95ci"][1]:.1%})
+    ZERO-SHOT BASELINE AVERAGE: {zs_macro_avg:.1%}
 """
-    table_summary += f"ZERO-SHOT BASELINE MACRO AVERAGE: {zs_macro_avg:.1%}\n"
-    table_summary += f"WEIGHTED MEAN SCORE: {weighted_avg:.1%} ± {weighted_std:.1%} (total examples: {total_count})\n"
-    table_summary += f"WEIGHTED ZERO-SHOT BASELINE: {zs_weighted_avg:.1%} ± {zs_weighted_std:.1%}\n"
     table_summary += "=" * 80 + "\n"
     logger.info(table_summary)

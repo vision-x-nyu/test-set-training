@@ -12,6 +12,10 @@ CUDA_VERSION=$(nvidia-smi --version | grep 'CUDA Version' | awk -F': ' '{print $
 
 case $CUDA_VERSION in
   12.8) TORCH="torch==2.7.0+cu128 --index-url https://download.pytorch.org/whl/cu128" ;;
+  12.7) TORCH="torch==2.7.0+cu127 --index-url https://download.pytorch.org/whl/cu127" ;;
+  12.6) TORCH="torch==2.7.0+cu126 --index-url https://download.pytorch.org/whl/cu126" ;;
+  12.5) TORCH="torch==2.7.0+cu125 --index-url https://download.pytorch.org/whl/cu125" ;;
+  12.3) TORCH="torch==2.7.0+cu123 --index-url https://download.pytorch.org/whl/cu123" ;;
   12.4) TORCH="torch==2.4.1+cu124 --index-url https://download.pytorch.org/whl/cu124" ;;
   12.1|12.2) TORCH="torch==2.4.1+cu121 --index-url https://download.pytorch.org/whl/cu121" ;;
   11.8) TORCH="torch==2.3.1+cu118 --index-url https://download.pytorch.org/whl/cu118" ;;
