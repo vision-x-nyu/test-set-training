@@ -93,7 +93,8 @@
                 <h3>The Dirty Secret</h3>
                 <p>
                     Many multimodal benchmarks hide a dirty secret: <strong>models can achieve high scores without even
-                        using the visual input.</strong>
+                        using the visual input.</strong> We call this "blind" evaluation—giving the model the question
+                    <em>without</em> the image.
                 </p>
                 <p>
                     This is particularly problematic for vision-centric benchmarks, which explicitly aim to require
@@ -228,8 +229,9 @@
         <div class="container">
             <h3 style="text-align: center; margin-bottom: 2rem;">Diagnosis: Shocking Vulnerabilities</h3>
             <p style="text-align: center; max-width: 700px; margin: 0 auto 3rem auto; color: var(--text-secondary);">
-                When we applied TsT to leading benchmarks, the results were alarming. Models could solve significant
-                portions of the test sets <strong>without seeing the images</strong>.
+                When we applied TsT to some leading multimodal benchmarks, the
+                results
+                were alarming. Our blind diagnostic models could solve significant portions of the test sets.
             </p>
 
             <!-- High Level Stats -->
@@ -258,7 +260,7 @@
                 <h2>Iterative Bias Pruning (IBP)</h2>
                 <p>
                     Identifying the problem isn't enough. We need to fix it. We use TsT's bias scores to systematically
-                    debias benchmarks.
+                    identify and remove the most broken samples.
                 </p>
                 <p>
                     <strong>Iterative Bias Pruning (IBP)</strong> alternates between:
