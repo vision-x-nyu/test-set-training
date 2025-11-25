@@ -186,6 +186,18 @@
                     This effectively "trains on the test set" not to overfit, but to adversarially probe for intrinsic
                     vulnerabilities.
                 </p>
+                <p>
+                    We propose two complementary diagnostic approaches, trained on <em>non-visual</em> features of the
+                    test set:
+                </p>
+                <ul style="list-style: none; margin-bottom: 1.5rem;">
+                    <li style="margin-bottom: 0.5rem;"><i class="fa-solid fa-robot"
+                            style="color: var(--accent-primary); margin-right: 10px;"></i> <strong>TsT-LLM</strong>:
+                        Uses LoRA-tuned LLMs for detection power and wide applicability.</li>
+                    <li style="margin-bottom: 0.5rem;"><i class="fa-solid fa-tree"
+                            style="color: var(--accent-primary); margin-right: 10px;"></i> <strong>TsT-RF</strong>: Uses
+                        Random Forests for interpretability and speed.</li>
+                </ul>
             </div>
             <div class="narrative-visual fade-in-up">
                 <img src="static/img/TsT_overview.png" alt="TsT Framework Overview"
@@ -206,9 +218,8 @@
                 <!-- <h3>It's Not Just Overfitting</h3> -->
                 <h3>Why the <em>test set specifically?</em></h3>
                 <p>
-                    <!-- You might ask: <em>"Is it actually crucial to 'train' on the test set specifically?"</em> -->
-                    Is this crucial to target the <em>test set</em> itself? Instead of some held-out "train"
-                    set...
+                    You might ask: <em>"Is it actually crucial to train on the test set specifically? Why not just use a
+                        held-out training set?"</em>
                 </p>
                 <p>
                     <strong>YES!</strong> Once a benchmark is released, models can exploit the <em>SPECIFIC</em>
@@ -227,11 +238,9 @@
     <!-- Diagnosis Results -->
     <section class="section">
         <div class="container">
-            <h3 style="text-align: center; margin-bottom: 2rem;">Diagnosis: Shocking Vulnerabilities</h3>
+            <h3 style="text-align: center; margin-bottom: 2rem;">Diagnosis: Widespread Vulnerabilities</h3>
             <p style="text-align: center; max-width: 700px; margin: 0 auto 3rem auto; color: var(--text-secondary);">
-                When we applied TsT to some leading multimodal benchmarks, the
-                results
-                were alarming. Our blind diagnostic models could solve significant portions of the test sets.
+                We applied TsT to some leading multimodal benchmarks, exposing notable non-visual shortcuts.
             </p>
 
             <!-- High Level Stats -->
@@ -245,6 +254,20 @@
                     <div class="stat-number">+31%</div>
                     <div class="stat-label">VSI-Bench Blind Gain</div>
                     <p style="font-size: 0.9rem; margin-top: 1rem;">Blind accuracy jumped from 25% to 56% using TsT.</p>
+                </div>
+            </div>
+
+            <!-- High Level Stats Row 2 -->
+            <div class="grid fade-in-up" style="margin-bottom: 4rem;">
+                <div class="stat-card">
+                    <div class="stat-number">+9%</div>
+                    <div class="stat-label">MMMU Blind Gain</div>
+                    <p style="font-size: 0.9rem; margin-top: 1rem;">Blind accuracy improved from 35% to 44%.</p>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">+6%</div>
+                    <div class="stat-label">VideoMME Blind Gain</div>
+                    <p style="font-size: 0.9rem; margin-top: 1rem;">Blind accuracy improved from 35% to 42%.</p>
                 </div>
             </div>
         </div>
@@ -270,7 +293,7 @@
                     <li style="margin-bottom: 0.5rem;">Re-calculating bias scores via TsT</li>
                 </ol>
                 <p>
-                    The result? <strong>VSI-Bench-Debiased</strong>, a robust subset that is much harder to game via
+                    The result? A <strong>debiased benchmark subset</strong> that is much harder to game via
                     shortcuts.
                 </p>
             </div>
