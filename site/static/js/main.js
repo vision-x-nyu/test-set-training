@@ -27,4 +27,34 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
     });
+
+    // Carousel Logic
+    const slides = document.querySelectorAll('.carousel-slide');
+    const dots = document.querySelectorAll('.carousel-dot');
+    const prevBtn = document.querySelector('.prev-btn');
+    const nextBtn = document.querySelector('.next-btn');
+
+    if (slides.length > 0) {
+        let currentSlide = 0;
+
+        function showSlide(n) {
+            slides.forEach(slide => slide.classList.remove('active'));
+            dots.forEach(dot => dot.classList.remove('active'));
+
+            currentSlide = (n + slides.length) % slides.length;
+
+            slides[currentSlide].classList.add('active');
+            dots[currentSlide].classList.add('active');
+        }
+
+        prevBtn.addEventListener('click', () => showSlide(currentSlide - 1));
+        nextBtn.addEventListener('click', () => showSlide(currentSlide + 1));
+
+        dots.forEach((dot, index) => {
+            dot.addEventListener('click', () => showSlide(index));
+        });
+
+        // Auto advance (optional, can remove if annoying)
+        // setInterval(() => showSlide(currentSlide + 1), 5000);
+    }
 });

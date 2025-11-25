@@ -5,8 +5,10 @@
     --surface-color-hover: #252525;
     --text-primary: #f0f0f0;
     --text-secondary: #a0a0a0;
-    --accent-primary: #FF4500; /* Hot Pepper Red/Orange */
-    --accent-secondary: #0071BC; /* Tech Blue */
+    --accent-primary: #FF4500;
+    /* Hot Pepper Red/Orange */
+    --accent-secondary: #0071BC;
+    /* Tech Blue */
     --accent-gradient: linear-gradient(135deg, #FF4500 0%, #FF8C00 100%);
     --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
     --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
@@ -41,7 +43,12 @@ a:hover {
 }
 
 /* Typography */
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
     font-weight: 700;
     line-height: 1.2;
     margin-bottom: 1rem;
@@ -278,17 +285,17 @@ footer {
         grid-template-columns: 1fr;
         gap: 2rem;
     }
-    
+
     .hero-buttons {
         flex-direction: column;
         width: 100%;
     }
-    
+
     .btn {
         width: 100%;
         justify-content: center;
     }
-    
+
     h1 {
         font-size: 2.5rem;
     }
@@ -308,4 +315,144 @@ code {
     font-family: var(--font-mono);
     color: #e6e6e6;
     font-size: 0.9rem;
+}
+
+/* Carousel */
+.carousel-container {
+    position: relative;
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+    overflow: hidden;
+    border-radius: var(--border-radius);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: var(--surface-color);
+}
+
+.carousel-slide {
+    display: none;
+    width: 100%;
+}
+
+.carousel-slide.active {
+    display: block;
+    animation: fadeEffect 0.5s;
+}
+
+.carousel-slide img {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+.carousel-caption {
+    padding: 1rem;
+    text-align: center;
+    background: rgba(0, 0, 0, 0.8);
+    color: var(--text-primary);
+    font-size: 0.9rem;
+}
+
+.carousel-nav {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 1rem;
+    background: var(--surface-color);
+}
+
+.carousel-dot {
+    height: 10px;
+    width: 10px;
+    background-color: #555;
+    border-radius: 50%;
+    display: inline-block;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.carousel-dot.active,
+.carousel-dot:hover {
+    background-color: var(--accent-primary);
+}
+
+.carousel-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(0, 0, 0, 0.5);
+    color: white;
+    border: none;
+    padding: 1rem;
+    cursor: pointer;
+    font-size: 1.5rem;
+    transition: background 0.3s;
+    z-index: 10;
+}
+
+.carousel-btn:hover {
+    background: rgba(0, 0, 0, 0.8);
+}
+
+.prev-btn {
+    left: 0;
+}
+
+.next-btn {
+    right: 0;
+}
+
+@keyframes fadeEffect {
+    from {
+        opacity: 0.4
+    }
+
+    to {
+        opacity: 1
+    }
+}
+
+/* Data Table */
+.data-table-container {
+    overflow-x: auto;
+    margin: 2rem 0;
+    border-radius: var(--border-radius);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--surface-color);
+    text-align: left;
+}
+
+.data-table th,
+.data-table td {
+    padding: 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.data-table th {
+    background: rgba(255, 255, 255, 0.05);
+    font-weight: 600;
+    color: var(--accent-secondary);
+}
+
+.data-table tr:last-child td {
+    border-bottom: none;
+}
+
+.data-table tr:hover {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.highlight-positive {
+    color: #4ade80;
+    /* Green */
+    font-weight: 600;
+}
+
+.highlight-neutral {
+    color: var(--text-secondary);
 }

@@ -14,12 +14,16 @@
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
 
-
     <!-- Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <!-- Styles -->
     <link rel="stylesheet" href="./static/css/style.css">
+
+    <!-- Favicon -->
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌶️</text></svg>">
+
 
     <!-- Scripts -->
     <script defer src="./static/js/main.js"></script>
@@ -82,11 +86,39 @@
                 </p>
             </div>
             <div class="narrative-visual fade-in-up">
-                <img src="static/img/bias_examples.png" alt="Statistical Bias Examples">
-                <p style="font-size: 0.8rem; margin-top: 0.5rem; text-align: center;">
-                    Examples of statistical shortcuts: counting biases, spatial correlations, and predictable size
-                    distributions.
-                </p>
+                <!-- Carousel -->
+                <div class="carousel-container">
+                    <button class="carousel-btn prev-btn"><i class="fa-solid fa-chevron-left"></i></button>
+                    <button class="carousel-btn next-btn"><i class="fa-solid fa-chevron-right"></i></button>
+
+                    <div class="carousel-slide active">
+                        <img src="static/img/bias_a.jpeg" alt="Counting Bias">
+                        <div class="carousel-caption"><strong>(a) Counting:</strong> Severe answer skew—always guessing
+                            "2" works well.</div>
+                    </div>
+                    <div class="carousel-slide">
+                        <img src="static/img/bias_b.jpeg" alt="Spatial Relation Bias">
+                        <div class="carousel-caption"><strong>(b) Spatial Relation:</strong> "Keyboard" is the correct
+                            answer 100% of the time.</div>
+                    </div>
+                    <div class="carousel-slide">
+                        <img src="static/img/bias_c.jpeg" alt="Appearance Order Bias">
+                        <div class="carousel-caption"><strong>(c) Appearance Order:</strong> "Clock" always appears in
+                            the 4th position.</div>
+                    </div>
+                    <div class="carousel-slide">
+                        <img src="static/img/bias_d.jpeg" alt="Size Estimation Bias">
+                        <div class="carousel-caption"><strong>(d) Size Estimation:</strong> Room sizes cluster
+                            predictably around 17m².</div>
+                    </div>
+
+                    <div class="carousel-nav">
+                        <span class="carousel-dot active"></span>
+                        <span class="carousel-dot"></span>
+                        <span class="carousel-dot"></span>
+                        <span class="carousel-dot"></span>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
@@ -112,7 +144,8 @@
     <section class="section narrative-section">
         <div class="container narrative-content">
             <div class="narrative-visual fade-in-up">
-                <img src="static/img/TsT_overview.png" alt="TsT Framework Overview">
+                <img src="static/img/TsT_overview.png" alt="TsT Framework Overview"
+                    style="background: white; padding: 1rem; border-radius: 8px;">
             </div>
             <div class="narrative-text fade-in-up">
                 <h3>Introducing TsT</h3>
@@ -140,11 +173,41 @@
         </div>
     </section>
 
+    <!-- Why the Test Set? -->
+    <section class="section narrative-section" style="background: var(--surface-color);">
+        <div class="container narrative-content">
+            <div class="narrative-text fade-in-up">
+                <!-- <h3>It's Not Just Overfitting</h3> -->
+                <h3>Why the <em>test set specifically?</em></h3>
+                <p>
+                    <!-- You might ask: <em>"Is it actually crucial to 'train' on the test set specifically?"</em> -->
+                    Is this crucial to target the <em>test set</em> itself? Instead of some held-out "train"
+                    set...
+                </p>
+                <p>
+                    <strong>YES!</strong> Once a benchmark is released, models can exploit the <em>SPECIFIC</em>
+                    artifacts present in <em>THAT</em> test set—idiosyncrasies of sampling, templates, or curation.
+                </p>
+                <p>
+                    Training on a held-out "train" set only captures general domain biases (blue region). To find the
+                    shortcuts that break your specific benchmark, you must <strong>stress-test the actual test
+                        instrument itself</strong> (pink region).
+                </p>
+            </div>
+            <div class="narrative-visual fade-in-up">
+                <img src="static/img/TsT_overview_bias_space.png" alt="Bias Space Diagram"
+                    style="background: white; padding: 1rem; border-radius: 8px;">
+            </div>
+        </div>
+    </section>
+
     <!-- The Results -->
     <section class="section">
         <div class="container">
             <h2 style="text-align: center; margin-bottom: 3rem;">Shocking Results</h2>
-            <div class="grid fade-in-up">
+
+            <!-- High Level Stats -->
+            <div class="grid fade-in-up" style="margin-bottom: 4rem;">
                 <div class="stat-card">
                     <div class="stat-number">+33%</div>
                     <div class="stat-label">CV-Bench Blind Gain</div>
@@ -162,6 +225,64 @@
                         performance gap.</p>
                 </div>
             </div>
+
+            <!-- Detailed Table -->
+            <div class="fade-in-up" style="max-width: 900px; margin: 0 auto;">
+                <h3 style="text-align: center; margin-bottom: 1.5rem;">Case Study: VSI-Bench-Debiased</h3>
+                <div class="data-table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Model Configuration</th>
+                                <th>Vision</th>
+                                <th>Blind</th>
+                                <th>Gap (V-B)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td colspan="4"
+                                    style="background: rgba(255,255,255,0.02); font-weight: 600; color: var(--text-secondary);">
+                                    Original VSI-Bench</td>
+                            </tr>
+                            <tr>
+                                <td>LLaVA-Video 7B (Base)</td>
+                                <td>36.7</td>
+                                <td>25.9</td>
+                                <td>10.8</td>
+                            </tr>
+                            <tr>
+                                <td>+ VSI-Train-10k FT</td>
+                                <td>57.1</td>
+                                <td>44.7</td>
+                                <td>12.4</td>
+                            </tr>
+                            <tr>
+                                <td colspan="4"
+                                    style="background: rgba(255,255,255,0.02); font-weight: 600; color: var(--text-secondary);">
+                                    VSI-Bench-Debiased (Ours)</td>
+                            </tr>
+                            <tr>
+                                <td>LLaVA-Video 7B (Base)</td>
+                                <td>31.3</td>
+                                <td>20.3</td>
+                                <td>11.0</td>
+                            </tr>
+                            <tr>
+                                <td>+ VSI-Train-10k FT</td>
+                                <td>48.7</td>
+                                <td>32.0</td>
+                                <td class="highlight-positive">16.6</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p style="text-align: center; font-size: 0.9rem; color: var(--text-secondary);">
+                    <em>Note: On the debiased benchmark, the blind model struggles significantly more (44.7% &rarr;
+                        32.0%), proving that shortcuts have been removed.</em>
+                </p>
+            </div>
+
         </div>
     </section>
 
