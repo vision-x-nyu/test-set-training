@@ -199,10 +199,6 @@ p {
     align-items: center;
 }
 
-.narrative-content.split-50-50 {
-    grid-template-columns: 1fr 1fr;
-}
-
 .narrative-content.reversed {
     grid-template-columns: 60% 40%;
 }
@@ -259,21 +255,40 @@ footer {
     text-align: center;
 }
 
+.authors-container {
+    margin-top: 3rem;
+    text-align: center;
+}
+
 .authors-list {
     display: flex;
     justify-content: center;
     gap: 1.5rem;
     flex-wrap: wrap;
-    margin-bottom: 2rem;
 }
 
 .author-item a {
-    color: var(--text-secondary);
+    color: var(--text-primary);
     font-weight: 500;
 }
 
 .author-item a:hover {
     color: var(--accent-primary);
+}
+
+
+.institutions {
+    margin-top: 1rem;
+    color: var(--text-primary);
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.venue {
+    margin-top: 0.25rem;
+    color: var(--text-secondary);
+    font-size: 1rem;
+    font-weight: 500;
 }
 
 /* Animations */
@@ -293,10 +308,6 @@ footer {
 
     .narrative-content,
     .narrative-content.reversed,
-    .narrative-content.split-50-50 {
-        grid-template-columns: 1fr;
-        gap: 2rem;
-    }
 
     .hero-buttons {
         flex-direction: column;
