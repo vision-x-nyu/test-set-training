@@ -67,6 +67,11 @@ h2 {
     color: var(--text-primary);
 }
 
+h3 {
+    font-size: clamp(1.5rem, 3vw, 2rem);
+    color: var(--text-primary);
+}
+
 p {
     margin-bottom: 1.5rem;
     font-size: 1.125rem;
@@ -307,7 +312,10 @@ footer {
 @media (max-width: 768px) {
 
     .narrative-content,
-    .narrative-content.reversed,
+    .narrative-content.reversed {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+    }
 
     .hero-buttons {
         flex-direction: column;
