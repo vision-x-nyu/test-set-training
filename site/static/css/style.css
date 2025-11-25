@@ -493,7 +493,7 @@ code {
 .data-table th {
     background: rgba(255, 255, 255, 0.05);
     font-weight: 600;
-    color: var(--accent-secondary);
+    color: var(--text-primary);
 }
 
 .data-table tr:last-child td {
