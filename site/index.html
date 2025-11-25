@@ -28,6 +28,7 @@
     <!-- Scripts -->
     <script defer src="./static/js/main.js"></script>
     <script defer src="./static/js/medium-zoom.min.js"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 
     <!-- Meta -->
     <meta property="og:title" content="Test-Set Stress-Test (TsT)">
@@ -129,10 +130,10 @@
     </section>
 
     <!-- The Problem -->
-    <section class="section narrative-section">
+    <section class="section narrative-section" id="problem">
         <div class="container narrative-content">
             <div class="narrative-text fade-in-up">
-                <h3>The Dirty Secret</h3>
+                <h3>The Problem</h3>
                 <p>
                     Many multimodal benchmarks hide a dirty secret: <strong>models can achieve high scores without even
                         using the visual input.</strong> We call this "blind" evaluation—giving the model the question
@@ -186,7 +187,7 @@
     </section>
 
     <!-- The Principle -->
-    <section class="section" style="background: var(--surface-color);">
+    <section class="section" style="background: var(--surface-color);" id="principle">
         <div class="container" style="text-align: center;">
             <div class="fade-in-up">
                 <h2 style="margin-bottom: 2rem;">Key Principle</h2>
@@ -203,7 +204,7 @@
     </section>
 
     <!-- The Solution: TsT -->
-    <section class="section narrative-section">
+    <section class="section narrative-section" id="tst">
         <div class="container narrative-content">
             <div class="narrative-text fade-in-up">
                 <span class="hero-tag">⓵&nbsp;&nbsp;Diagnose</span>
@@ -250,7 +251,7 @@
     </section>
 
     <!-- Why the Test Set? -->
-    <section class="section narrative-section" style="background: var(--surface-color);">
+    <section class="section narrative-section" style="background: var(--surface-color);" id="why-test-set">
         <div class="container narrative-content split-50-50">
             <div class="narrative-visual fade-in-up">
                 <img src="static/img/TsT_overview_bias_space.png" alt="Bias Space Diagram"
@@ -278,7 +279,7 @@
     </section>
 
     <!-- Diagnosis Results -->
-    <section class="section">
+    <section class="section" id="diagnostic-results">
         <div class="container">
             <h3 style="text-align: center; margin-bottom: 2rem;">Diagnosis: Widespread Vulnerabilities</h3>
             <p style="text-align: center; max-width: 700px; margin: 0 auto 3rem auto; color: var(--text-secondary);">
@@ -318,7 +319,7 @@
 
     <!-- Mitigation -->
     <!-- <section class="section narrative-section" style="background: var(--surface-color);"> -->
-    <section class="section narrative-section">
+    <section class="section narrative-section" id="ibp">
         <div class="container narrative-content">
             <div class="narrative-text fade-in-up">
                 <span class="hero-tag">⓶&nbsp;&nbsp;Debias</span>
@@ -358,8 +359,8 @@
     </section>
 
     <!-- Mitigation Results -->
-    <section class="section">
-        <div class="container">
+    <section class="section" id="mitigation-results">
+        <div class="container" id="vsi-bench-debiased">
             <!-- <h3 style="text-align: center; margin-bottom: 2rem;">Proof it Works</h3> -->
             <h3 style="text-align: center; margin-bottom: 1.5rem;">Case Study: VSI-Bench-Debiased</h3>
             <p style="text-align: center; max-width: 700px; margin: 0 auto 3rem auto; color: var(--text-secondary);">
@@ -438,7 +439,7 @@
 
     <!-- Footer -->
     <footer>
-        <div class="container">
+        <div class="container" id="citation">
             <div class="fade-in-up">
                 <h3 style="margin-bottom: 1rem;">Citation</h3>
                 <p>
