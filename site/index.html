@@ -88,35 +88,34 @@
             <div class="narrative-visual fade-in-up">
                 <!-- Carousel -->
                 <div class="carousel-container">
-                    <button class="carousel-btn prev-btn"><i class="fa-solid fa-chevron-left"></i></button>
-                    <button class="carousel-btn next-btn"><i class="fa-solid fa-chevron-right"></i></button>
-
-                    <div class="carousel-slide active">
-                        <img src="static/img/bias_a.jpeg" alt="Counting Bias">
-                        <div class="carousel-caption"><strong>(a) Counting:</strong> Severe answer skew—always guessing
-                            "2" works well.</div>
-                    </div>
-                    <div class="carousel-slide">
-                        <img src="static/img/bias_b.jpeg" alt="Spatial Relation Bias">
-                        <div class="carousel-caption"><strong>(b) Spatial Relation:</strong> "Keyboard" is the correct
-                            answer 100% of the time.</div>
-                    </div>
-                    <div class="carousel-slide">
-                        <img src="static/img/bias_c.jpeg" alt="Appearance Order Bias">
-                        <div class="carousel-caption"><strong>(c) Appearance Order:</strong> "Clock" always appears in
-                            the 4th position.</div>
-                    </div>
-                    <div class="carousel-slide">
-                        <img src="static/img/bias_d.jpeg" alt="Size Estimation Bias">
-                        <div class="carousel-caption"><strong>(d) Size Estimation:</strong> Room sizes cluster
-                            predictably around 17m².</div>
+                    <div class="carousel-slides-wrapper">
+                        <div class="carousel-slide active"
+                            data-caption="Severe answer skew. Always guessing '2' works well.">
+                            <img src="static/img/bias_a.jpeg" alt="Counting Bias">
+                        </div>
+                        <div class="carousel-slide" data-caption="'Keyboard' is the correct answer 100% of the time.">
+                            <img src="static/img/bias_b.jpeg" alt="Spatial Relation Bias">
+                        </div>
+                        <div class="carousel-slide" data-caption="'Clock' always appears in the 4th position.">
+                            <img src="static/img/bias_c.jpeg" alt="Appearance Order Bias">
+                        </div>
+                        <div class="carousel-slide" data-caption="Room sizes cluster predictably around 17m².">
+                            <img src="static/img/bias_d.jpeg" alt="Size Estimation Bias">
+                        </div>
                     </div>
 
-                    <div class="carousel-nav">
-                        <span class="carousel-dot active"></span>
-                        <span class="carousel-dot"></span>
-                        <span class="carousel-dot"></span>
-                        <span class="carousel-dot"></span>
+                    <div class="carousel-controls">
+                        <button class="carousel-btn prev-btn"><i class="fa-solid fa-chevron-left"></i></button>
+                        <div class="carousel-center-content">
+                            <div class="carousel-caption-text">Severe answer skew. Always guessing '2' works well.</div>
+                            <div class="carousel-nav">
+                                <span class="carousel-dot active"></span>
+                                <span class="carousel-dot"></span>
+                                <span class="carousel-dot"></span>
+                                <span class="carousel-dot"></span>
+                            </div>
+                        </div>
+                        <button class="carousel-btn next-btn"><i class="fa-solid fa-chevron-right"></i></button>
                     </div>
                 </div>
             </div>
@@ -189,9 +188,10 @@
                     artifacts present in <em>THAT</em> test set—idiosyncrasies of sampling, templates, or curation.
                 </p>
                 <p>
-                    Training on a held-out "train" set only captures general domain biases (blue region). To find the
+                    Training on a held-out "train" set only captures general domain biases (<span
+                        style="color: #2A2AFF;">blue region</span>). To find the
                     shortcuts that break your specific benchmark, you must <strong>stress-test the actual test
-                        instrument itself</strong> (pink region).
+                        instrument itself</strong> (<span style="color: #FF0066;">pink region</span>).
                 </p>
             </div>
             <div class="narrative-visual fade-in-up">

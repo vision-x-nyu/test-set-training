@@ -33,6 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const dots = document.querySelectorAll('.carousel-dot');
     const prevBtn = document.querySelector('.prev-btn');
     const nextBtn = document.querySelector('.next-btn');
+    const captionText = document.querySelector('.carousel-caption-text');
 
     if (slides.length > 0) {
         let currentSlide = 0;
@@ -45,6 +46,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
             slides[currentSlide].classList.add('active');
             dots[currentSlide].classList.add('active');
+
+            // Update caption
+            const caption = slides[currentSlide].getAttribute('data-caption');
+            if (captionText) {
+                captionText.innerHTML = caption;
+            }
         }
 
         prevBtn.addEventListener('click', () => showSlide(currentSlide - 1));
