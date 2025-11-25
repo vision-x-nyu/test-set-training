@@ -194,9 +194,17 @@ p {
 
 .narrative-content {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 40% 60%;
     gap: 4rem;
     align-items: center;
+}
+
+.narrative-content.split-50-50 {
+    grid-template-columns: 1fr 1fr;
+}
+
+.narrative-content.reversed {
+    grid-template-columns: 60% 40%;
 }
 
 .narrative-text h3 {
@@ -282,7 +290,10 @@ footer {
 
 /* Mobile Responsive */
 @media (max-width: 768px) {
-    .narrative-content {
+
+    .narrative-content,
+    .narrative-content.reversed,
+    .narrative-content.split-50-50 {
         grid-template-columns: 1fr;
         gap: 2rem;
     }

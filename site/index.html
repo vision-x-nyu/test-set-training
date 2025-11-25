@@ -43,7 +43,7 @@
             <span class="hero-tag">🌶️&nbsp;&nbsp;Hot Take</span>
             <h1>Benchmark Designers Should<br>"Train on the Test Set"</h1>
             <p style="font-size: 1.5rem; margin-top: 1rem; color: var(--text-secondary);">
-                To expose and mitigate exploitable non-visual shortcuts in multimodal benchmarks.
+                ...to expose and mitigate exploitable non-visual shortcuts in multimodal benchmarks.
             </p>
             <div class="hero-buttons">
                 <a href="https://arxiv.org/abs/2511.04655" class="btn btn-primary">
@@ -142,10 +142,6 @@
     <!-- The Solution: TsT -->
     <section class="section narrative-section">
         <div class="container narrative-content">
-            <div class="narrative-visual fade-in-up">
-                <img src="static/img/TsT_overview.png" alt="TsT Framework Overview"
-                    style="background: white; padding: 1rem; border-radius: 8px;">
-            </div>
             <div class="narrative-text fade-in-up">
                 <h3>Introducing TsT</h3>
                 <p>
@@ -169,12 +165,22 @@
                     vulnerabilities.
                 </p>
             </div>
+            <div class="narrative-visual fade-in-up">
+                <img src="static/img/TsT_overview.png" alt="TsT Framework Overview"
+                    style="background: white; padding: 1rem; border-radius: 8px;">
+            </div>
         </div>
     </section>
 
     <!-- Why the Test Set? -->
     <section class="section narrative-section" style="background: var(--surface-color);">
+        <!-- <div class="container narrative-content split-50-50"> -->
+        <!-- <div class="container narrative-content reversed"> -->
         <div class="container narrative-content">
+            <div class="narrative-visual fade-in-up">
+                <img src="static/img/TsT_overview_bias_space.png" alt="Bias Space Diagram"
+                    style="background: white; padding: 1rem; border-radius: 8px;">
+            </div>
             <div class="narrative-text fade-in-up">
                 <!-- <h3>It's Not Just Overfitting</h3> -->
                 <h3>Why the <em>test set specifically?</em></h3>
@@ -193,10 +199,6 @@
                     shortcuts that break your specific benchmark, you must <strong>stress-test the actual test
                         instrument itself</strong> (<span style="color: #FF0066;">pink region</span>).
                 </p>
-            </div>
-            <div class="narrative-visual fade-in-up">
-                <img src="static/img/TsT_overview_bias_space.png" alt="Bias Space Diagram"
-                    style="background: white; padding: 1rem; border-radius: 8px;">
             </div>
         </div>
     </section>
