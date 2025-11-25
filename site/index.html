@@ -86,6 +86,48 @@
     </header>
 
 
+    <!-- Abstract-->
+    <section class="section" id="abstract">
+        <div class="container fade-in-up">
+            <!-- justify text -->
+            <h2>Abstract</h2>
+            <p>
+                Robust multimodal benchmarks are the foundation of progress in Multimodal Large Language Models
+                (MLLMs).
+                Yet we show that many modern “vision-centric” benchmarks can be <em>aced</em> by models that ignore
+                the visual input entirely,
+                simply by exploiting non-visual shortcuts encoded in the test set's questions, answer distributions,
+                and templates.
+            </p>
+            <p>
+                We advocate a simple principle for benchmark design:
+                <strong>if a benchmark can be gamed, it will be</strong>.
+                Rather than hoping blind baselines remain low, we propose that benchmark designers should actively
+                <em>train on the test set</em> to probe its intrinsic vulnerabilities.
+            </p>
+            <p>
+                We introduce the <strong>Test-set Stress-Test (TsT)</strong>, which uses \(k\)-fold cross-validation
+                on non-visual test-set information
+                to (<em>i</em>) estimate a benchmark's global non-visual solvability and (<em>ii</em>) assign
+                sample-level bias scores \(s(x)\).
+                We instantiate TsT with a powerful LLM-based diagnostic (TsT-LLM) and an interpretable Random Forest
+                diagnostic (TsT-RF).
+                Finally, we propose <strong>Iterative Bias Pruning (IBP)</strong>, which uses TsT's bias scores to
+                iteratively filter high-bias samples
+                and construct more robust datasets.
+            </p>
+            <p>
+                Applied to four widely used benchmarks&mdash;VSI-Bench, CV-Bench, MMMU, and VideoMME&mdash;TsT
+                reveals
+                <strong>pervasive non-visual shortcuts</strong>, including gains of more than <strong>+30 percentage
+                    points</strong> in blind accuracy
+                by learning test-set patterns alone. As a case study, we use TsT + IBP to create a debiased variant
+                of VSI-Bench that
+                substantially widens the vision-blind performance gap and better compels genuine visual reasoning.
+            </p>
+        </div>
+    </section>
+
     <!-- The Problem -->
     <section class="section narrative-section">
         <div class="container narrative-content">
@@ -395,6 +437,12 @@
     <!-- Footer -->
     <footer>
         <div class="container">
+            <div class="fade-in-up">
+                <h3 style="margin-bottom: 1rem;">Citation</h3>
+                <p>
+                    If you find this work useful, please cite:
+                </p>
+            </div>
 
             <div style="max-width: 600px; margin: 0 auto; text-align: left;">
                 <pre><code>@article{brown2025shortcuts,
