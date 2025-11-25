@@ -158,6 +158,7 @@
     <section class="section narrative-section">
         <div class="container narrative-content">
             <div class="narrative-text fade-in-up">
+                <span class="hero-tag">Diagnose</span>
                 <h3>Introducing TsT</h3>
                 <p>
                     <strong>Test-Set Stress-Test (TsT)</strong> is a diagnostic framework that quantifies non-visual
@@ -189,7 +190,7 @@
 
     <!-- Why the Test Set? -->
     <section class="section narrative-section" style="background: var(--surface-color);">
-        <div class="container narrative-content">
+        <div class="container narrative-content split-50-50">
             <div class="narrative-visual fade-in-up">
                 <img src="static/img/TsT_overview_bias_space.png" alt="Bias Space Diagram"
                     style="background: white; padding: 1rem; border-radius: 8px;">
@@ -216,10 +217,14 @@
         </div>
     </section>
 
-    <!-- The Results -->
+    <!-- Diagnosis Results -->
     <section class="section">
         <div class="container">
-            <h2 style="text-align: center; margin-bottom: 3rem;">Shocking Results</h2>
+            <h2 style="text-align: center; margin-bottom: 2rem;">Diagnosis: Shocking Vulnerabilities</h2>
+            <p style="text-align: center; max-width: 700px; margin: 0 auto 3rem auto; color: var(--text-secondary);">
+                When we applied TsT to leading benchmarks, the results were alarming. Models could solve significant
+                portions of the test sets <strong>without seeing the images</strong>.
+            </p>
 
             <!-- High Level Stats -->
             <div class="grid fade-in-up" style="margin-bottom: 4rem;">
@@ -233,6 +238,56 @@
                     <div class="stat-label">VSI-Bench Blind Gain</div>
                     <p style="font-size: 0.9rem; margin-top: 1rem;">Blind accuracy jumped from 25% to 56% using TsT.</p>
                 </div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- Mitigation -->
+    <!-- <section class="section narrative-section" style="background: var(--surface-color);"> -->
+    <section class="section narrative-section">
+        <div class="container narrative-content">
+            <div class="narrative-text fade-in-up">
+                <span class="hero-tag">Debias</span>
+                <h2>Iterative Bias Pruning (IBP)</h2>
+                <p>
+                    Identifying the problem isn't enough. We need to fix it. We use TsT's bias scores to systematically
+                    debias benchmarks.
+                </p>
+                <p>
+                    <strong>Iterative Bias Pruning (IBP)</strong> alternates between:
+                </p>
+                <ol style="margin-left: 1.5rem; color: var(--text-secondary); margin-bottom: 1.5rem;">
+                    <li style="margin-bottom: 0.5rem;">Pruning the top-k most biased samples</li>
+                    <li style="margin-bottom: 0.5rem;">Re-calculating bias scores via TsT</li>
+                </ol>
+                <p>
+                    The result? <strong>VSI-Bench-Debiased</strong>, a robust subset that is much harder to game via
+                    shortcuts.
+                </p>
+            </div>
+            <div class="narrative-visual fade-in-up">
+                <!-- Placeholder for IBP visual if available, or reuse a relevant chart -->
+                <div style="background: #111; padding: 2rem; border-radius: 12px; text-align: center;">
+                    <i class="fa-solid fa-scissors"
+                        style="font-size: 4rem; color: var(--accent-secondary); margin-bottom: 1rem;"></i>
+                    <h4>Systematic Debiasing</h4>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Mitigation Results -->
+    <section class="section">
+        <div class="container">
+            <h2 style="text-align: center; margin-bottom: 2rem;">Proof it Works</h2>
+            <p style="text-align: center; max-width: 700px; margin: 0 auto 3rem auto; color: var(--text-secondary);">
+                By applying the full TsT+IBP procedure to VSI-Bench, we created a debiased version where visual
+                understanding is actually required.
+            </p>
+
+            <!-- High Level Stats -->
+            <div class="grid fade-in-up" style="margin-bottom: 4rem; justify-content: center;">
                 <div class="stat-card">
                     <div class="stat-number">34%</div>
                     <div class="stat-label">Wider Gap</div>
@@ -293,42 +348,11 @@
                     </table>
                 </div>
                 <p style="text-align: center; font-size: 0.9rem; color: var(--text-secondary);">
-                    <em>Note: On the debiased benchmark, the blind model struggles significantly more (44.7% &rarr;
+                    <em>On the debiased benchmark, the blind model struggles significantly more (44.7% &rarr;
                         32.0%), proving that shortcuts have been removed.</em>
                 </p>
             </div>
 
-        </div>
-    </section>
-
-    <!-- Mitigation -->
-    <section class="section narrative-section" style="background: var(--surface-color);">
-        <div class="container narrative-content">
-            <div class="narrative-text fade-in-up">
-                <h3>Iterative Bias Pruning (IBP)</h3>
-                <p>
-                    Identifying the problem isn't enough. We use TsT's bias scores to systematically debias benchmarks.
-                </p>
-                <p>
-                    <strong>IBP</strong> alternates between:
-                </p>
-                <ol style="margin-left: 1.5rem; color: var(--text-secondary); margin-bottom: 1.5rem;">
-                    <li style="margin-bottom: 0.5rem;">Pruning the top-k most biased samples</li>
-                    <li style="margin-bottom: 0.5rem;">Re-calculating bias scores via TsT</li>
-                </ol>
-                <p>
-                    The result? <strong>VSI-Bench-Debiased</strong>, a robust subset that is much harder to game via
-                    shortcuts.
-                </p>
-            </div>
-            <div class="narrative-visual fade-in-up">
-                <!-- Placeholder for IBP visual if available, or reuse a relevant chart -->
-                <div style="background: #111; padding: 2rem; border-radius: 12px; text-align: center;">
-                    <i class="fa-solid fa-scissors"
-                        style="font-size: 4rem; color: var(--accent-secondary); margin-bottom: 1rem;"></i>
-                    <h4>Systematic Debiasing</h4>
-                </div>
-            </div>
         </div>
     </section>
 
