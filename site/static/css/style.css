@@ -91,7 +91,7 @@ p {
 
 /* Hero Section */
 .hero {
-    min-height: 90vh;
+    min-height: 95vh;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -192,6 +192,19 @@ p {
     border-radius: 12px;
 }
 
+
+/* Abstract */
+#abstract .container {
+    align-items: center;
+    max-width: 750px;
+    text-align: justify;
+}
+
+#abstract h2 {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
 /* Narrative Sections */
 .narrative-section {
     border-top: 1px solid rgba(255, 255, 255, 0.05);
@@ -200,7 +213,7 @@ p {
 .narrative-content {
     display: grid;
     grid-template-columns: 2fr 3fr;
-    gap: 4rem;
+    gap: 3rem;
     align-items: center;
 }
 
