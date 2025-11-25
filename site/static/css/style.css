@@ -199,13 +199,13 @@ p {
 
 .narrative-content {
     display: grid;
-    grid-template-columns: 40% 60%;
+    grid-template-columns: 2fr 3fr;
     gap: 4rem;
     align-items: center;
 }
 
 .narrative-content.reversed {
-    grid-template-columns: 60% 40%;
+    grid-template-columns: 3fr 2fr;
 }
 
 .narrative-text h3 {
