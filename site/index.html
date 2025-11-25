@@ -27,6 +27,7 @@
 
     <!-- Scripts -->
     <script defer src="./static/js/main.js"></script>
+    <script defer src="./static/js/medium-zoom.min.js"></script>
 
     <!-- Meta -->
     <meta property="og:title" content="Test-Set Stress-Test (TsT)">
@@ -106,16 +107,20 @@
                     <div class="carousel-slides-wrapper">
                         <div class="carousel-slide active"
                             data-caption="Severe answer skew. Always guessing '2' works well.">
-                            <img src="static/img/bias_a.jpeg" alt="Counting Bias">
+                            <img src="static/img/bias_a.jpeg" alt="Counting Bias" class="medium-zoom-image"
+                                data-zoomable>
                         </div>
                         <div class="carousel-slide" data-caption="'Keyboard' is the correct answer 100% of the time.">
-                            <img src="static/img/bias_b.jpeg" alt="Spatial Relation Bias">
+                            <img src="static/img/bias_b.jpeg" alt="Spatial Relation Bias" class="medium-zoom-image"
+                                data-zoomable>
                         </div>
                         <div class="carousel-slide" data-caption="'Clock' always appears in the 4th position.">
-                            <img src="static/img/bias_c.jpeg" alt="Appearance Order Bias">
+                            <img src="static/img/bias_c.jpeg" alt="Appearance Order Bias" class="medium-zoom-image"
+                                data-zoomable>
                         </div>
                         <div class="carousel-slide" data-caption="Room sizes cluster predictably around 17m².">
-                            <img src="static/img/bias_d.jpeg" alt="Size Estimation Bias">
+                            <img src="static/img/bias_d.jpeg" alt="Size Estimation Bias" class="medium-zoom-image"
+                                data-zoomable>
                         </div>
                     </div>
 
@@ -183,7 +188,8 @@
             </div>
             <div class="narrative-visual fade-in-up">
                 <img src="static/img/TsT_overview.png" alt="TsT Framework Overview"
-                    style="background: white; padding: 1rem; border-radius: 8px;">
+                    style="background: white; padding: 1rem; border-radius: 8px;" class="medium-zoom-image"
+                    data-zoomable>
             </div>
         </div>
     </section>
@@ -268,11 +274,16 @@
             </div>
             <div class="narrative-visual fade-in-up">
                 <!-- Placeholder for IBP visual if available, or reuse a relevant chart -->
-                <div style="background: #111; padding: 2rem; border-radius: 12px; text-align: center;">
+                <div style="background: #111; padding: 1rem; border-radius: 12px; text-align: center;">
                     <i class="fa-solid fa-scissors"
                         style="font-size: 4rem; color: var(--accent-secondary); margin-bottom: 1rem;"></i>
-                    <h4>Systematic Debiasing</h4>
+                    <!-- <h4>Systematic Debiasing</h4> -->
+                    <!-- <h4>IBP Algorithm</h4> -->
+                    <h4>IBP Algorithm: Systematic Debiasing</h4>
                 </div>
+                <img src="static/img/ibp.png" alt="IBP Algorithm"
+                    style="background: white; padding: 1rem; border-radius: 8px;" class="medium-zoom-image"
+                    data-zoomable>
             </div>
         </div>
     </section>

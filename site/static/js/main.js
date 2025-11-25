@@ -1,4 +1,11 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // Initialize medium-zoom
+    if (typeof mediumZoom === 'function') {
+        mediumZoom('[data-zoomable]', {
+            background: 'rgba(0, 0, 0, 0.9)',
+            margin: 24
+        });
+    }
     // Intersection Observer for scroll animations
     const observerOptions = {
         root: null,
