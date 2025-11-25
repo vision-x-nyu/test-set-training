@@ -323,6 +323,9 @@ footer {
 
 /* Mobile Responsive */
 @media (max-width: 768px) {
+    #abstract .container {
+        text-align: left;
+    }
 
     .narrative-content,
     .narrative-content.reversed {
