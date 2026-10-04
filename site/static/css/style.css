@@ -265,6 +265,17 @@ p {
     letter-spacing: 0.05em;
 }
 
+.stat-number-sm {
+    font-size: 2.5rem;
+}
+
+.results-note {
+    max-width: 760px;
+    margin: 0 auto 1rem auto;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
 /* Footer */
 footer {
     border-top: 1px solid rgba(255, 255, 255, 0.05);
@@ -310,7 +321,7 @@ footer {
 }
 
 .version-note {
-    max-width: 720px;
+    max-width: 800px;
     margin: 0.75rem auto 0;
     font-size: 0.9rem;
     color: var(--text-secondary);
@@ -369,6 +380,12 @@ code {
     font-family: var(--font-mono);
     color: #e6e6e6;
     font-size: 0.9rem;
+}
+
+/* Wrap long BibTeX lines instead of scrolling them out of view. */
+#citation pre {
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
 }
 
 /* Carousel */
@@ -519,4 +536,25 @@ code {
 
 .highlight-neutral {
     color: var(--text-secondary);
+}
+
+@media (max-width: 480px) {
+    /* Keep all four results-table columns visible on phones. */
+    .data-table th,
+    .data-table td {
+        padding: 0.6rem 0.45rem;
+        font-size: 0.85rem;
+    }
+
+    .stat-number-sm {
+        font-size: 2rem;
+    }
+
+    #citation pre {
+        padding: 1rem;
+    }
+
+    #citation code {
+        font-size: 0.75rem;
+    }
 }
