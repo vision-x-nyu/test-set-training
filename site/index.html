@@ -57,7 +57,11 @@
                     <div class="author-item"><a href="https://www.sainingxie.com/">Saining Xie</a></div>
                 </div>
                 <div class="institutions">New York University</div>
-                <div class="venue">Preprint, Nov. 2025</div>
+                <div class="venue">COLM 2026</div>
+                <p class="version-note">
+                    Numbers follow the COLM 2026 paper with small corrections and supersede the November 2025
+                    arXiv version.
+                </p>
             </div>
 
 
@@ -116,15 +120,6 @@
                 Finally, we propose <strong>Iterative Bias Pruning (IBP)</strong>, which uses TsT's bias scores to
                 iteratively filter high-bias samples
                 and construct more robust datasets.
-            </p>
-            <p>
-                Applied to four widely used benchmarks&mdash;VSI-Bench, CV-Bench, MMMU, and VideoMME&mdash;TsT
-                reveals
-                <strong>pervasive non-visual shortcuts</strong>, including gains of more than <strong>+30 percentage
-                    points</strong> in blind accuracy
-                by learning test-set patterns alone. As a case study, we use TsT + IBP to create a debiased variant
-                of VSI-Bench that
-                substantially widens the vision-blind performance gap and better compels genuine visual reasoning.
             </p>
         </div>
     </section>
@@ -278,45 +273,6 @@
         </div>
     </section>
 
-    <!-- Diagnosis Results -->
-    <section class="section" id="diagnostic-results">
-        <div class="container">
-            <h3 style="text-align: center; margin-bottom: 2rem;">Diagnosis: Widespread Vulnerabilities</h3>
-            <p style="text-align: center; max-width: 700px; margin: 0 auto 3rem auto; color: var(--text-secondary);">
-                We applied TsT to some leading multimodal benchmarks, exposing notable non-visual shortcuts.
-            </p>
-
-            <!-- High Level Stats -->
-            <div class="grid fade-in-up" style="margin-top: 4rem;">
-                <div class="stat-card">
-                    <div class="stat-number">+33%</div>
-                    <div class="stat-label">CV-Bench Blind Gain</div>
-                    <p style="font-size: 0.9rem; margin-top: 1rem;">Blind accuracy jumped from 40% to 73% using TsT.</p>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number">+31%</div>
-                    <div class="stat-label">VSI-Bench Blind Gain</div>
-                    <p style="font-size: 0.9rem; margin-top: 1rem;">Blind accuracy jumped from 25% to 56% using TsT.</p>
-                </div>
-            </div>
-
-            <!-- High Level Stats Row 2 -->
-            <div class="grid fade-in-up" style="margin-bottom: 4rem; margin-top: 2rem;">
-                <div class="stat-card">
-                    <div class="stat-number">+9%</div>
-                    <div class="stat-label">MMMU Blind Gain</div>
-                    <p style="font-size: 0.9rem; margin-top: 1rem;">Blind accuracy improved from 35% to 44%.</p>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number">+6%</div>
-                    <div class="stat-label">VideoMME Blind Gain</div>
-                    <p style="font-size: 0.9rem; margin-top: 1rem;">Blind accuracy improved from 35% to 42%.</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-
     <!-- Mitigation -->
     <!-- <section class="section narrative-section" style="background: var(--surface-color);"> -->
     <section class="section narrative-section" id="ibp">
@@ -335,10 +291,6 @@
                     <li style="margin-bottom: 0.5rem;">Pruning the top-k most biased samples</li>
                     <li style="margin-bottom: 0.5rem;">Re-calculating bias scores via TsT</li>
                 </ol>
-                <p>
-                    The result? A <strong>debiased benchmark subset</strong> that is much harder to game via
-                    shortcuts.
-                </p>
             </div>
             <div class="narrative-visual fade-in-up">
                 <div style="background: #111; padding: 1rem; border-radius: 12px; text-align: center;">
@@ -358,8 +310,8 @@
             <!-- <h3 style="text-align: center; margin-bottom: 2rem;">Proof it Works</h3> -->
             <h3 style="text-align: center; margin-bottom: 1.5rem;">Case Study: VSI-Bench-Debiased</h3>
             <p style="text-align: center; max-width: 700px; margin: 0 auto 3rem auto; color: var(--text-secondary);">
-                By applying the full TsT+IBP procedure to VSI-Bench, we created a debiased version of VSI-Bench where
-                visual understanding is more crucial to score well.
+                VSI-Bench-Debiased v1 is a designer-in-the-loop pilot built with hand-written per-type filters. It
+                predates the automated IBP algorithm and is not its output.
             </p>
 
             <!-- High Level Stats -->
@@ -423,8 +375,7 @@
                     </table>
                 </div>
                 <p style="text-align: center; font-size: 0.9rem; color: var(--text-secondary);">
-                    <em>On the debiased benchmark, the blind model struggles significantly more (44.7% &rarr;
-                        32.0%), proving that shortcuts have been removed.</em>
+                    <em>On the debiased benchmark, the fine-tuned model's blind score drops from 44.7 to 32.0.</em>
                 </p>
             </div>
 
