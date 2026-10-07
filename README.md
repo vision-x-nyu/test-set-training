@@ -8,7 +8,7 @@
 [![arXiv](https://img.shields.io/badge/cs.CV-arXiv:2511.04655-b31b1b.svg?style&logo=arXiv)](https://arxiv.org/abs/2511.04655)
 [![PDF](https://img.shields.io/badge/PDF-TsT-FDDEB3.svg)](https://arxiv.org/pdf/2511.04655)
 [![Project](https://img.shields.io/badge/Web-Test--set_Stress--Test-blue.svg)](https://vision-x-nyu.github.io/test-set-training/)
-[![VSI-Bench](https://img.shields.io/badge/HF-VSI--Bench_(incl._Debiased_v1)-FED123.svg?style&logo=HuggingFace)](https://hf.co/datasets/nyu-visionx/VSI-Bench)
+[![VSI-Bench](https://img.shields.io/badge/HF-VSI--Bench_(incl._Debiased)-FED123.svg?style&logo=HuggingFace)](https://hf.co/datasets/nyu-visionx/VSI-Bench)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 
 </div>
@@ -24,7 +24,7 @@ In the paper, Qwen2-7B fine-tuned without images on the other folds scores 42.7 
 held-out questions, against 24.7 zero-shot (+17.9 from unrounded scores), and 60.3 against 47.3 on
 CV-Bench (+13.1), while MMMU shows little learnable signal (−0.7), even though GPT-4o answers 52.3% of its multiple-choice questions blind: a high blind score
 alone cannot tell pretrained knowledge from test-set patterns. Iterative Bias Pruning (IBP) uses
-s(x) to remove the most exploitable questions and re-diagnose the rest. VSI-Bench-Debiased v1, a
+s(x) to remove the most exploitable questions and re-diagnose the rest. VSI-Bench-Debiased, a
 designer-in-the-loop pilot built with hand-written filters rather than IBP, lowers a fine-tuned
 model's blind score from 44.7 to 32.0 while its vision score drops only from 57.1 to 48.7.
 
@@ -116,7 +116,7 @@ because shuffled folds depend on it.
 
 ## Reproducing the paper
 
-The paper's TsT-RF scores, VSI-Bench-Debiased v1 evaluation, automated IBP tables and GPT-4o
+The paper's TsT-RF scores, VSI-Bench-Debiased evaluation, automated IBP tables and GPT-4o
 baselines reproduce exactly on a CPU with one command each, and TsT-LLM reruns land within the
 run-to-run variation the paper describes. [docs/reproducing.md](docs/reproducing.md) has the
 commands and expected values.
@@ -130,7 +130,7 @@ commands and expected values.
 - [Interpreting results](docs/interpreting-results.md): what the scores and s(x) mean, and how not to misread them
 - [Evaluating on VSI-Bench-Debiased](docs/evaluating-on-debiased.md): configs, scoring and the blind-score drop
 - [Reproducing the paper](docs/reproducing.md): every reproduced value and the code-vs-paper notes
-- [Paper settings](docs/paper-settings.md): the TsT-LLM configuration (App. D.1), value by value
+- [Paper settings](docs/paper-settings.md): the TsT-LLM configuration (App. C.1), value by value
 - [Development](docs/development.md): code map and repository checks
 - [Third-party notices](THIRD_PARTY_NOTICES.md): adapted code and the datasets' own terms
 

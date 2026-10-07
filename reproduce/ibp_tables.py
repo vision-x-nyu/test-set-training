@@ -1,19 +1,19 @@
 #!/usr/bin/env python3
-"""CPU reproduction of the Iterative Bias Pruning (IBP) results: Tables 8, 10, 13 and 14.
+"""CPU reproduction of the Iterative Bias Pruning (IBP) results: Tables 6, 10, 11 and 12.
 
 Re-scores shipped per-question predictions on shipped removal lists. No GPU, no model or dataset
 download, no API calls; needs numpy only.
 
-  Table 10  VSI-Bench refinement provenance: fine-tuned LLaVA-Video-7B vision-blind gap on the
+  Table 10  Automated IBP on VSI-Bench: fine-tuned LLaVA-Video-7B vision-blind gap on the
             questions kept by automated TsT-RF IBP (per-format B=1000; per-type uniform 54%; per-type
-            with the v1 pilot's per-type budgets, seeds 42 and 1) and by the v1 manual pilot, each with
+            with the pilot's per-type budgets, seeds 42 and 1) and by the manual pilot, each with
             a matched random-removal control (10 seeds). Cambrian-S gaps are reported as well.
-  Table 13  Removal rates by question type for TsT-LLM (ranks Delta s(x), budget 200) and TsT-RF
+  Table 12  Removal rates by question type for TsT-LLM (ranks Delta s(x), budget 200) and TsT-RF
             (ranks s(x), B=1000), and the Jaccard overlap of their removed sets (also at a matched
             budget of 200).
-  Table 14  Per-format TsT-RF IBP budget sweep: removal rate and mean s(x) of the remaining MC and NUM
+  Table 11  Per-format TsT-RF IBP budget sweep: removal rate and mean s(x) of the remaining MC and NUM
             questions at the start of the last iteration (from the runs' summary.json files).
-  Table 8   MMMU: LLaVA-OneVision-7B vision and blind accuracy on the original 900 questions and on
+  Table 6   MMMU: LLaVA-OneVision-7B vision and blind accuracy on the original 900 questions and on
             the 800 kept by TsT-LLM IBP (Delta s(x), 100 removed), with 1,000 matched random removals.
 
 Inputs (reproduce/data/):
@@ -254,21 +254,21 @@ def _print(res):
         )
     t13 = res["table13"]
     print(
-        f"\nTable 13: Jaccard {t13['jaccard']:.3f} ({t13['intersection']} shared of {t13['union']}); "
+        f"\nTable 12: Jaccard {t13['jaccard']:.3f} ({t13['intersection']} shared of {t13['union']}); "
         f"matched budget 200: {t13['jaccard_matched_budget_200']:.3f}"
     )
     print(f"  {'question type':30s} TsT-LLM %  TsT-RF %")
     for qt, r in t13["removal_rates"].items():
-        mark = "  (in Table 13)" if qt in TABLE13_TYPES else ""
+        mark = "  (in Table 12)" if qt in TABLE13_TYPES else ""
         print(f"  {qt:30s} {r['tst_llm_pct']:8.1f}  {r['tst_rf_pct']:8.1f}{mark}")
-    print("\nTable 14 (per-format, mean s(x) at the start of the last iteration)")
+    print("\nTable 11 (per-format, mean s(x) at the start of the last iteration)")
     print("      B  removed%   MC     NUM   batch")
     for b, r in res["table14"].items():
         print(
             f"  {b.split('_')[1]:>5s}  {r['removed_pct']:7.1f}  {r['mc_mean_bias']:.3f}  {r['num_mean_bias']:.3f}  {r['batch_size']}"
         )
     t8 = res["table8"]
-    print("\nTable 8 (MMMU val, LLaVA-OneVision-7B; accuracy %)      n   vision  blind   gap")
+    print("\nTable 6 (MMMU val, LLaVA-OneVision-7B; accuracy %)      n   vision  blind   gap")
     for key, label in (("original", "Original"), ("delta_s_ranked", "Delta s(x)-ranked removal")):
         r = t8[key]
         print(f"  {label:48s} {r['n']:4d}  {r['vision']:5.1f}  {r['blind']:5.1f}  {r['gap']:5.2f}")

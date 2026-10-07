@@ -53,7 +53,7 @@ src/TsT/
 └── benchmarks/               # adapters: vsi and cvb (both diagnostics); video_mme, mmmu, mmstar (TsT-LLM)
 scripts/                      # rf_report.py, summarize_llm_predictions.py, blind_baselines.py
 reproduce/                    # no-GPU reproduction scripts and their data
-legacy/                       # the script that built VSI-Bench-Debiased v1
+legacy/                       # the script that built VSI-Bench-Debiased
 configs/app_d1/               # the TsT-LLM training config the trainer writes
 examples/                     # bring-your-own-benchmark example
 tests/                        # unit, release and fake-GPU tests; fixtures are small text-only subsets

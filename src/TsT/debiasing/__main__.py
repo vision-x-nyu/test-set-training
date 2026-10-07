@@ -96,7 +96,7 @@ def create_parser():
     t.add_argument("--target_col", default=None)
     t.add_argument("--verbose", "-v", action="store_true", help="Log every iteration")
 
-    llm = parser.add_argument_group("TsT-LLM (--mode llm; defaults are the paper's settings, App. D.1)")
+    llm = parser.add_argument_group("TsT-LLM (--mode llm; defaults are the paper's settings, App. C.1)")
     llm.add_argument("--llm_model", default="Qwen/Qwen2-7B-Instruct")
     llm.add_argument("--llm_model_revision", default=None, help="default: the paper's revision for Qwen2-7B-Instruct")
     llm.add_argument("--llm_train_batch_size", type=int, default=4)

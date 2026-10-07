@@ -5,7 +5,7 @@ runs TsT on the remaining questions, ranks them by their held-out score, and rem
 until the removal budget is spent or the highest remaining score falls to an early-stop threshold.
 Re-running TsT after every batch lets the ranking adapt as questions are removed.
 
-The pruned set depends on the diagnostic, the allocation and the seed (Appendix E.3). Treat a
+The pruned set depends on the diagnostic, the allocation and the seed (Appendix D.4 and D.5). Treat a
 removal list as an audit selection to inspect, not as the single correct debiased benchmark.
 
 ## Run it
@@ -103,7 +103,7 @@ quarter of the per-format B=1000 removal set, so the paper's v2 numbers use the 
 
 ## Reproducing the paper's IBP results
 
-The removal lists behind Tables 8, 10, 13 and 14 are shipped in `reproduce/data/ibp/`, and
+The removal lists behind Tables 6, 10, 11 and 12 are shipped in `reproduce/data/ibp/`, and
 `python reproduce/ibp_tables.py --check` re-derives the tables from them on CPU in about a second.
 `uv run bash reproduce/regenerate_ibp.sh outputs/ibp 5` regenerates the TsT-RF lists with this CLI
 (about 10 minutes with 5 parallel runs, 30 one at a time) and checks them against the shipped ones. See [reproduce/README.md](../reproduce/README.md).

@@ -1,10 +1,10 @@
-# The LLaMA-Factory training config behind the paper's TsT-LLM results (App. D.1).
+# The LLaMA-Factory training config behind the paper's TsT-LLM results (App. C.1).
 # TsT-LLM trains one LoRA adapter per cross-validation fold (k=5, seed 42, one
 # repeat) on that fold's training split, then scores the held-out fold. Below the
 # comments, this file is byte-for-byte what src/TsT/evaluators/llm/trainers/llamafactory.py
 # writes for each fold with the default settings, keys sorted (a test checks this). The
 # trainer generates the config itself; it does not read this file.
-# docs/paper-settings.md lists every App. D.1 value, the inference settings and the
+# docs/paper-settings.md lists every App. C.1 value, the inference settings and the
 # pinned versions.
 #
 # LLaMA-Factory (upstream, https://github.com/hiyouga/LlamaFactory):

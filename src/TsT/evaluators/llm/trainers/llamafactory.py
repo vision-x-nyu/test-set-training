@@ -2,7 +2,7 @@
 LoRA fine-tuning with LLaMA-Factory (https://github.com/hiyouga/LlamaFactory).
 
 For each fold the trainer writes the training examples as an alpaca-format dataset with
-its ``dataset_info.json``, writes a training config (the App. D.1 settings; see
+its ``dataset_info.json``, writes a training config (the App. C.1 settings; see
 ``configs/app_d1/llamafactory_train.yaml``), and runs ``python -m llamafactory.cli train``
 in a subprocess on one GPU.
 
@@ -30,7 +30,7 @@ CONFIG_FILE_NAME = "llamafactory_train.yaml"
 
 @dataclass
 class LlamaFactoryConfig:
-    """LoRA training settings (defaults: App. D.1)."""
+    """LoRA training settings (defaults: App. C.1)."""
 
     model_name: str = "Qwen/Qwen2-7B-Instruct"
     model_revision: Optional[str] = None

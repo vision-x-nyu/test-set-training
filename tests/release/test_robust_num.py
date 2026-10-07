@@ -1,4 +1,4 @@
-"""Pin the unit-aware NUM parser behind Table 12's InternVL rows (reproduce/robust_num.py)."""
+"""Pin the unit-aware NUM parser behind Table 9's InternVL rows (reproduce/robust_num.py)."""
 
 import importlib.util
 from pathlib import Path

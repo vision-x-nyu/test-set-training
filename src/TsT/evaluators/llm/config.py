@@ -1,5 +1,5 @@
 """
-Run configuration for TsT-LLM. The defaults are the paper's configuration (App. D.1).
+Run configuration for TsT-LLM. The defaults are the paper's configuration (App. C.1).
 """
 
 from dataclasses import asdict, dataclass
@@ -12,7 +12,7 @@ PAPER_MODEL_REVISION = "f2826a00ceef68f0f2b946d945ecc0477ce4450c"
 
 @dataclass
 class LLMRunConfig:
-    """Inference and LoRA-training settings for one TsT-LLM run (defaults: App. D.1)."""
+    """Inference and LoRA-training settings for one TsT-LLM run (defaults: App. C.1)."""
 
     model_name: str = PAPER_MODEL
     # None: the paper's revision for the paper's model, else the Hub's main ("main" also works).

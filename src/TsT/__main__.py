@@ -141,7 +141,7 @@ def create_parser(available_benchmarks=None):
     )
     parser.add_argument("--verbose", "-v", action="store_true", help="Log per-fold scores and feature importances")
 
-    llm = parser.add_argument_group("TsT-LLM (--mode llm; defaults are the paper's settings, App. D.1)")
+    llm = parser.add_argument_group("TsT-LLM (--mode llm; defaults are the paper's settings, App. C.1)")
     llm.add_argument(
         "--llm_model", type=str, default="Qwen/Qwen2-7B-Instruct", help="Base model (default: %(default)s)"
     )

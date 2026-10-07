@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Regenerate the shipped TsT-RF IBP removal lists (Tables 10, 13, 14) with the IBP CLI and check
+# Regenerate the shipped TsT-RF IBP removal lists (Tables 10, 11, 12) with the IBP CLI and check
 # that they match reproduce/data/ibp/rf/ exactly.
 #
 # Usage: bash reproduce/regenerate_ibp.sh [OUT_DIR] [JOBS]

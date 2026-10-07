@@ -3,7 +3,7 @@
 TsT-LLM is the paper's primary diagnostic. For each of k folds, it LoRA-fine-tunes a text-only
 LLM on the other folds' questions and answers and scores the held-out fold; a zero-shot pass of the
 base model over every question gives the baseline. The gain over that baseline, ΔTsT, is what the
-model learned from the test set's own text. The defaults are the paper's settings (App. D.1); see
+model learned from the test set's own text. The defaults are the paper's settings (App. C.1); see
 [paper-settings.md](paper-settings.md) for every value.
 
 ## Requirements

@@ -105,26 +105,26 @@ as a pointer for inspection, not as an effect size.
 
 ## Feature names in the paper and in the code
 
-The paper's feature tables (Tables 5–7 in both the proceedings and the arXiv version) are
+The paper's feature tables (Tables 4 and 5 in the arXiv version, Tables 5–7 in the proceedings) are
 representative, not exhaustive, and some of their names differ from the column names in the code
 (`summary.json` lists every model's exact `feature_cols`). The rows below are the names that differ;
 every other name in those tables is the same in the code, except two CV-Bench features that the
-arXiv version's Table 7 marks ‡ (`pair_answer_freq_score`, `is_majority_answer`): they read the
+arXiv version's Table 5 marks ‡ (`pair_answer_freq_score`, `is_majority_answer`): they read the
 held-out question's own answer and are not in this release. Indices in the code start at 0 (`opt_0`, `seq_0_score`, `choice_0_…`), except in
 the `object_*` and `opt_seq_*` columns, which start at 1.
 
 | Table | Paper name | Code name | Preset |
 |---|---|---|---|
-| Table 6, object relative distance | `object_{i}`, i ∈ [4] | `object_1` … `object_4` | both |
-| Table 6, object relative distance | `opt_{i}_obj_freq` | `opt_{i}_option_freq` | both |
-| Table 6, object relative distance | `max_opt_obj_freq` | `max_option_freq` | both |
-| Table 6, object relative distance | `opt_{i}_pair_freq`, and in the arXiv version also `opt_{i}_ord_pair_freq` | `opt_{i}_tgt_option_pair_freq` and `opt_{i}_tgt_option_ord_pair_freq` (sorted and ordered pair) | `paper` only. The proceedings describe option i's object paired with the target object; that per-option computation was never implemented. All eight columns hold the training-fold frequency of the held-out question's own (target, gold object) pair, so they read the held-out label. The arXiv version's Table 6 describes what was computed and marks these features ‡. The default preset drops them. |
-| Table 6, object relative distance | `max_opt_pair_freq`, and in the arXiv version also `max_opt_ord_pair_freq` | `max_tgt_option_pair_freq` and `max_tgt_option_ord_pair_freq` | `paper` only; the maximum of the columns in the row above, so also the gold-pair frequency |
-| Table 6, appearance order | `opt_seq_{i}` | `opt_seq_1` … `opt_seq_4` | both |
-| Table 6, appearance order | `seq_{i}_adj_pair_score` | `seq_{i}_pair_score` | both |
-| Table 7, 2D count | `opt_{i}_dist_from_obj_mean` | `choice_{i}_dist_from_obj_mean` (i = 0…5) | default (CV-Bench's only preset) |
-| Table 7, 2D count | `opt_{i}_dist_from_global_mean` | `choice_{i}_dist_from_global_mean` (i = 0…5) | default |
-| Table 7, 2D relation, 3D depth, 3D distance | `object_{i}`, i ∈ [2] | `object_1`, `object_2` | default |
+| Table 4, object relative distance | `object_{i}`, i ∈ [4] | `object_1` … `object_4` | both |
+| Table 4, object relative distance | `opt_{i}_obj_freq` | `opt_{i}_option_freq` | both |
+| Table 4, object relative distance | `max_opt_obj_freq` | `max_option_freq` | both |
+| Table 4, object relative distance | `opt_{i}_pair_freq`, and in the arXiv version also `opt_{i}_ord_pair_freq` | `opt_{i}_tgt_option_pair_freq` and `opt_{i}_tgt_option_ord_pair_freq` (sorted and ordered pair) | `paper` only. The proceedings describe option i's object paired with the target object; that per-option computation was never implemented. All eight columns hold the training-fold frequency of the held-out question's own (target, gold object) pair, so they read the held-out label. The arXiv version's Table 4 describes what was computed and marks these features ‡. The default preset drops them. |
+| Table 4, object relative distance | `max_opt_pair_freq`, and in the arXiv version also `max_opt_ord_pair_freq` | `max_tgt_option_pair_freq` and `max_tgt_option_ord_pair_freq` | `paper` only; the maximum of the columns in the row above, so also the gold-pair frequency |
+| Table 4, appearance order | `opt_seq_{i}` | `opt_seq_1` … `opt_seq_4` | both |
+| Table 4, appearance order | `seq_{i}_adj_pair_score` | `seq_{i}_pair_score` | both |
+| Table 5, 2D count | `opt_{i}_dist_from_obj_mean` | `choice_{i}_dist_from_obj_mean` (i = 0…5) | default (CV-Bench's only preset) |
+| Table 5, 2D count | `opt_{i}_dist_from_global_mean` | `choice_{i}_dist_from_global_mean` (i = 0…5) | default |
+| Table 5, 2D relation, 3D depth, 3D distance | `object_{i}`, i ∈ [2] | `object_1`, `object_2` | default |
 
 ## Checks before trusting a number
 

@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
-"""Zero-GPU reproduction of the VSI-Bench-Debiased v1 evaluation numbers.
+"""Zero-GPU reproduction of the VSI-Bench-Debiased evaluation numbers.
 
 Re-aggregates cached per-sample lmms-eval predictions on VSI-Bench against the
-released v1 removal list. No GPU, no model download, no API calls.
+released VSI-Bench-Debiased removal list. No GPU, no model download, no API calls.
 
-Reproduces (table numbers are the same in the proceedings and the arXiv version):
-  * Table 2  fine-tuned LLaVA-Video-7B row (vision / blind / gap, original and v1)
-  * Table 2/3 base LLaVA-Video-7B *blind* cells; the base *vision* cells come from a
+Reproduces (table numbers follow the arXiv version):
+  * Table 2  fine-tuned LLaVA-Video-7B row (vision / blind / gap, original and debiased)
+  * Table 2  base LLaVA-Video-7B *blind* cells; the base *vision* cells come from a
     run on a pre-release version of VSI-Bench and are not shipped
-  * Table 9  per-type composition of v1 (from the removal list)
-  * Table 11 matched random-pruning control at 54% removal, 10 seeds
-  * Table 12 all seven rows (rows 3-7 are 2026 lmms-eval runs, including a
+  * Table 7  per-type composition of the debiased set (from the removal list)
+  * Table 8  matched random-pruning control at 54% removal, 10 seeds
+  * Table 9  all seven rows (rows 3-7 are 2026 lmms-eval runs, including a
     separate run of the base LLaVA-Video-7B)
 
 Scoring: MC types use the logged `accuracy`. NUM answers are re-scored from each
@@ -62,7 +62,7 @@ MODELS = [
     ("cambrian_s_prerelease", "cambrian-s", "cambrian-s_blind"),
 ]
 
-# Table 12 rows 3-7: (key, vision file, blind file, printed name)
+# Table 9 rows 3-7: (key, vision file, blind file, printed name)
 TRANSFER = [
     ("internvl3_9b", "internvl3_9b", "internvl3_9b_blind", "InternVL3-9B"),
     ("internvl2_5_26b", "internvl2_5_26b", "internvl2_5_26b_blind", "InternVL2.5-26B"),
@@ -186,14 +186,14 @@ def main(argv=None):
         r["random_control_54pct"] = random_control(vis, bld, removed)
         res[key] = r
 
-    # Table 12 rows 3-7.
+    # Table 9 rows 3-7.
     for key, vf, bf, _ in TRANSFER:
         vis = load_scores(os.path.join(a.preds_dir, vf), num_field=NUM_FIELD)
         bld = load_scores(os.path.join(a.preds_dir, bf), num_field=NUM_FIELD)
         res[key] = vision_blind(vis, bld, removed)
 
-    # Base LLaVA-Video-7B, 2025 run (Tables 2/3): blind only; its vision run used a pre-release
-    # VSI-Bench and is not shipped. The 2026 run of the same model (Table 12) gives the same blind scores.
+    # Base LLaVA-Video-7B, 2025 run (Table 2): blind only; its vision run used a pre-release
+    # VSI-Bench and is not shipped. The 2026 run of the same model (Table 9) gives the same blind scores.
     bld = load_scores(os.path.join(a.preds_dir, "llava_vid_7b_blind"), num_field=NUM_FIELD)
     ids = sorted(bld)
     res["llava_video_7b_base_blind"] = {
@@ -201,7 +201,7 @@ def main(argv=None):
         "blind_v1": micro(bld, [i for i in ids if i not in removed])[0],
     }
 
-    # Table 9: v1 composition by question type.
+    # Table 7: composition of the debiased set by question type.
     qt_of = {i: qt for i, (qt, _) in load_scores(os.path.join(a.preds_dir, "vsi_train_10k")).items()}
     orig, rem = Counter(qt_of.values()), Counter(qt_of[i] for i in removed if i in qt_of)
     res["v1_composition"] = {
@@ -256,7 +256,7 @@ def _compare(exp, got, tol):
 def _print(res):
     ft, cs = res["llava_video_7b_ft_vsi_train_10k"], res["cambrian_s_prerelease"]
     print(f"removed ids: {res['removed_ids']}")
-    print("\nTable 2 / 12 (micro, %)        Vis    Blind  Gap   | v1 Vis  Blind  Gap   | dGap")
+    print("\nTable 2 / 9 (micro, %)         Vis    Blind  Gap   | v1 Vis  Blind  Gap   | dGap")
     rows = [("Cambrian-S (pre-release ckpt)", cs), ("LLaVA-Video-7B + VSI-Train-10k", ft)]
     rows += [(name, res[key]) for key, _, _, name in TRANSFER]
     for name, r in rows:
@@ -266,17 +266,17 @@ def _print(res):
         )
     b = res["llava_video_7b_base_blind"]
     print(
-        f"Base LLaVA-Video-7B blind, 2025 run (Tables 2/3): {b['blind_full']:.2f} -> {b['blind_v1']:.2f} "
+        f"Base LLaVA-Video-7B blind, 2025 run (Table 2): {b['blind_full']:.2f} -> {b['blind_v1']:.2f} "
         "(vision: pre-release VSI-Bench run, not shipped)"
     )
-    print("\nTable 11 (54% removal, 10 seeds)  full   guided  random mean+/-sd [min,max]")
+    print("\nTable 8 (54% removal, 10 seeds)   full   guided  random mean+/-sd [min,max]")
     for name, r in (("LLaVA-Video-7B + FT", ft), ("Cambrian-S", cs)):
         c = r["random_control_54pct"]
         print(
             f"{name:32s} {c['full_gap']:5.2f}  {c['guided_gap']:5.2f}   {c['random_mean']:5.2f} +/- "
             f"{c['random_std_ddof1']:.2f} [{c['random_min']:.2f},{c['random_max']:.2f}]  (n={c['n']}, rm={c['n_removed']})"
         )
-    print("\nTable 9 composition: type original removed kept")
+    print("\nTable 7 composition: type original removed kept")
     for qt, c in res["v1_composition"].items():
         print(f"  {qt:28s} {c['original']:5d} {c['removed']:5d} {c['kept']:5d}")
     t = res["v1_composition_total"]

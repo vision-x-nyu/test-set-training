@@ -1,10 +1,10 @@
-"""Legacy: the designer-in-the-loop pilot script that built VSI-Bench-Debiased v1.
+"""Legacy: the designer-in-the-loop pilot script that built VSI-Bench-Debiased.
 
 This is NOT the automated Iterative Bias Pruning (IBP) algorithm from the paper. It
 applies hand-written, per-question-type filters over answer statistics with
 hand-set per-type budgets. The released removal list
 (reproduce/data/vsi_bench_debiased_v1_removed_ids.txt, identical to pruned_ids.txt
-in nyu-visionx/VSI-Bench) is the canonical v1 artifact; this script is kept for
+in nyu-visionx/VSI-Bench) is the canonical artifact; this script is kept for
 transparency. See legacy/README.md.
 
 The filter and scoring functions and the per-type budgets are unchanged from the
@@ -36,7 +36,7 @@ from scipy.stats import lognorm
 from sklearn.preprocessing import minmax_scale
 from tqdm import tqdm
 
-# Optional: only the fuzzy_* helpers below use text2digits, and the v1 run did not use them.
+# Optional: only the fuzzy_* helpers below use text2digits, and the released run did not use them.
 # https://github.com/ShailChoksi/text2digits
 try:
     from text2digits import text2digits
@@ -46,7 +46,7 @@ except ImportError:
     t2d = None
 
 VSI_REPO = "nyu-visionx/VSI-Bench"
-# The dataset revision v1 was built from. The 2025-11-11 upload (d7cb1a3) reordered the
+# The dataset revision VSI-Bench-Debiased was built from. The 2025-11-11 upload (d7cb1a3) reordered the
 # rows, and row order decides how the filters below break ties.
 VSI_REVISION = "bc96b17cb6be84878a6c1f2e64c24346356e0d04"
 
@@ -1620,7 +1620,7 @@ budgets = {
 
 
 def debias_vsibench(df: pd.DataFrame):
-    """Apply the per-type v1 filters with the v1 budgets. Returns the set of removed ids."""
+    """Apply the pilot's per-type filters with its budgets. Returns the set of removed ids."""
     print("Debiasing VSIBench...")
 
     sep = "=" * 100

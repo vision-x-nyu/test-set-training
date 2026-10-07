@@ -1,7 +1,7 @@
-# Paper settings: TsT-LLM (App. D.1)
+# Paper settings: TsT-LLM (App. C.1)
 
 The defaults of `python -m TsT --mode llm` are the configuration behind the paper's
-TsT-LLM results (App. D.1). This page lists every setting and where the code sets it.
+TsT-LLM results (App. C.1). This page lists every setting and where the code sets it.
 
 - [`configs/app_d1/llamafactory_train.yaml`](../configs/app_d1/llamafactory_train.yaml)
   is the LLaMA-Factory config that the trainer writes for each fold, with the two
@@ -15,15 +15,15 @@ TsT-LLM results (App. D.1). This page lists every setting and where the code set
 | Base model | [`Qwen/Qwen2-7B-Instruct`](https://huggingface.co/Qwen/Qwen2-7B-Instruct) at `f2826a00ceef68f0f2b946d945ecc0477ce4450c` | The paper's runs passed no revision, but the Hub's `main` has pointed at this commit since 2024-08-21; this release pins it by default. |
 | Training framework | [LLaMA-Factory](https://github.com/hiyouga/LlamaFactory) at `b8272a874b5ca59762d5386afcfd3d2fb71d5e00` | Installed by the `llm` extra. The paper's runs used `53a9924ea882250cf96e499d271b666956f8b12b`, which has the same commit message, date and package source (`src/`, `setup.py`, `pyproject.toml`, `requirements.txt`) but was later dropped from upstream history. `b8272a8` is an ancestor of `main` and of tags `v0.9.4` and `v0.9.5`. |
 | Inference and training libraries | vLLM 0.9.2, PyTorch 2.7.0 (CUDA 12.8), transformers 4.52.4, PEFT 0.15.2, TRL 0.9.6 | Pinned in `uv.lock` (`llm` extra). |
-| VSI-Bench | [`nyu-visionx/VSI-Bench`](https://huggingface.co/datasets/nyu-visionx/VSI-Bench) at `d7cb1a3960b79dd3e20d4990b83005e96e1bcd9d` | The revision App. D.1 names for TsT-LLM. (TsT-RF in this release defaults to `bc96b17`; see [reproducing.md](reproducing.md).) |
-| CV-Bench | [`nyu-visionx/CV-Bench`](https://huggingface.co/datasets/nyu-visionx/CV-Bench) at `bc284db50d036958861cb60cdd7b77612052ce0d` | The revision App. D.1 of the arXiv version names; TsT-RF in this release uses the same one. |
-| VideoMME | `lmms-lab/Video-MME` at `ead1408f75b618502df9a1d8e0950166bf0a2a0b` | The revision App. D.1 of the arXiv version names. The Hub now redirects this repository id. |
+| VSI-Bench | [`nyu-visionx/VSI-Bench`](https://huggingface.co/datasets/nyu-visionx/VSI-Bench) at `d7cb1a3960b79dd3e20d4990b83005e96e1bcd9d` | The revision App. C.1 names for TsT-LLM. (TsT-RF in this release defaults to `bc96b17`; see [reproducing.md](reproducing.md).) |
+| CV-Bench | [`nyu-visionx/CV-Bench`](https://huggingface.co/datasets/nyu-visionx/CV-Bench) at `bc284db50d036958861cb60cdd7b77612052ce0d` | The revision App. C.1 of the arXiv version names; TsT-RF in this release uses the same one. |
+| VideoMME | `lmms-lab/Video-MME` at `ead1408f75b618502df9a1d8e0950166bf0a2a0b` | The revision App. C.1 of the arXiv version names. The Hub now redirects this repository id. |
 | MMMU | `lmms-lab/MMMU` at `364f2e2eb107b36e07ff4c5a15f5947a759cef47` | Validation split. The Hub's head since before the paper's runs, which did not pin it; the Hub now redirects this repository id. |
 | MMStar | [`Lin-Chen/MMStar`](https://huggingface.co/datasets/Lin-Chen/MMStar) at `bc98d668301da7b14f648724866e57302778ab27` | The revision of the paper's MMStar run. |
 
-## App. D.1, value by value
+## App. C.1, value by value
 
-| App. D.1 setting | Value | Where it is set |
+| App. C.1 setting | Value | Where it is set |
 |---|---|---|
 | Model | Qwen2-7B-Instruct, revision `f2826a0` | YAML `model_name_or_path: Qwen/Qwen2-7B-Instruct` |
 | VSI-Bench revision | `d7cb1a3` | dataset revision the run loaded |
@@ -55,7 +55,7 @@ TsT-LLM results (App. D.1). This page lists every setting and where the code set
 | Held-out scoring | each sample is scored only in its held-out fold | cross-validation |
 | GPUs | one | LoRA training runs on one visible GPU (see below) |
 
-The command for the D.1 runs; every flag after `--mode llm` is a default:
+The command for the C.1 runs; every flag after `--mode llm` is a default:
 
 ```bash
 uv run python -m TsT --benchmark vsi --mode llm --llm_model Qwen/Qwen2-7B-Instruct --n_splits 5 --repeats 1
@@ -82,7 +82,7 @@ uv run python -m TsT --benchmark vsi --mode llm --llm_model Qwen/Qwen2-7B-Instru
 - **Training template versus inference prompt (as run).** Training formats each
   example with LLaMA-Factory's `gemma` template, while inference sends the raw prompt
   without a chat template. This mismatch is how the paper's runs were configured, and
-  App. D.1 states both; the defaults keep it so the paper's numbers reproduce.
+  App. C.1 states both; the defaults keep it so the paper's numbers reproduce.
 - **One GPU.** With several visible GPUs, LLaMA-Factory would launch distributed
   training on all of them and multiply the effective batch size. The trainer
   therefore exposes only the first visible GPU to the training subprocess; vLLM also
@@ -105,7 +105,7 @@ uv run python -m TsT --benchmark vsi --mode llm --llm_model Qwen/Qwen2-7B-Instru
   choice by the run seed and the question, so it no longer varies between reruns. The paper's
   runs drew it unseeded, which moved zero-shot scores by up to a few tenths of a point between
   runs. On CV-Bench many zero-shot answers start with words rather than a letter, so the
-  fallback gives them chance credit; App. D.1 reports the effect (+13.1 as scored, about
+  fallback gives them chance credit; App. C.1 reports the effect (+13.1 as scored, about
   +18.4 if such answers count as wrong).
 - **NUM.** The model generates up to 10 tokens. The number parsed from the answer
   (number words are converted to digits) is scored with mean

@@ -562,7 +562,7 @@ def evaluate_benchmark(
             of a text-only LLM; needs the ``llm`` extra and one GPU).
         revision: HF dataset revision; None uses the benchmark's pinned revision for ``mode``.
         feature_set: TsT-RF feature preset ("default" is leak-free; see the benchmark's feature_sets).
-        llm_config: TsT-LLM settings (TsT.evaluators.llm.LLMRunConfig); None uses App. D.1.
+        llm_config: TsT-LLM settings (TsT.evaluators.llm.LLMRunConfig); None uses App. C.1.
         predictions_dir: TsT-LLM only: write per-question predictions (JSON lines) here.
         group_col: Keep rows sharing this column's value in one fold (e.g. "scene_name").
         df: Pre-loaded benchmark dataframe (skips load_data; ``revision`` is then only recorded).

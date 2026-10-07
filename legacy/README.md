@@ -1,6 +1,6 @@
-# Legacy: the script that built VSI-Bench-Debiased v1
+# Legacy: the script that built VSI-Bench-Debiased
 
-`debias_vsi_clean.py` is the script that produced VSI-Bench-Debiased v1, a designer-in-the-loop
+`debias_vsi_clean.py` is the script that produced VSI-Bench-Debiased, a designer-in-the-loop
 pilot built with hand-written per-type filters and hand-set budgets. It predates the automated
 Iterative Bias Pruning (IBP) procedure in the paper (Algorithm 1) and is not its output; it does not
 compute or use TsT bias scores s(x). The automated IBP code is in
@@ -15,9 +15,9 @@ compute or use TsT bias scores s(x). The automated IBP code is in
 - **What is canonical.** The released removal list,
   [`reproduce/data/vsi_bench_debiased_v1_removed_ids.txt`](../reproduce/data/vsi_bench_debiased_v1_removed_ids.txt),
   is byte-identical to `pruned_ids.txt` in `nyu-visionx/VSI-Bench` (revision
-  `bdcadb3`). Evaluate on v1 with that list or with the `debiased` config on
+  `bdcadb3`). Evaluate on VSI-Bench-Debiased with that list or with the `debiased` config on
   Hugging Face, not with a fresh run of this script.
-- **How well it reproduces v1.** On VSI-Bench revision `bc96b17` with numpy 1.26.4,
+- **How well it reproduces the released list.** On VSI-Bench revision `bc96b17` with numpy 1.26.4,
   the script selects exactly the released 2,768 questions when numpy's AVX-512 code
   paths are off. When they are on, it matches 2,758 of them (table below).
 

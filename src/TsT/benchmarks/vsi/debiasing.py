@@ -4,7 +4,7 @@ IBP strategy for VSI-Bench.
 Preserves diversity across question types (``question_type`` column)
 during iterative bias pruning.
 
-Note: this is the automated, TsT-based IBP strategy. The released VSI-Bench-Debiased v1 was
+Note: this is the automated, TsT-based IBP strategy. The released VSI-Bench-Debiased was
 built differently, by hand-written per-type filters (``legacy/debias_vsi_clean.py``).
 """
 

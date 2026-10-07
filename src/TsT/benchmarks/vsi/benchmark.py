@@ -56,7 +56,7 @@ class VSIBenchmark(Benchmark):
     description = "Evaluates spatial reasoning biases across numerical and multiple choice tasks"
     hf_repo = "nyu-visionx/VSI-Bench"
     default_revision = VSI_REVISION
-    # The paper's TsT-LLM runs (App. D.1) loaded the 2025-11-11 revision.
+    # The paper's TsT-LLM runs (App. C.1) loaded the 2025-11-11 revision.
     llm_revision = VSI_REVISION_2025_11_11
     id_col = "id"
     group_col_hint = "scene_name"

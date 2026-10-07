@@ -1,4 +1,4 @@
-"""The no-GPU reproduction of the VSI-Bench-Debiased v1 numbers matches its expected values."""
+"""The no-GPU reproduction of the VSI-Bench-Debiased numbers matches its expected values."""
 
 import subprocess
 import sys
