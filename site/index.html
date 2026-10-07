@@ -69,8 +69,8 @@
                 <div class="institutions">New York University</div>
                 <div class="venue">COLM 2026</div>
                 <p class="version-note">
-                    Numbers follow the COLM 2026 paper with small corrections and supersede the November 2025
-                    arXiv version.
+                    Numbers follow the revised arXiv version (v2, corrections listed in its Appendix G) and
+                    supersede the November 2025 version.
                 </p>
             </div>
 
@@ -79,14 +79,14 @@
                 <a href="https://openreview.net/forum?id=ggtdDv1l9s" class="btn btn-primary">
                     <i class="fa-solid fa-file-lines"></i> COLM 2026
                 </a>
-                <a href="https://openreview.net/pdf?id=ggtdDv1l9s" class="btn btn-secondary">
+                <a href="https://arxiv.org/pdf/2511.04655" class="btn btn-secondary">
                     <i class="fa-solid fa-file-pdf"></i>PDF
                 </a>
                 <a href="https://arxiv.org/abs/2511.04655" class="btn btn-secondary">
                     <i class="ai ai-arxiv"></i>arXiv
                 </a>
                 <a href="https://github.com/vision-x-nyu/test-set-training" class="btn btn-secondary">
-                    <i class="fa-brands fa-github"></i> Code (not yet released)
+                    <i class="fa-brands fa-github"></i> Code
                 </a>
                 <a href="https://x.com/_ellisbrown/status/1988014436645327220" class="btn btn-secondary">
                     <i class="fa-brands fa-twitter"></i> Thread
@@ -120,17 +120,17 @@
             <p>
                 This <strong>Test-set Stress-Test (TsT)</strong> yields a benchmark-level score and a per-question
                 bias score \(s(x)\) for designer review. With the same model and the same scoring, a text-only
-                Qwen2-7B goes from 24.7 zero-shot to 42.7 on VSI-Bench (+18 points), but shows no gain on
-                knowledge-intensive MMMU (34.2&nbsp;&rarr;&nbsp;33.6), even though GPT-4o answers 52.3% of MMMU questions
-                correctly without the image. A blind score alone cannot tell pretrained knowledge apart from
-                patterns learnable from the test set.
+                Qwen2-7B goes from 24.7 zero-shot to 42.7 on VSI-Bench (+18 points) and from 47.3 to 60.3 on
+                CV-Bench (+13), but learns little on knowledge-intensive MMMU (34.2&nbsp;&rarr;&nbsp;33.6), even
+                though GPT-4o answers 52.3% of MMMU's multiple-choice questions correctly without the image. A blind
+                score alone cannot tell pretrained knowledge apart from patterns learnable from the test set.
             </p>
             <p>
                 These shortcuts are reachable without test access: fine-tuning LLaVA-Video-7B on the
                 in-distribution VSI-Train-10k raises its blind VSI-Bench score by 18.8 points, about as much as its
                 vision score (+20.4). The bias scores also drive <strong>Iterative Bias Pruning (IBP)</strong>. Our
-                released VSI-Bench-Debiased v1 is a designer-in-the-loop pilot built with hand-written per-type
-                filters, not produced by IBP. It lowers that fine-tuned model's blind score from 44.7 to 32.0 while
+                released VSI-Bench-Debiased v1 is a designer-in-the-loop pilot version, not the output of the full
+                automated IBP procedure. It lowers that fine-tuned model's blind score from 44.7 to 32.0 while
                 its vision score falls less (57.1&nbsp;&rarr;&nbsp;48.7), and its vision-blind gap is 16.7, versus
                 12.4&nbsp;&plusmn;&nbsp;0.6 when a random 54% of questions is removed. TsT is a pre-release audit of
                 an evaluation instrument, not a recipe for training deployed models on test answers.
@@ -150,9 +150,9 @@
                 </p>
                 <p>
                     This is particularly problematic for vision-centric benchmarks, which explicitly aim to require
-                    visual inputs to be solved. If a model can score well on counting questions by guessing small
-                    numbers, because over half of VSI-Bench counting answers are 3 or fewer, are we really measuring
-                    visual understanding?
+                    visual inputs to be solved. If a model can score well on VSI-Bench counting questions by always
+                    answering "2", the ground truth for over half of them, are we really measuring visual
+                    understanding?
                 </p>
             </div>
             <div class="narrative-visual fade-in-up">
@@ -165,8 +165,8 @@
                                 data-zoomable>
                         </div>
                         <div class="carousel-slide"
-                            data-caption="CV-Bench depth: 'keyboard' is the correct answer every time it is queried.">
-                            <img src="static/img/bias_b.jpeg" alt="Spatial Relation Bias" class="medium-zoom-image"
+                            data-caption="CV-Bench depth: books are the closer object in 60 of 64 questions; a bookcase never is (0 of 42).">
+                            <img src="static/img/bias_b_v2.jpeg" alt="Spatial Relation Bias" class="medium-zoom-image"
                                 data-zoomable>
                         </div>
                         <div class="carousel-slide"
@@ -278,8 +278,8 @@
                         set?"</em>
                 </p>
                 <p>
-                    Many multimodal benchmarks are released as a test set only, so there is often no training split
-                    to use. And once a benchmark is released, models can exploit patterns specific to that test set,
+                    Most multimodal benchmarks are released with only an evaluation split, so there is often no
+                    training split to use. And once a benchmark is released, models can exploit patterns specific to that test set,
                     such as those introduced by sampling, templates, or curation.
                 </p>
                 <p>
@@ -308,29 +308,39 @@
                     <div class="stat-number">+18 pts</div>
                     <div class="stat-label">VSI-Bench</div>
                     <p style="font-size: 0.9rem; margin-top: 1rem;">Zero-shot 24.7&nbsp;&rarr;&nbsp;TsT 42.7.
-                        Multiple-choice questions only: 25.5&nbsp;&rarr;&nbsp;39.1.</p>
+                        Multiple-choice questions only: 25.5&nbsp;&rarr;&nbsp;39.1. With folds grouped by scene, the
+                        gain is +17.</p>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-number">No gain</div>
+                    <div class="stat-number">+13 pts</div>
+                    <div class="stat-label">CV-Bench</div>
+                    <p style="font-size: 0.9rem; margin-top: 1rem;">Zero-shot 47.3&nbsp;&rarr;&nbsp;TsT 60.3.</p>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">+4 pts</div>
+                    <div class="stat-label">VideoMME</div>
+                    <p style="font-size: 0.9rem; margin-top: 1rem;">Zero-shot 29.2&nbsp;&rarr;&nbsp;TsT 33.4.</p>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">+5 pts</div>
+                    <div class="stat-label">MMStar (curated to need vision)</div>
+                    <p style="font-size: 0.9rem; margin-top: 1rem;">Zero-shot 24.2&nbsp;&rarr;&nbsp;TsT 29.5. A
+                        control: TsT finds only a small gain on a benchmark built to require the image.</p>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number stat-number-text">Little learnable signal</div>
                     <div class="stat-label">MMMU (knowledge-intensive)</div>
-                    <p style="font-size: 0.9rem; margin-top: 1rem;">Zero-shot 34.2&nbsp;&rarr;&nbsp;TsT 33.6. GPT-4o answers
-                        52.3% of MMMU questions correctly without the image, which points to pretrained knowledge
-                        rather than patterns learnable from the test set.</p>
+                    <p style="font-size: 0.9rem; margin-top: 1rem;">Zero-shot 34.2&nbsp;&rarr;&nbsp;TsT 33.6. GPT-4o
+                        answers 52.3% of MMMU's multiple-choice questions correctly without the image, which points to
+                        pretrained knowledge rather than patterns learnable from the test set.</p>
                 </div>
             </div>
-
-            <!-- CV-Bench / VideoMME: add cards here once the reruns under the paper's recipe are approved. -->
 
             <p class="results-note">
                 A TsT score is a stress test of the benchmark, not model performance. These scores are not
                 accuracy: for multiple-choice questions they are the mean probability the model assigns to the
                 correct option, and for VSI-Bench numerical questions they are mean relative accuracy (VSI-Bench
                 combines the two by question count). Gains are in points.
-            </p>
-            <p class="results-note" id="cvb-videomme-note">
-                CV-Bench and VideoMME are not shown: the COLM 2026 version reports them from an earlier
-                configuration (Qwen2.5-7B-Instruct, top-1 accuracy, sweep-selected settings), not the recipe used
-                above. We are re-running both with the paper's recipe.
             </p>
         </div>
     </section>
@@ -357,7 +367,8 @@
                 <p>
                     The paper runs automated IBP on VSI-Bench (with TsT-RF) and MMMU (with TsT-LLM). The released
                     VSI-Bench-Debiased v1 predates this algorithm and was built with hand-written per-type filters
-                    (below).
+                    (below). On VSI-Bench, automated per-type IBP at the pilot's 54% removal rate widens a fine-tuned
+                    model's vision-blind gap to 14.1, versus 12.2&ndash;12.4 for random removal.
                 </p>
             </div>
             <div class="narrative-visual fade-in-up">
@@ -378,9 +389,8 @@
             <!-- <h3 style="text-align: center; margin-bottom: 2rem;">Proof it Works</h3> -->
             <h3 style="text-align: center; margin-bottom: 1.5rem;">Case Study: VSI-Bench-Debiased v1</h3>
             <p style="text-align: center; max-width: 700px; margin: 0 auto 3rem auto; color: var(--text-secondary);">
-                VSI-Bench-Debiased v1 is a designer-in-the-loop pilot built with hand-written per-type filters. It
-                predates the automated IBP algorithm and is not its output. The filters remove 2,768 of the 5,130
-                questions (54.0%) and keep 2,362. Because the question-type mix changes, v1 is a separate evaluation
+                VSI-Bench-Debiased v1 is a designer-in-the-loop pilot version, not the output of the full automated
+                IBP procedure. It removes 2,768 of the 5,130 questions (54.0%) and keeps 2,362. Because the question-type mix changes, v1 is a separate evaluation
                 set, not a drop-in replacement for VSI-Bench: report it alongside the full set.
             </p>
 
@@ -456,12 +466,6 @@
                     On v1, the fine-tuned model's blind score falls from 44.7 to 32.0 while its vision score falls
                     from 57.1 to 48.7, so v1 preferentially removes questions that can be answered without the
                     video. v1 reduces non-visual shortcuts but is not guaranteed to be free of them.
-                </p>
-                <p class="results-note" id="pilot-provenance-note">
-                    Both LLaVA-Video models above were among the reference models whose scores were visible while
-                    the filters were set. Two checks avoid this: on InternVL3-9B, a model not used during filtering,
-                    the gap moves from 11.1 to 13.2; and automated per-type IBP (uniform per-type budgets, no
-                    hand-written filters) at the same 54% removal widens the fine-tuned model's gap to 14.3.
                 </p>
             </div>
 

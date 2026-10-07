@@ -269,6 +269,11 @@ p {
     font-size: 2.5rem;
 }
 
+.stat-number-text {
+    font-size: 2rem;
+    line-height: 1.15;
+}
+
 .results-note {
     max-width: 760px;
     margin: 0 auto 1rem auto;
