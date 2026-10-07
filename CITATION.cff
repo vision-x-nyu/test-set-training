@@ -1,0 +1,53 @@
+cff-version: 1.2.0
+message: "If you use this code, please cite the paper below."
+title: "TsT: Test-set Stress-Test"
+abstract: >-
+  Code for the Test-set Stress-Test (TsT): k-fold cross-validation of a text-only
+  model on a benchmark's own test set to expose non-visual shortcuts before release.
+type: software
+version: 1.0.0
+license: Apache-2.0
+repository-code: "https://github.com/vision-x-nyu/test-set-training"
+url: "https://vision-x-nyu.github.io/test-set-training/"
+authors:
+  - given-names: Ellis
+    family-names: Brown
+    affiliation: New York University
+  - given-names: Jihan
+    family-names: Yang
+    affiliation: New York University
+  - given-names: Shusheng
+    family-names: Yang
+    affiliation: New York University
+  - given-names: Rob
+    family-names: Fergus
+    affiliation: New York University
+  - given-names: Saining
+    family-names: Xie
+    affiliation: New York University
+keywords:
+  - benchmark design
+  - multimodal evaluation
+  - non-visual shortcuts
+  - VSI-Bench
+preferred-citation:
+  type: conference-paper
+  title: "Benchmark Designers Should \"Train on the Test Set\" to Expose Exploitable Non-Visual Shortcuts"
+  authors:
+    - given-names: Ellis
+      family-names: Brown
+    - given-names: Jihan
+      family-names: Yang
+    - given-names: Shusheng
+      family-names: Yang
+    - given-names: Rob
+      family-names: Fergus
+    - given-names: Saining
+      family-names: Xie
+  collection-title: "Conference on Language Modeling (COLM)"
+  year: 2026
+  identifiers:
+    - type: other
+      value: "arXiv:2511.04655"
+      description: arXiv preprint
+  url: "https://arxiv.org/abs/2511.04655"

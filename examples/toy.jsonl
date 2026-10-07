@@ -1,0 +1,360 @@
+{"id": 0, "scene_id": "room_000", "question_type": "taller_object", "question": "Which is taller, the tv or the bookshelf?", "options": ["A. tv", "B. bookshelf"], "answer": "B"}
+{"id": 1, "scene_id": "room_000", "question_type": "taller_object", "question": "Which is taller, the tv or the guitar?", "options": ["A. tv", "B. guitar"], "answer": "B"}
+{"id": 2, "scene_id": "room_000", "question_type": "object_count", "question": "How many picture frames are in this room?", "options": null, "answer": "5"}
+{"id": 3, "scene_id": "room_000", "question_type": "object_count", "question": "How many chairs are in this room?", "options": null, "answer": "8"}
+{"id": 4, "scene_id": "room_000", "question_type": "object_color", "question": "What color is the chair?", "options": ["A. white", "B. yellow", "C. blue", "D. green"], "answer": "D"}
+{"id": 5, "scene_id": "room_000", "question_type": "object_color", "question": "What color is the lamp?", "options": ["A. black", "B. yellow", "C. green", "D. blue"], "answer": "A"}
+{"id": 6, "scene_id": "room_001", "question_type": "taller_object", "question": "Which is taller, the floor lamp or the laptop?", "options": ["A. floor lamp", "B. laptop"], "answer": "A"}
+{"id": 7, "scene_id": "room_001", "question_type": "taller_object", "question": "Which is taller, the laptop or the plant?", "options": ["A. laptop", "B. plant"], "answer": "B"}
+{"id": 8, "scene_id": "room_001", "question_type": "object_count", "question": "How many lamps are in this room?", "options": null, "answer": "1"}
+{"id": 9, "scene_id": "room_001", "question_type": "object_count", "question": "How many pillows are in this room?", "options": null, "answer": "3"}
+{"id": 10, "scene_id": "room_001", "question_type": "object_color", "question": "What color is the curtain?", "options": ["A. blue", "B. black", "C. gray", "D. white"], "answer": "D"}
+{"id": 11, "scene_id": "room_001", "question_type": "object_color", "question": "What color is the door?", "options": ["A. blue", "B. white", "C. red", "D. yellow"], "answer": "A"}
+{"id": 12, "scene_id": "room_002", "question_type": "taller_object", "question": "Which is taller, the laptop or the bookshelf?", "options": ["A. laptop", "B. bookshelf"], "answer": "B"}
+{"id": 13, "scene_id": "room_002", "question_type": "taller_object", "question": "Which is taller, the chair or the plant?", "options": ["A. chair", "B. plant"], "answer": "A"}
+{"id": 14, "scene_id": "room_002", "question_type": "object_count", "question": "How many books are in this room?", "options": null, "answer": "6"}
+{"id": 15, "scene_id": "room_002", "question_type": "object_count", "question": "How many picture frames are in this room?", "options": null, "answer": "1"}
+{"id": 16, "scene_id": "room_002", "question_type": "object_color", "question": "What color is the sofa?", "options": ["A. black", "B. white", "C. green", "D. yellow"], "answer": "B"}
+{"id": 17, "scene_id": "room_002", "question_type": "object_color", "question": "What color is the cabinet?", "options": ["A. blue", "B. yellow", "C. red", "D. black"], "answer": "A"}
+{"id": 18, "scene_id": "room_003", "question_type": "taller_object", "question": "Which is taller, the wardrobe or the chair?", "options": ["A. wardrobe", "B. chair"], "answer": "A"}
+{"id": 19, "scene_id": "room_003", "question_type": "taller_object", "question": "Which is taller, the tv or the trash can?", "options": ["A. tv", "B. trash can"], "answer": "A"}
+{"id": 20, "scene_id": "room_003", "question_type": "object_count", "question": "How many towels are in this room?", "options": null, "answer": "2"}
+{"id": 21, "scene_id": "room_003", "question_type": "object_count", "question": "How many towels are in this room?", "options": null, "answer": "1"}
+{"id": 22, "scene_id": "room_003", "question_type": "object_color", "question": "What color is the chair?", "options": ["A. black", "B. green", "C. blue", "D. white"], "answer": "D"}
+{"id": 23, "scene_id": "room_003", "question_type": "object_color", "question": "What color is the curtain?", "options": ["A. red", "B. green", "C. gray", "D. yellow"], "answer": "C"}
+{"id": 24, "scene_id": "room_004", "question_type": "taller_object", "question": "Which is taller, the trash can or the tv?", "options": ["A. trash can", "B. tv"], "answer": "B"}
+{"id": 25, "scene_id": "room_004", "question_type": "taller_object", "question": "Which is taller, the door or the guitar?", "options": ["A. door", "B. guitar"], "answer": "A"}
+{"id": 26, "scene_id": "room_004", "question_type": "object_count", "question": "How many towels are in this room?", "options": null, "answer": "5"}
+{"id": 27, "scene_id": "room_004", "question_type": "object_count", "question": "How many towels are in this room?", "options": null, "answer": "3"}
+{"id": 28, "scene_id": "room_004", "question_type": "object_color", "question": "What color is the sofa?", "options": ["A. green", "B. blue", "C. brown", "D. gray"], "answer": "B"}
+{"id": 29, "scene_id": "room_004", "question_type": "object_color", "question": "What color is the cabinet?", "options": ["A. green", "B. brown", "C. red", "D. white"], "answer": "A"}
+{"id": 30, "scene_id": "room_005", "question_type": "taller_object", "question": "Which is taller, the trash can or the plant?", "options": ["A. trash can", "B. plant"], "answer": "B"}
+{"id": 31, "scene_id": "room_005", "question_type": "taller_object", "question": "Which is taller, the tv or the nightstand?", "options": ["A. tv", "B. nightstand"], "answer": "A"}
+{"id": 32, "scene_id": "room_005", "question_type": "object_count", "question": "How many towels are in this room?", "options": null, "answer": "1"}
+{"id": 33, "scene_id": "room_005", "question_type": "object_count", "question": "How many pillows are in this room?", "options": null, "answer": "5"}
+{"id": 34, "scene_id": "room_005", "question_type": "object_color", "question": "What color is the lamp?", "options": ["A. yellow", "B. brown", "C. black", "D. white"], "answer": "C"}
+{"id": 35, "scene_id": "room_005", "question_type": "object_color", "question": "What color is the cabinet?", "options": ["A. black", "B. brown", "C. red", "D. gray"], "answer": "B"}
+{"id": 36, "scene_id": "room_006", "question_type": "taller_object", "question": "Which is taller, the trash can or the bookshelf?", "options": ["A. trash can", "B. bookshelf"], "answer": "B"}
+{"id": 37, "scene_id": "room_006", "question_type": "taller_object", "question": "Which is taller, the bookshelf or the table?", "options": ["A. bookshelf", "B. table"], "answer": "B"}
+{"id": 38, "scene_id": "room_006", "question_type": "object_count", "question": "How many books are in this room?", "options": null, "answer": "15"}
+{"id": 39, "scene_id": "room_006", "question_type": "object_count", "question": "How many pillows are in this room?", "options": null, "answer": "4"}
+{"id": 40, "scene_id": "room_006", "question_type": "object_color", "question": "What color is the blanket?", "options": ["A. yellow", "B. white", "C. blue", "D. red"], "answer": "D"}
+{"id": 41, "scene_id": "room_006", "question_type": "object_color", "question": "What color is the door?", "options": ["A. black", "B. white", "C. green", "D. blue"], "answer": "A"}
+{"id": 42, "scene_id": "room_007", "question_type": "taller_object", "question": "Which is taller, the laptop or the mug?", "options": ["A. laptop", "B. mug"], "answer": "A"}
+{"id": 43, "scene_id": "room_007", "question_type": "taller_object", "question": "Which is taller, the laptop or the guitar?", "options": ["A. laptop", "B. guitar"], "answer": "B"}
+{"id": 44, "scene_id": "room_007", "question_type": "object_count", "question": "How many cups are in this room?", "options": null, "answer": "4"}
+{"id": 45, "scene_id": "room_007", "question_type": "object_count", "question": "How many books are in this room?", "options": null, "answer": "17"}
+{"id": 46, "scene_id": "room_007", "question_type": "object_color", "question": "What color is the door?", "options": ["A. gray", "B. blue", "C. white", "D. yellow"], "answer": "A"}
+{"id": 47, "scene_id": "room_007", "question_type": "object_color", "question": "What color is the cabinet?", "options": ["A. brown", "B. gray", "C. yellow", "D. white"], "answer": "D"}
+{"id": 48, "scene_id": "room_008", "question_type": "taller_object", "question": "Which is taller, the laptop or the trash can?", "options": ["A. laptop", "B. trash can"], "answer": "A"}
+{"id": 49, "scene_id": "room_008", "question_type": "taller_object", "question": "Which is taller, the plant or the sofa?", "options": ["A. plant", "B. sofa"], "answer": "B"}
+{"id": 50, "scene_id": "room_008", "question_type": "object_count", "question": "How many books are in this room?", "options": null, "answer": "19"}
+{"id": 51, "scene_id": "room_008", "question_type": "object_count", "question": "How many books are in this room?", "options": null, "answer": "13"}
+{"id": 52, "scene_id": "room_008", "question_type": "object_color", "question": "What color is the blanket?", "options": ["A. red", "B. gray", "C. white", "D. blue"], "answer": "B"}
+{"id": 53, "scene_id": "room_008", "question_type": "object_color", "question": "What color is the door?", "options": ["A. yellow", "B. blue", "C. brown", "D. red"], "answer": "B"}
+{"id": 54, "scene_id": "room_009", "question_type": "taller_object", "question": "Which is taller, the floor lamp or the mug?", "options": ["A. floor lamp", "B. mug"], "answer": "A"}
+{"id": 55, "scene_id": "room_009", "question_type": "taller_object", "question": "Which is taller, the laptop or the guitar?", "options": ["A. laptop", "B. guitar"], "answer": "A"}
+{"id": 56, "scene_id": "room_009", "question_type": "object_count", "question": "How many books are in this room?", "options": null, "answer": "11"}
+{"id": 57, "scene_id": "room_009", "question_type": "object_count", "question": "How many chairs are in this room?", "options": null, "answer": "3"}
+{"id": 58, "scene_id": "room_009", "question_type": "object_color", "question": "What color is the cabinet?", "options": ["A. yellow", "B. white", "C. green", "D. black"], "answer": "D"}
+{"id": 59, "scene_id": "room_009", "question_type": "object_color", "question": "What color is the blanket?", "options": ["A. brown", "B. yellow", "C. red", "D. black"], "answer": "D"}
+{"id": 60, "scene_id": "room_010", "question_type": "taller_object", "question": "Which is taller, the bookshelf or the floor lamp?", "options": ["A. bookshelf", "B. floor lamp"], "answer": "A"}
+{"id": 61, "scene_id": "room_010", "question_type": "taller_object", "question": "Which is taller, the chair or the nightstand?", "options": ["A. chair", "B. nightstand"], "answer": "A"}
+{"id": 62, "scene_id": "room_010", "question_type": "object_count", "question": "How many cups are in this room?", "options": null, "answer": "4"}
+{"id": 63, "scene_id": "room_010", "question_type": "object_count", "question": "How many beds are in this room?", "options": null, "answer": "1"}
+{"id": 64, "scene_id": "room_010", "question_type": "object_color", "question": "What color is the chair?", "options": ["A. gray", "B. brown", "C. green", "D. white"], "answer": "B"}
+{"id": 65, "scene_id": "room_010", "question_type": "object_color", "question": "What color is the cabinet?", "options": ["A. white", "B. blue", "C. red", "D. black"], "answer": "D"}
+{"id": 66, "scene_id": "room_011", "question_type": "taller_object", "question": "Which is taller, the wardrobe or the mug?", "options": ["A. wardrobe", "B. mug"], "answer": "A"}
+{"id": 67, "scene_id": "room_011", "question_type": "taller_object", "question": "Which is taller, the plant or the wardrobe?", "options": ["A. plant", "B. wardrobe"], "answer": "A"}
+{"id": 68, "scene_id": "room_011", "question_type": "object_count", "question": "How many plants are in this room?", "options": null, "answer": "2"}
+{"id": 69, "scene_id": "room_011", "question_type": "object_count", "question": "How many picture frames are in this room?", "options": null, "answer": "6"}
+{"id": 70, "scene_id": "room_011", "question_type": "object_color", "question": "What color is the rug?", "options": ["A. white", "B. blue", "C. brown", "D. black"], "answer": "D"}
+{"id": 71, "scene_id": "room_011", "question_type": "object_color", "question": "What color is the chair?", "options": ["A. gray", "B. black", "C. red", "D. white"], "answer": "D"}
+{"id": 72, "scene_id": "room_012", "question_type": "taller_object", "question": "Which is taller, the sofa or the trash can?", "options": ["A. sofa", "B. trash can"], "answer": "A"}
+{"id": 73, "scene_id": "room_012", "question_type": "taller_object", "question": "Which is taller, the trash can or the nightstand?", "options": ["A. trash can", "B. nightstand"], "answer": "B"}
+{"id": 74, "scene_id": "room_012", "question_type": "object_count", "question": "How many books are in this room?", "options": null, "answer": "13"}
+{"id": 75, "scene_id": "room_012", "question_type": "object_count", "question": "How many chairs are in this room?", "options": null, "answer": "5"}
+{"id": 76, "scene_id": "room_012", "question_type": "object_color", "question": "What color is the cabinet?", "options": ["A. red", "B. blue", "C. green", "D. yellow"], "answer": "C"}
+{"id": 77, "scene_id": "room_012", "question_type": "object_color", "question": "What color is the rug?", "options": ["A. green", "B. gray", "C. black", "D. brown"], "answer": "C"}
+{"id": 78, "scene_id": "room_013", "question_type": "taller_object", "question": "Which is taller, the laptop or the nightstand?", "options": ["A. laptop", "B. nightstand"], "answer": "B"}
+{"id": 79, "scene_id": "room_013", "question_type": "taller_object", "question": "Which is taller, the mug or the wardrobe?", "options": ["A. mug", "B. wardrobe"], "answer": "B"}
+{"id": 80, "scene_id": "room_013", "question_type": "object_count", "question": "How many plants are in this room?", "options": null, "answer": "4"}
+{"id": 81, "scene_id": "room_013", "question_type": "object_count", "question": "How many lamps are in this room?", "options": null, "answer": "3"}
+{"id": 82, "scene_id": "room_013", "question_type": "object_color", "question": "What color is the rug?", "options": ["A. brown", "B. black", "C. gray", "D. green"], "answer": "A"}
+{"id": 83, "scene_id": "room_013", "question_type": "object_color", "question": "What color is the lamp?", "options": ["A. yellow", "B. black", "C. blue", "D. white"], "answer": "A"}
+{"id": 84, "scene_id": "room_014", "question_type": "taller_object", "question": "Which is taller, the guitar or the door?", "options": ["A. guitar", "B. door"], "answer": "A"}
+{"id": 85, "scene_id": "room_014", "question_type": "taller_object", "question": "Which is taller, the tv or the chair?", "options": ["A. tv", "B. chair"], "answer": "A"}
+{"id": 86, "scene_id": "room_014", "question_type": "object_count", "question": "How many cups are in this room?", "options": null, "answer": "2"}
+{"id": 87, "scene_id": "room_014", "question_type": "object_count", "question": "How many chairs are in this room?", "options": null, "answer": "6"}
+{"id": 88, "scene_id": "room_014", "question_type": "object_color", "question": "What color is the rug?", "options": ["A. black", "B. white", "C. brown", "D. gray"], "answer": "B"}
+{"id": 89, "scene_id": "room_014", "question_type": "object_color", "question": "What color is the sofa?", "options": ["A. blue", "B. gray", "C. yellow", "D. white"], "answer": "C"}
+{"id": 90, "scene_id": "room_015", "question_type": "taller_object", "question": "Which is taller, the mug or the plant?", "options": ["A. mug", "B. plant"], "answer": "A"}
+{"id": 91, "scene_id": "room_015", "question_type": "taller_object", "question": "Which is taller, the nightstand or the floor lamp?", "options": ["A. nightstand", "B. floor lamp"], "answer": "B"}
+{"id": 92, "scene_id": "room_015", "question_type": "object_count", "question": "How many chairs are in this room?", "options": null, "answer": "8"}
+{"id": 93, "scene_id": "room_015", "question_type": "object_count", "question": "How many plants are in this room?", "options": null, "answer": "4"}
+{"id": 94, "scene_id": "room_015", "question_type": "object_color", "question": "What color is the door?", "options": ["A. green", "B. brown", "C. yellow", "D. blue"], "answer": "A"}
+{"id": 95, "scene_id": "room_015", "question_type": "object_color", "question": "What color is the chair?", "options": ["A. white", "B. brown", "C. red", "D. green"], "answer": "A"}
+{"id": 96, "scene_id": "room_016", "question_type": "taller_object", "question": "Which is taller, the table or the plant?", "options": ["A. table", "B. plant"], "answer": "A"}
+{"id": 97, "scene_id": "room_016", "question_type": "taller_object", "question": "Which is taller, the nightstand or the table?", "options": ["A. nightstand", "B. table"], "answer": "B"}
+{"id": 98, "scene_id": "room_016", "question_type": "object_count", "question": "How many picture frames are in this room?", "options": null, "answer": "5"}
+{"id": 99, "scene_id": "room_016", "question_type": "object_count", "question": "How many books are in this room?", "options": null, "answer": "7"}
+{"id": 100, "scene_id": "room_016", "question_type": "object_color", "question": "What color is the lamp?", "options": ["A. red", "B. gray", "C. blue", "D. yellow"], "answer": "B"}
+{"id": 101, "scene_id": "room_016", "question_type": "object_color", "question": "What color is the sofa?", "options": ["A. blue", "B. red", "C. brown", "D. black"], "answer": "D"}
+{"id": 102, "scene_id": "room_017", "question_type": "taller_object", "question": "Which is taller, the nightstand or the guitar?", "options": ["A. nightstand", "B. guitar"], "answer": "A"}
+{"id": 103, "scene_id": "room_017", "question_type": "taller_object", "question": "Which is taller, the table or the floor lamp?", "options": ["A. table", "B. floor lamp"], "answer": "B"}
+{"id": 104, "scene_id": "room_017", "question_type": "object_count", "question": "How many plants are in this room?", "options": null, "answer": "3"}
+{"id": 105, "scene_id": "room_017", "question_type": "object_count", "question": "How many picture frames are in this room?", "options": null, "answer": "4"}
+{"id": 106, "scene_id": "room_017", "question_type": "object_color", "question": "What color is the rug?", "options": ["A. yellow", "B. gray", "C. brown", "D. green"], "answer": "A"}
+{"id": 107, "scene_id": "room_017", "question_type": "object_color", "question": "What color is the curtain?", "options": ["A. red", "B. black", "C. blue", "D. brown"], "answer": "B"}
+{"id": 108, "scene_id": "room_018", "question_type": "taller_object", "question": "Which is taller, the floor lamp or the laptop?", "options": ["A. floor lamp", "B. laptop"], "answer": "B"}
+{"id": 109, "scene_id": "room_018", "question_type": "taller_object", "question": "Which is taller, the mug or the tv?", "options": ["A. mug", "B. tv"], "answer": "B"}
+{"id": 110, "scene_id": "room_018", "question_type": "object_count", "question": "How many plants are in this room?", "options": null, "answer": "3"}
+{"id": 111, "scene_id": "room_018", "question_type": "object_count", "question": "How many windows are in this room?", "options": null, "answer": "3"}
+{"id": 112, "scene_id": "room_018", "question_type": "object_color", "question": "What color is the rug?", "options": ["A. white", "B. black", "C. gray", "D. yellow"], "answer": "D"}
+{"id": 113, "scene_id": "room_018", "question_type": "object_color", "question": "What color is the cabinet?", "options": ["A. yellow", "B. white", "C. green", "D. blue"], "answer": "A"}
+{"id": 114, "scene_id": "room_019", "question_type": "taller_object", "question": "Which is taller, the table or the sofa?", "options": ["A. table", "B. sofa"], "answer": "B"}
+{"id": 115, "scene_id": "room_019", "question_type": "taller_object", "question": "Which is taller, the trash can or the door?", "options": ["A. trash can", "B. door"], "answer": "B"}
+{"id": 116, "scene_id": "room_019", "question_type": "object_count", "question": "How many picture frames are in this room?", "options": null, "answer": "6"}
+{"id": 117, "scene_id": "room_019", "question_type": "object_count", "question": "How many towels are in this room?", "options": null, "answer": "4"}
+{"id": 118, "scene_id": "room_019", "question_type": "object_color", "question": "What color is the sofa?", "options": ["A. brown", "B. white", "C. blue", "D. red"], "answer": "B"}
+{"id": 119, "scene_id": "room_019", "question_type": "object_color", "question": "What color is the lamp?", "options": ["A. blue", "B. green", "C. white", "D. gray"], "answer": "B"}
+{"id": 120, "scene_id": "room_020", "question_type": "taller_object", "question": "Which is taller, the table or the trash can?", "options": ["A. table", "B. trash can"], "answer": "B"}
+{"id": 121, "scene_id": "room_020", "question_type": "taller_object", "question": "Which is taller, the door or the wardrobe?", "options": ["A. door", "B. wardrobe"], "answer": "B"}
+{"id": 122, "scene_id": "room_020", "question_type": "object_count", "question": "How many lamps are in this room?", "options": null, "answer": "1"}
+{"id": 123, "scene_id": "room_020", "question_type": "object_count", "question": "How many lamps are in this room?", "options": null, "answer": "1"}
+{"id": 124, "scene_id": "room_020", "question_type": "object_color", "question": "What color is the rug?", "options": ["A. gray", "B. yellow", "C. white", "D. brown"], "answer": "D"}
+{"id": 125, "scene_id": "room_020", "question_type": "object_color", "question": "What color is the cabinet?", "options": ["A. gray", "B. yellow", "C. brown", "D. white"], "answer": "D"}
+{"id": 126, "scene_id": "room_021", "question_type": "taller_object", "question": "Which is taller, the door or the mug?", "options": ["A. door", "B. mug"], "answer": "B"}
+{"id": 127, "scene_id": "room_021", "question_type": "taller_object", "question": "Which is taller, the door or the floor lamp?", "options": ["A. door", "B. floor lamp"], "answer": "A"}
+{"id": 128, "scene_id": "room_021", "question_type": "object_count", "question": "How many cups are in this room?", "options": null, "answer": "7"}
+{"id": 129, "scene_id": "room_021", "question_type": "object_count", "question": "How many cups are in this room?", "options": null, "answer": "3"}
+{"id": 130, "scene_id": "room_021", "question_type": "object_color", "question": "What color is the curtain?", "options": ["A. blue", "B. yellow", "C. brown", "D. green"], "answer": "C"}
+{"id": 131, "scene_id": "room_021", "question_type": "object_color", "question": "What color is the sofa?", "options": ["A. brown", "B. black", "C. red", "D. gray"], "answer": "C"}
+{"id": 132, "scene_id": "room_022", "question_type": "taller_object", "question": "Which is taller, the chair or the trash can?", "options": ["A. chair", "B. trash can"], "answer": "A"}
+{"id": 133, "scene_id": "room_022", "question_type": "taller_object", "question": "Which is taller, the trash can or the chair?", "options": ["A. trash can", "B. chair"], "answer": "B"}
+{"id": 134, "scene_id": "room_022", "question_type": "object_count", "question": "How many picture frames are in this room?", "options": null, "answer": "6"}
+{"id": 135, "scene_id": "room_022", "question_type": "object_count", "question": "How many books are in this room?", "options": null, "answer": "18"}
+{"id": 136, "scene_id": "room_022", "question_type": "object_color", "question": "What color is the curtain?", "options": ["A. green", "B. yellow", "C. red", "D. gray"], "answer": "A"}
+{"id": 137, "scene_id": "room_022", "question_type": "object_color", "question": "What color is the chair?", "options": ["A. gray", "B. red", "C. brown", "D. yellow"], "answer": "D"}
+{"id": 138, "scene_id": "room_023", "question_type": "taller_object", "question": "Which is taller, the door or the table?", "options": ["A. door", "B. table"], "answer": "A"}
+{"id": 139, "scene_id": "room_023", "question_type": "taller_object", "question": "Which is taller, the mug or the nightstand?", "options": ["A. mug", "B. nightstand"], "answer": "B"}
+{"id": 140, "scene_id": "room_023", "question_type": "object_count", "question": "How many plants are in this room?", "options": null, "answer": "3"}
+{"id": 141, "scene_id": "room_023", "question_type": "object_count", "question": "How many lamps are in this room?", "options": null, "answer": "1"}
+{"id": 142, "scene_id": "room_023", "question_type": "object_color", "question": "What color is the blanket?", "options": ["A. yellow", "B. brown", "C. black", "D. blue"], "answer": "B"}
+{"id": 143, "scene_id": "room_023", "question_type": "object_color", "question": "What color is the rug?", "options": ["A. black", "B. white", "C. blue", "D. green"], "answer": "B"}
+{"id": 144, "scene_id": "room_024", "question_type": "taller_object", "question": "Which is taller, the trash can or the table?", "options": ["A. trash can", "B. table"], "answer": "B"}
+{"id": 145, "scene_id": "room_024", "question_type": "taller_object", "question": "Which is taller, the mug or the guitar?", "options": ["A. mug", "B. guitar"], "answer": "B"}
+{"id": 146, "scene_id": "room_024", "question_type": "object_count", "question": "How many picture frames are in this room?", "options": null, "answer": "4"}
+{"id": 147, "scene_id": "room_024", "question_type": "object_count", "question": "How many pillows are in this room?", "options": null, "answer": "6"}
+{"id": 148, "scene_id": "room_024", "question_type": "object_color", "question": "What color is the curtain?", "options": ["A. blue", "B. red", "C. black", "D. gray"], "answer": "A"}
+{"id": 149, "scene_id": "room_024", "question_type": "object_color", "question": "What color is the lamp?", "options": ["A. gray", "B. red", "C. black", "D. yellow"], "answer": "C"}
+{"id": 150, "scene_id": "room_025", "question_type": "taller_object", "question": "Which is taller, the nightstand or the guitar?", "options": ["A. nightstand", "B. guitar"], "answer": "B"}
+{"id": 151, "scene_id": "room_025", "question_type": "taller_object", "question": "Which is taller, the mug or the floor lamp?", "options": ["A. mug", "B. floor lamp"], "answer": "B"}
+{"id": 152, "scene_id": "room_025", "question_type": "object_count", "question": "How many pillows are in this room?", "options": null, "answer": "6"}
+{"id": 153, "scene_id": "room_025", "question_type": "object_count", "question": "How many plants are in this room?", "options": null, "answer": "4"}
+{"id": 154, "scene_id": "room_025", "question_type": "object_color", "question": "What color is the lamp?", "options": ["A. yellow", "B. black", "C. red", "D. white"], "answer": "D"}
+{"id": 155, "scene_id": "room_025", "question_type": "object_color", "question": "What color is the curtain?", "options": ["A. gray", "B. white", "C. yellow", "D. red"], "answer": "C"}
+{"id": 156, "scene_id": "room_026", "question_type": "taller_object", "question": "Which is taller, the guitar or the chair?", "options": ["A. guitar", "B. chair"], "answer": "A"}
+{"id": 157, "scene_id": "room_026", "question_type": "taller_object", "question": "Which is taller, the door or the wardrobe?", "options": ["A. door", "B. wardrobe"], "answer": "B"}
+{"id": 158, "scene_id": "room_026", "question_type": "object_count", "question": "How many picture frames are in this room?", "options": null, "answer": "4"}
+{"id": 159, "scene_id": "room_026", "question_type": "object_count", "question": "How many cups are in this room?", "options": null, "answer": "7"}
+{"id": 160, "scene_id": "room_026", "question_type": "object_color", "question": "What color is the blanket?", "options": ["A. green", "B. gray", "C. yellow", "D. white"], "answer": "D"}
+{"id": 161, "scene_id": "room_026", "question_type": "object_color", "question": "What color is the sofa?", "options": ["A. blue", "B. red", "C. yellow", "D. brown"], "answer": "C"}
+{"id": 162, "scene_id": "room_027", "question_type": "taller_object", "question": "Which is taller, the chair or the floor lamp?", "options": ["A. chair", "B. floor lamp"], "answer": "B"}
+{"id": 163, "scene_id": "room_027", "question_type": "taller_object", "question": "Which is taller, the trash can or the chair?", "options": ["A. trash can", "B. chair"], "answer": "B"}
+{"id": 164, "scene_id": "room_027", "question_type": "object_count", "question": "How many plants are in this room?", "options": null, "answer": "3"}
+{"id": 165, "scene_id": "room_027", "question_type": "object_count", "question": "How many windows are in this room?", "options": null, "answer": "4"}
+{"id": 166, "scene_id": "room_027", "question_type": "object_color", "question": "What color is the lamp?", "options": ["A. red", "B. blue", "C. brown", "D. yellow"], "answer": "B"}
+{"id": 167, "scene_id": "room_027", "question_type": "object_color", "question": "What color is the blanket?", "options": ["A. yellow", "B. white", "C. red", "D. blue"], "answer": "D"}
+{"id": 168, "scene_id": "room_028", "question_type": "taller_object", "question": "Which is taller, the plant or the nightstand?", "options": ["A. plant", "B. nightstand"], "answer": "B"}
+{"id": 169, "scene_id": "room_028", "question_type": "taller_object", "question": "Which is taller, the nightstand or the door?", "options": ["A. nightstand", "B. door"], "answer": "B"}
+{"id": 170, "scene_id": "room_028", "question_type": "object_count", "question": "How many chairs are in this room?", "options": null, "answer": "8"}
+{"id": 171, "scene_id": "room_028", "question_type": "object_count", "question": "How many beds are in this room?", "options": null, "answer": "1"}
+{"id": 172, "scene_id": "room_028", "question_type": "object_color", "question": "What color is the blanket?", "options": ["A. blue", "B. red", "C. black", "D. green"], "answer": "B"}
+{"id": 173, "scene_id": "room_028", "question_type": "object_color", "question": "What color is the rug?", "options": ["A. red", "B. blue", "C. yellow", "D. gray"], "answer": "C"}
+{"id": 174, "scene_id": "room_029", "question_type": "taller_object", "question": "Which is taller, the bookshelf or the sofa?", "options": ["A. bookshelf", "B. sofa"], "answer": "A"}
+{"id": 175, "scene_id": "room_029", "question_type": "taller_object", "question": "Which is taller, the chair or the plant?", "options": ["A. chair", "B. plant"], "answer": "A"}
+{"id": 176, "scene_id": "room_029", "question_type": "object_count", "question": "How many windows are in this room?", "options": null, "answer": "3"}
+{"id": 177, "scene_id": "room_029", "question_type": "object_count", "question": "How many towels are in this room?", "options": null, "answer": "1"}
+{"id": 178, "scene_id": "room_029", "question_type": "object_color", "question": "What color is the chair?", "options": ["A. gray", "B. green", "C. black", "D. brown"], "answer": "B"}
+{"id": 179, "scene_id": "room_029", "question_type": "object_color", "question": "What color is the lamp?", "options": ["A. green", "B. yellow", "C. gray", "D. red"], "answer": "C"}
+{"id": 180, "scene_id": "room_030", "question_type": "taller_object", "question": "Which is taller, the nightstand or the bookshelf?", "options": ["A. nightstand", "B. bookshelf"], "answer": "A"}
+{"id": 181, "scene_id": "room_030", "question_type": "taller_object", "question": "Which is taller, the table or the laptop?", "options": ["A. table", "B. laptop"], "answer": "A"}
+{"id": 182, "scene_id": "room_030", "question_type": "object_count", "question": "How many chairs are in this room?", "options": null, "answer": "8"}
+{"id": 183, "scene_id": "room_030", "question_type": "object_count", "question": "How many cups are in this room?", "options": null, "answer": "7"}
+{"id": 184, "scene_id": "room_030", "question_type": "object_color", "question": "What color is the door?", "options": ["A. brown", "B. red", "C. white", "D. green"], "answer": "C"}
+{"id": 185, "scene_id": "room_030", "question_type": "object_color", "question": "What color is the sofa?", "options": ["A. gray", "B. green", "C. brown", "D. yellow"], "answer": "B"}
+{"id": 186, "scene_id": "room_031", "question_type": "taller_object", "question": "Which is taller, the nightstand or the chair?", "options": ["A. nightstand", "B. chair"], "answer": "A"}
+{"id": 187, "scene_id": "room_031", "question_type": "taller_object", "question": "Which is taller, the door or the table?", "options": ["A. door", "B. table"], "answer": "A"}
+{"id": 188, "scene_id": "room_031", "question_type": "object_count", "question": "How many beds are in this room?", "options": null, "answer": "1"}
+{"id": 189, "scene_id": "room_031", "question_type": "object_count", "question": "How many windows are in this room?", "options": null, "answer": "2"}
+{"id": 190, "scene_id": "room_031", "question_type": "object_color", "question": "What color is the curtain?", "options": ["A. black", "B. gray", "C. yellow", "D. red"], "answer": "B"}
+{"id": 191, "scene_id": "room_031", "question_type": "object_color", "question": "What color is the blanket?", "options": ["A. white", "B. black", "C. green", "D. gray"], "answer": "A"}
+{"id": 192, "scene_id": "room_032", "question_type": "taller_object", "question": "Which is taller, the tv or the trash can?", "options": ["A. tv", "B. trash can"], "answer": "A"}
+{"id": 193, "scene_id": "room_032", "question_type": "taller_object", "question": "Which is taller, the bookshelf or the wardrobe?", "options": ["A. bookshelf", "B. wardrobe"], "answer": "B"}
+{"id": 194, "scene_id": "room_032", "question_type": "object_count", "question": "How many lamps are in this room?", "options": null, "answer": "3"}
+{"id": 195, "scene_id": "room_032", "question_type": "object_count", "question": "How many windows are in this room?", "options": null, "answer": "2"}
+{"id": 196, "scene_id": "room_032", "question_type": "object_color", "question": "What color is the door?", "options": ["A. green", "B. blue", "C. gray", "D. brown"], "answer": "B"}
+{"id": 197, "scene_id": "room_032", "question_type": "object_color", "question": "What color is the sofa?", "options": ["A. gray", "B. black", "C. green", "D. red"], "answer": "B"}
+{"id": 198, "scene_id": "room_033", "question_type": "taller_object", "question": "Which is taller, the laptop or the chair?", "options": ["A. laptop", "B. chair"], "answer": "B"}
+{"id": 199, "scene_id": "room_033", "question_type": "taller_object", "question": "Which is taller, the door or the chair?", "options": ["A. door", "B. chair"], "answer": "A"}
+{"id": 200, "scene_id": "room_033", "question_type": "object_count", "question": "How many pillows are in this room?", "options": null, "answer": "3"}
+{"id": 201, "scene_id": "room_033", "question_type": "object_count", "question": "How many beds are in this room?", "options": null, "answer": "2"}
+{"id": 202, "scene_id": "room_033", "question_type": "object_color", "question": "What color is the rug?", "options": ["A. yellow", "B. white", "C. gray", "D. brown"], "answer": "D"}
+{"id": 203, "scene_id": "room_033", "question_type": "object_color", "question": "What color is the sofa?", "options": ["A. green", "B. white", "C. gray", "D. black"], "answer": "C"}
+{"id": 204, "scene_id": "room_034", "question_type": "taller_object", "question": "Which is taller, the wardrobe or the tv?", "options": ["A. wardrobe", "B. tv"], "answer": "A"}
+{"id": 205, "scene_id": "room_034", "question_type": "taller_object", "question": "Which is taller, the plant or the laptop?", "options": ["A. plant", "B. laptop"], "answer": "A"}
+{"id": 206, "scene_id": "room_034", "question_type": "object_count", "question": "How many towels are in this room?", "options": null, "answer": "4"}
+{"id": 207, "scene_id": "room_034", "question_type": "object_count", "question": "How many towels are in this room?", "options": null, "answer": "1"}
+{"id": 208, "scene_id": "room_034", "question_type": "object_color", "question": "What color is the blanket?", "options": ["A. gray", "B. brown", "C. black", "D. green"], "answer": "C"}
+{"id": 209, "scene_id": "room_034", "question_type": "object_color", "question": "What color is the rug?", "options": ["A. red", "B. brown", "C. yellow", "D. white"], "answer": "D"}
+{"id": 210, "scene_id": "room_035", "question_type": "taller_object", "question": "Which is taller, the nightstand or the laptop?", "options": ["A. nightstand", "B. laptop"], "answer": "A"}
+{"id": 211, "scene_id": "room_035", "question_type": "taller_object", "question": "Which is taller, the guitar or the wardrobe?", "options": ["A. guitar", "B. wardrobe"], "answer": "B"}
+{"id": 212, "scene_id": "room_035", "question_type": "object_count", "question": "How many lamps are in this room?", "options": null, "answer": "3"}
+{"id": 213, "scene_id": "room_035", "question_type": "object_count", "question": "How many books are in this room?", "options": null, "answer": "14"}
+{"id": 214, "scene_id": "room_035", "question_type": "object_color", "question": "What color is the chair?", "options": ["A. green", "B. brown", "C. yellow", "D. blue"], "answer": "D"}
+{"id": 215, "scene_id": "room_035", "question_type": "object_color", "question": "What color is the chair?", "options": ["A. gray", "B. green", "C. red", "D. yellow"], "answer": "B"}
+{"id": 216, "scene_id": "room_036", "question_type": "taller_object", "question": "Which is taller, the chair or the table?", "options": ["A. chair", "B. table"], "answer": "A"}
+{"id": 217, "scene_id": "room_036", "question_type": "taller_object", "question": "Which is taller, the nightstand or the table?", "options": ["A. nightstand", "B. table"], "answer": "B"}
+{"id": 218, "scene_id": "room_036", "question_type": "object_count", "question": "How many plants are in this room?", "options": null, "answer": "1"}
+{"id": 219, "scene_id": "room_036", "question_type": "object_count", "question": "How many cups are in this room?", "options": null, "answer": "6"}
+{"id": 220, "scene_id": "room_036", "question_type": "object_color", "question": "What color is the chair?", "options": ["A. yellow", "B. white", "C. black", "D. red"], "answer": "A"}
+{"id": 221, "scene_id": "room_036", "question_type": "object_color", "question": "What color is the blanket?", "options": ["A. yellow", "B. blue", "C. brown", "D. white"], "answer": "D"}
+{"id": 222, "scene_id": "room_037", "question_type": "taller_object", "question": "Which is taller, the sofa or the trash can?", "options": ["A. sofa", "B. trash can"], "answer": "A"}
+{"id": 223, "scene_id": "room_037", "question_type": "taller_object", "question": "Which is taller, the floor lamp or the tv?", "options": ["A. floor lamp", "B. tv"], "answer": "A"}
+{"id": 224, "scene_id": "room_037", "question_type": "object_count", "question": "How many lamps are in this room?", "options": null, "answer": "1"}
+{"id": 225, "scene_id": "room_037", "question_type": "object_count", "question": "How many pillows are in this room?", "options": null, "answer": "6"}
+{"id": 226, "scene_id": "room_037", "question_type": "object_color", "question": "What color is the blanket?", "options": ["A. brown", "B. gray", "C. white", "D. green"], "answer": "D"}
+{"id": 227, "scene_id": "room_037", "question_type": "object_color", "question": "What color is the curtain?", "options": ["A. white", "B. brown", "C. yellow", "D. blue"], "answer": "A"}
+{"id": 228, "scene_id": "room_038", "question_type": "taller_object", "question": "Which is taller, the tv or the sofa?", "options": ["A. tv", "B. sofa"], "answer": "B"}
+{"id": 229, "scene_id": "room_038", "question_type": "taller_object", "question": "Which is taller, the guitar or the wardrobe?", "options": ["A. guitar", "B. wardrobe"], "answer": "B"}
+{"id": 230, "scene_id": "room_038", "question_type": "object_count", "question": "How many picture frames are in this room?", "options": null, "answer": "1"}
+{"id": 231, "scene_id": "room_038", "question_type": "object_count", "question": "How many windows are in this room?", "options": null, "answer": "4"}
+{"id": 232, "scene_id": "room_038", "question_type": "object_color", "question": "What color is the lamp?", "options": ["A. black", "B. green", "C. blue", "D. white"], "answer": "A"}
+{"id": 233, "scene_id": "room_038", "question_type": "object_color", "question": "What color is the lamp?", "options": ["A. green", "B. blue", "C. brown", "D. black"], "answer": "D"}
+{"id": 234, "scene_id": "room_039", "question_type": "taller_object", "question": "Which is taller, the door or the mug?", "options": ["A. door", "B. mug"], "answer": "A"}
+{"id": 235, "scene_id": "room_039", "question_type": "taller_object", "question": "Which is taller, the tv or the plant?", "options": ["A. tv", "B. plant"], "answer": "A"}
+{"id": 236, "scene_id": "room_039", "question_type": "object_count", "question": "How many towels are in this room?", "options": null, "answer": "3"}
+{"id": 237, "scene_id": "room_039", "question_type": "object_count", "question": "How many lamps are in this room?", "options": null, "answer": "1"}
+{"id": 238, "scene_id": "room_039", "question_type": "object_color", "question": "What color is the sofa?", "options": ["A. yellow", "B. blue", "C. brown", "D. red"], "answer": "B"}
+{"id": 239, "scene_id": "room_039", "question_type": "object_color", "question": "What color is the lamp?", "options": ["A. gray", "B. white", "C. green", "D. brown"], "answer": "A"}
+{"id": 240, "scene_id": "room_040", "question_type": "taller_object", "question": "Which is taller, the trash can or the mug?", "options": ["A. trash can", "B. mug"], "answer": "A"}
+{"id": 241, "scene_id": "room_040", "question_type": "taller_object", "question": "Which is taller, the sofa or the laptop?", "options": ["A. sofa", "B. laptop"], "answer": "A"}
+{"id": 242, "scene_id": "room_040", "question_type": "object_count", "question": "How many beds are in this room?", "options": null, "answer": "2"}
+{"id": 243, "scene_id": "room_040", "question_type": "object_count", "question": "How many books are in this room?", "options": null, "answer": "14"}
+{"id": 244, "scene_id": "room_040", "question_type": "object_color", "question": "What color is the sofa?", "options": ["A. brown", "B. green", "C. white", "D. red"], "answer": "D"}
+{"id": 245, "scene_id": "room_040", "question_type": "object_color", "question": "What color is the curtain?", "options": ["A. red", "B. brown", "C. white", "D. green"], "answer": "A"}
+{"id": 246, "scene_id": "room_041", "question_type": "taller_object", "question": "Which is taller, the wardrobe or the tv?", "options": ["A. wardrobe", "B. tv"], "answer": "A"}
+{"id": 247, "scene_id": "room_041", "question_type": "taller_object", "question": "Which is taller, the chair or the table?", "options": ["A. chair", "B. table"], "answer": "A"}
+{"id": 248, "scene_id": "room_041", "question_type": "object_count", "question": "How many towels are in this room?", "options": null, "answer": "2"}
+{"id": 249, "scene_id": "room_041", "question_type": "object_count", "question": "How many picture frames are in this room?", "options": null, "answer": "3"}
+{"id": 250, "scene_id": "room_041", "question_type": "object_color", "question": "What color is the rug?", "options": ["A. green", "B. black", "C. white", "D. red"], "answer": "B"}
+{"id": 251, "scene_id": "room_041", "question_type": "object_color", "question": "What color is the sofa?", "options": ["A. blue", "B. yellow", "C. white", "D. green"], "answer": "B"}
+{"id": 252, "scene_id": "room_042", "question_type": "taller_object", "question": "Which is taller, the door or the chair?", "options": ["A. door", "B. chair"], "answer": "A"}
+{"id": 253, "scene_id": "room_042", "question_type": "taller_object", "question": "Which is taller, the wardrobe or the mug?", "options": ["A. wardrobe", "B. mug"], "answer": "A"}
+{"id": 254, "scene_id": "room_042", "question_type": "object_count", "question": "How many chairs are in this room?", "options": null, "answer": "6"}
+{"id": 255, "scene_id": "room_042", "question_type": "object_count", "question": "How many towels are in this room?", "options": null, "answer": "2"}
+{"id": 256, "scene_id": "room_042", "question_type": "object_color", "question": "What color is the door?", "options": ["A. blue", "B. yellow", "C. red", "D. white"], "answer": "C"}
+{"id": 257, "scene_id": "room_042", "question_type": "object_color", "question": "What color is the chair?", "options": ["A. green", "B. gray", "C. white", "D. black"], "answer": "C"}
+{"id": 258, "scene_id": "room_043", "question_type": "taller_object", "question": "Which is taller, the trash can or the mug?", "options": ["A. trash can", "B. mug"], "answer": "A"}
+{"id": 259, "scene_id": "room_043", "question_type": "taller_object", "question": "Which is taller, the door or the plant?", "options": ["A. door", "B. plant"], "answer": "A"}
+{"id": 260, "scene_id": "room_043", "question_type": "object_count", "question": "How many pillows are in this room?", "options": null, "answer": "4"}
+{"id": 261, "scene_id": "room_043", "question_type": "object_count", "question": "How many books are in this room?", "options": null, "answer": "20"}
+{"id": 262, "scene_id": "room_043", "question_type": "object_color", "question": "What color is the lamp?", "options": ["A. brown", "B. black", "C. green", "D. red"], "answer": "B"}
+{"id": 263, "scene_id": "room_043", "question_type": "object_color", "question": "What color is the lamp?", "options": ["A. brown", "B. white", "C. red", "D. blue"], "answer": "B"}
+{"id": 264, "scene_id": "room_044", "question_type": "taller_object", "question": "Which is taller, the nightstand or the bookshelf?", "options": ["A. nightstand", "B. bookshelf"], "answer": "B"}
+{"id": 265, "scene_id": "room_044", "question_type": "taller_object", "question": "Which is taller, the sofa or the laptop?", "options": ["A. sofa", "B. laptop"], "answer": "A"}
+{"id": 266, "scene_id": "room_044", "question_type": "object_count", "question": "How many chairs are in this room?", "options": null, "answer": "4"}
+{"id": 267, "scene_id": "room_044", "question_type": "object_count", "question": "How many beds are in this room?", "options": null, "answer": "1"}
+{"id": 268, "scene_id": "room_044", "question_type": "object_color", "question": "What color is the blanket?", "options": ["A. green", "B. red", "C. yellow", "D. white"], "answer": "C"}
+{"id": 269, "scene_id": "room_044", "question_type": "object_color", "question": "What color is the curtain?", "options": ["A. blue", "B. red", "C. yellow", "D. gray"], "answer": "C"}
+{"id": 270, "scene_id": "room_045", "question_type": "taller_object", "question": "Which is taller, the chair or the nightstand?", "options": ["A. chair", "B. nightstand"], "answer": "A"}
+{"id": 271, "scene_id": "room_045", "question_type": "taller_object", "question": "Which is taller, the bookshelf or the laptop?", "options": ["A. bookshelf", "B. laptop"], "answer": "B"}
+{"id": 272, "scene_id": "room_045", "question_type": "object_count", "question": "How many pillows are in this room?", "options": null, "answer": "4"}
+{"id": 273, "scene_id": "room_045", "question_type": "object_count", "question": "How many towels are in this room?", "options": null, "answer": "3"}
+{"id": 274, "scene_id": "room_045", "question_type": "object_color", "question": "What color is the blanket?", "options": ["A. blue", "B. yellow", "C. gray", "D. black"], "answer": "C"}
+{"id": 275, "scene_id": "room_045", "question_type": "object_color", "question": "What color is the sofa?", "options": ["A. white", "B. yellow", "C. black", "D. gray"], "answer": "D"}
+{"id": 276, "scene_id": "room_046", "question_type": "taller_object", "question": "Which is taller, the tv or the guitar?", "options": ["A. tv", "B. guitar"], "answer": "B"}
+{"id": 277, "scene_id": "room_046", "question_type": "taller_object", "question": "Which is taller, the table or the trash can?", "options": ["A. table", "B. trash can"], "answer": "B"}
+{"id": 278, "scene_id": "room_046", "question_type": "object_count", "question": "How many pillows are in this room?", "options": null, "answer": "5"}
+{"id": 279, "scene_id": "room_046", "question_type": "object_count", "question": "How many windows are in this room?", "options": null, "answer": "4"}
+{"id": 280, "scene_id": "room_046", "question_type": "object_color", "question": "What color is the sofa?", "options": ["A. green", "B. black", "C. brown", "D. white"], "answer": "C"}
+{"id": 281, "scene_id": "room_046", "question_type": "object_color", "question": "What color is the door?", "options": ["A. white", "B. yellow", "C. black", "D. green"], "answer": "C"}
+{"id": 282, "scene_id": "room_047", "question_type": "taller_object", "question": "Which is taller, the mug or the sofa?", "options": ["A. mug", "B. sofa"], "answer": "B"}
+{"id": 283, "scene_id": "room_047", "question_type": "taller_object", "question": "Which is taller, the guitar or the tv?", "options": ["A. guitar", "B. tv"], "answer": "A"}
+{"id": 284, "scene_id": "room_047", "question_type": "object_count", "question": "How many beds are in this room?", "options": null, "answer": "1"}
+{"id": 285, "scene_id": "room_047", "question_type": "object_count", "question": "How many cups are in this room?", "options": null, "answer": "3"}
+{"id": 286, "scene_id": "room_047", "question_type": "object_color", "question": "What color is the cabinet?", "options": ["A. brown", "B. blue", "C. red", "D. white"], "answer": "A"}
+{"id": 287, "scene_id": "room_047", "question_type": "object_color", "question": "What color is the sofa?", "options": ["A. brown", "B. yellow", "C. black", "D. white"], "answer": "A"}
+{"id": 288, "scene_id": "room_048", "question_type": "taller_object", "question": "Which is taller, the guitar or the door?", "options": ["A. guitar", "B. door"], "answer": "B"}
+{"id": 289, "scene_id": "room_048", "question_type": "taller_object", "question": "Which is taller, the door or the laptop?", "options": ["A. door", "B. laptop"], "answer": "A"}
+{"id": 290, "scene_id": "room_048", "question_type": "object_count", "question": "How many chairs are in this room?", "options": null, "answer": "5"}
+{"id": 291, "scene_id": "room_048", "question_type": "object_count", "question": "How many lamps are in this room?", "options": null, "answer": "1"}
+{"id": 292, "scene_id": "room_048", "question_type": "object_color", "question": "What color is the chair?", "options": ["A. blue", "B. brown", "C. green", "D. yellow"], "answer": "B"}
+{"id": 293, "scene_id": "room_048", "question_type": "object_color", "question": "What color is the blanket?", "options": ["A. green", "B. blue", "C. brown", "D. black"], "answer": "C"}
+{"id": 294, "scene_id": "room_049", "question_type": "taller_object", "question": "Which is taller, the nightstand or the wardrobe?", "options": ["A. nightstand", "B. wardrobe"], "answer": "B"}
+{"id": 295, "scene_id": "room_049", "question_type": "taller_object", "question": "Which is taller, the trash can or the table?", "options": ["A. trash can", "B. table"], "answer": "B"}
+{"id": 296, "scene_id": "room_049", "question_type": "object_count", "question": "How many lamps are in this room?", "options": null, "answer": "3"}
+{"id": 297, "scene_id": "room_049", "question_type": "object_count", "question": "How many chairs are in this room?", "options": null, "answer": "8"}
+{"id": 298, "scene_id": "room_049", "question_type": "object_color", "question": "What color is the rug?", "options": ["A. yellow", "B. green", "C. black", "D. blue"], "answer": "C"}
+{"id": 299, "scene_id": "room_049", "question_type": "object_color", "question": "What color is the lamp?", "options": ["A. white", "B. yellow", "C. green", "D. black"], "answer": "C"}
+{"id": 300, "scene_id": "room_050", "question_type": "taller_object", "question": "Which is taller, the mug or the chair?", "options": ["A. mug", "B. chair"], "answer": "B"}
+{"id": 301, "scene_id": "room_050", "question_type": "taller_object", "question": "Which is taller, the laptop or the floor lamp?", "options": ["A. laptop", "B. floor lamp"], "answer": "B"}
+{"id": 302, "scene_id": "room_050", "question_type": "object_count", "question": "How many cups are in this room?", "options": null, "answer": "6"}
+{"id": 303, "scene_id": "room_050", "question_type": "object_count", "question": "How many books are in this room?", "options": null, "answer": "12"}
+{"id": 304, "scene_id": "room_050", "question_type": "object_color", "question": "What color is the door?", "options": ["A. brown", "B. black", "C. blue", "D. yellow"], "answer": "A"}
+{"id": 305, "scene_id": "room_050", "question_type": "object_color", "question": "What color is the chair?", "options": ["A. brown", "B. white", "C. black", "D. green"], "answer": "A"}
+{"id": 306, "scene_id": "room_051", "question_type": "taller_object", "question": "Which is taller, the plant or the mug?", "options": ["A. plant", "B. mug"], "answer": "A"}
+{"id": 307, "scene_id": "room_051", "question_type": "taller_object", "question": "Which is taller, the floor lamp or the tv?", "options": ["A. floor lamp", "B. tv"], "answer": "A"}
+{"id": 308, "scene_id": "room_051", "question_type": "object_count", "question": "How many towels are in this room?", "options": null, "answer": "4"}
+{"id": 309, "scene_id": "room_051", "question_type": "object_count", "question": "How many chairs are in this room?", "options": null, "answer": "4"}
+{"id": 310, "scene_id": "room_051", "question_type": "object_color", "question": "What color is the blanket?", "options": ["A. blue", "B. red", "C. brown", "D. yellow"], "answer": "D"}
+{"id": 311, "scene_id": "room_051", "question_type": "object_color", "question": "What color is the door?", "options": ["A. blue", "B. red", "C. black", "D. brown"], "answer": "B"}
+{"id": 312, "scene_id": "room_052", "question_type": "taller_object", "question": "Which is taller, the nightstand or the mug?", "options": ["A. nightstand", "B. mug"], "answer": "A"}
+{"id": 313, "scene_id": "room_052", "question_type": "taller_object", "question": "Which is taller, the mug or the chair?", "options": ["A. mug", "B. chair"], "answer": "B"}
+{"id": 314, "scene_id": "room_052", "question_type": "object_count", "question": "How many picture frames are in this room?", "options": null, "answer": "6"}
+{"id": 315, "scene_id": "room_052", "question_type": "object_count", "question": "How many lamps are in this room?", "options": null, "answer": "3"}
+{"id": 316, "scene_id": "room_052", "question_type": "object_color", "question": "What color is the blanket?", "options": ["A. yellow", "B. brown", "C. green", "D. red"], "answer": "A"}
+{"id": 317, "scene_id": "room_052", "question_type": "object_color", "question": "What color is the chair?", "options": ["A. yellow", "B. gray", "C. brown", "D. black"], "answer": "C"}
+{"id": 318, "scene_id": "room_053", "question_type": "taller_object", "question": "Which is taller, the guitar or the laptop?", "options": ["A. guitar", "B. laptop"], "answer": "B"}
+{"id": 319, "scene_id": "room_053", "question_type": "taller_object", "question": "Which is taller, the table or the laptop?", "options": ["A. table", "B. laptop"], "answer": "A"}
+{"id": 320, "scene_id": "room_053", "question_type": "object_count", "question": "How many books are in this room?", "options": null, "answer": "5"}
+{"id": 321, "scene_id": "room_053", "question_type": "object_count", "question": "How many cups are in this room?", "options": null, "answer": "2"}
+{"id": 322, "scene_id": "room_053", "question_type": "object_color", "question": "What color is the cabinet?", "options": ["A. brown", "B. green", "C. gray", "D. yellow"], "answer": "A"}
+{"id": 323, "scene_id": "room_053", "question_type": "object_color", "question": "What color is the blanket?", "options": ["A. black", "B. yellow", "C. white", "D. gray"], "answer": "A"}
+{"id": 324, "scene_id": "room_054", "question_type": "taller_object", "question": "Which is taller, the guitar or the plant?", "options": ["A. guitar", "B. plant"], "answer": "A"}
+{"id": 325, "scene_id": "room_054", "question_type": "taller_object", "question": "Which is taller, the mug or the floor lamp?", "options": ["A. mug", "B. floor lamp"], "answer": "B"}
+{"id": 326, "scene_id": "room_054", "question_type": "object_count", "question": "How many beds are in this room?", "options": null, "answer": "1"}
+{"id": 327, "scene_id": "room_054", "question_type": "object_count", "question": "How many windows are in this room?", "options": null, "answer": "4"}
+{"id": 328, "scene_id": "room_054", "question_type": "object_color", "question": "What color is the sofa?", "options": ["A. white", "B. brown", "C. yellow", "D. green"], "answer": "C"}
+{"id": 329, "scene_id": "room_054", "question_type": "object_color", "question": "What color is the chair?", "options": ["A. white", "B. gray", "C. red", "D. yellow"], "answer": "B"}
+{"id": 330, "scene_id": "room_055", "question_type": "taller_object", "question": "Which is taller, the table or the floor lamp?", "options": ["A. table", "B. floor lamp"], "answer": "B"}
+{"id": 331, "scene_id": "room_055", "question_type": "taller_object", "question": "Which is taller, the tv or the chair?", "options": ["A. tv", "B. chair"], "answer": "B"}
+{"id": 332, "scene_id": "room_055", "question_type": "object_count", "question": "How many beds are in this room?", "options": null, "answer": "2"}
+{"id": 333, "scene_id": "room_055", "question_type": "object_count", "question": "How many books are in this room?", "options": null, "answer": "19"}
+{"id": 334, "scene_id": "room_055", "question_type": "object_color", "question": "What color is the lamp?", "options": ["A. red", "B. green", "C. brown", "D. white"], "answer": "B"}
+{"id": 335, "scene_id": "room_055", "question_type": "object_color", "question": "What color is the lamp?", "options": ["A. black", "B. yellow", "C. red", "D. green"], "answer": "C"}
+{"id": 336, "scene_id": "room_056", "question_type": "taller_object", "question": "Which is taller, the guitar or the laptop?", "options": ["A. guitar", "B. laptop"], "answer": "A"}
+{"id": 337, "scene_id": "room_056", "question_type": "taller_object", "question": "Which is taller, the nightstand or the guitar?", "options": ["A. nightstand", "B. guitar"], "answer": "B"}
+{"id": 338, "scene_id": "room_056", "question_type": "object_count", "question": "How many lamps are in this room?", "options": null, "answer": "1"}
+{"id": 339, "scene_id": "room_056", "question_type": "object_count", "question": "How many towels are in this room?", "options": null, "answer": "3"}
+{"id": 340, "scene_id": "room_056", "question_type": "object_color", "question": "What color is the door?", "options": ["A. green", "B. blue", "C. gray", "D. yellow"], "answer": "D"}
+{"id": 341, "scene_id": "room_056", "question_type": "object_color", "question": "What color is the lamp?", "options": ["A. gray", "B. green", "C. white", "D. blue"], "answer": "A"}
+{"id": 342, "scene_id": "room_057", "question_type": "taller_object", "question": "Which is taller, the floor lamp or the trash can?", "options": ["A. floor lamp", "B. trash can"], "answer": "A"}
+{"id": 343, "scene_id": "room_057", "question_type": "taller_object", "question": "Which is taller, the floor lamp or the nightstand?", "options": ["A. floor lamp", "B. nightstand"], "answer": "A"}
+{"id": 344, "scene_id": "room_057", "question_type": "object_count", "question": "How many plants are in this room?", "options": null, "answer": "1"}
+{"id": 345, "scene_id": "room_057", "question_type": "object_count", "question": "How many pillows are in this room?", "options": null, "answer": "2"}
+{"id": 346, "scene_id": "room_057", "question_type": "object_color", "question": "What color is the chair?", "options": ["A. black", "B. blue", "C. yellow", "D. brown"], "answer": "C"}
+{"id": 347, "scene_id": "room_057", "question_type": "object_color", "question": "What color is the rug?", "options": ["A. gray", "B. blue", "C. black", "D. white"], "answer": "A"}
+{"id": 348, "scene_id": "room_058", "question_type": "taller_object", "question": "Which is taller, the plant or the wardrobe?", "options": ["A. plant", "B. wardrobe"], "answer": "B"}
+{"id": 349, "scene_id": "room_058", "question_type": "taller_object", "question": "Which is taller, the guitar or the wardrobe?", "options": ["A. guitar", "B. wardrobe"], "answer": "B"}
+{"id": 350, "scene_id": "room_058", "question_type": "object_count", "question": "How many windows are in this room?", "options": null, "answer": "2"}
+{"id": 351, "scene_id": "room_058", "question_type": "object_count", "question": "How many picture frames are in this room?", "options": null, "answer": "3"}
+{"id": 352, "scene_id": "room_058", "question_type": "object_color", "question": "What color is the rug?", "options": ["A. yellow", "B. red", "C. white", "D. green"], "answer": "D"}
+{"id": 353, "scene_id": "room_058", "question_type": "object_color", "question": "What color is the door?", "options": ["A. gray", "B. yellow", "C. black", "D. brown"], "answer": "C"}
+{"id": 354, "scene_id": "room_059", "question_type": "taller_object", "question": "Which is taller, the sofa or the mug?", "options": ["A. sofa", "B. mug"], "answer": "A"}
+{"id": 355, "scene_id": "room_059", "question_type": "taller_object", "question": "Which is taller, the nightstand or the sofa?", "options": ["A. nightstand", "B. sofa"], "answer": "A"}
+{"id": 356, "scene_id": "room_059", "question_type": "object_count", "question": "How many towels are in this room?", "options": null, "answer": "1"}
+{"id": 357, "scene_id": "room_059", "question_type": "object_count", "question": "How many picture frames are in this room?", "options": null, "answer": "4"}
+{"id": 358, "scene_id": "room_059", "question_type": "object_color", "question": "What color is the sofa?", "options": ["A. green", "B. black", "C. yellow", "D. brown"], "answer": "D"}
+{"id": 359, "scene_id": "room_059", "question_type": "object_color", "question": "What color is the lamp?", "options": ["A. green", "B. black", "C. blue", "D. white"], "answer": "A"}

@@ -1,0 +1,54 @@
+# The LLaMA-Factory training config behind the paper's TsT-LLM results (App. D.1).
+# TsT-LLM trains one LoRA adapter per cross-validation fold (k=5, seed 42, one
+# repeat) on that fold's training split, then scores the held-out fold. Below the
+# comments, this file is byte-for-byte what src/TsT/evaluators/llm/trainers/llamafactory.py
+# writes for each fold with the default settings, keys sorted (a test checks this). The
+# trainer generates the config itself; it does not read this file.
+# docs/paper-settings.md lists every App. D.1 value, the inference settings and the
+# pinned versions.
+#
+# LLaMA-Factory (upstream, https://github.com/hiyouga/LlamaFactory):
+#   53a9924ea882250cf96e499d271b666956f8b12b  the commit the paper's runs used
+#   b8272a874b5ca59762d5386afcfd3d2fb71d5e00  same package source (src/, setup.py,
+#                                             pyproject.toml); an ancestor of main,
+#                                             v0.9.4 and v0.9.5
+# Model: Qwen/Qwen2-7B-Instruct, revision f2826a00ceef68f0f2b946d945ecc0477ce4450c. The
+#   paper's runs passed no revision, but the Hub's main has pointed at this commit since
+#   2024-08-21; this release pins it (model_revision below).
+#
+# <fold_tmp> is a fresh temporary directory for each fold. <fold_tmp>/dataset holds
+# dataset_info.json and custom_sft_dataset.jsonl (alpaca format; see
+# docs/paper-settings.md). To run one fold by hand with upstream LLaMA-Factory, fill in
+# the two paths and run:  llamafactory-cli train llamafactory_train.yaml
+cutoff_len: 1024
+dataloader_num_workers: 4
+dataset: custom_sft_dataset
+dataset_dir: <fold_tmp>/dataset
+do_train: true
+eval_steps: 100
+finetuning_type: lora
+fp16: true
+gradient_accumulation_steps: 1
+learning_rate: 0.0002
+logging_steps: 10
+lora_alpha: 16
+lora_dropout: 0.1
+lora_rank: 8
+lora_target: all
+lr_scheduler_type: cosine
+model_name_or_path: Qwen/Qwen2-7B-Instruct
+model_revision: f2826a00ceef68f0f2b946d945ecc0477ce4450c
+num_train_epochs: 1
+output_dir: <fold_tmp>/adapter
+overwrite_cache: true
+overwrite_output_dir: true
+per_device_eval_batch_size: 4
+per_device_train_batch_size: 4
+preprocessing_num_workers: 4
+save_steps: 500
+save_total_limit: 1
+seed: 42
+stage: sft
+template: gemma
+val_size: 0.1
+warmup_ratio: 0.1

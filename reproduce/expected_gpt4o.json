@@ -1,0 +1,27 @@
+{
+  "_comment": "GPT-4o (gpt-4o-2024-08-06) blind top-1 accuracy (%) on each benchmark's multiple-choice questions, rescored from reproduce/data/gpt4o/ by scripts/blind_baselines.py. unparseable_wrong: responses that name no option count as incorrect (the paper's rule; Table 1 prints these rounded). unparseable_random_seed0: such responses get a random option seeded by (seed, benchmark, question id).",
+  "paper_values": {
+    "vsi": 34.0,
+    "cvb": 44.8,
+    "mmmu": 52.3,
+    "video_mme": 46.6
+  },
+  "unparseable_wrong": {
+    "vsi": 33.9759,
+    "cvb": 44.8446,
+    "mmmu": 52.3022,
+    "video_mme": 46.5926
+  },
+  "unparseable_random_seed0": {
+    "vsi": 34.0161,
+    "cvb": 47.6876,
+    "mmmu": 52.6564,
+    "video_mme": 46.6296
+  },
+  "n_unparseable": {
+    "vsi": 5,
+    "cvb": 232,
+    "mmmu": 7,
+    "video_mme": 8
+  }
+}
