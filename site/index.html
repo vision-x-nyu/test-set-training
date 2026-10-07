@@ -69,7 +69,7 @@
                 <div class="institutions">New York University</div>
                 <div class="venue">COLM 2026</div>
                 <p class="version-note">
-                    Numbers follow the revised arXiv version (v2, corrections listed in its Appendix G) and
+                    Numbers follow the revised arXiv version (v2) and
                     supersede the November 2025 version.
                 </p>
             </div>
@@ -97,7 +97,7 @@
                     <i class="fa-solid fa-database"></i> VSI-Train-10k
                 </a>
                 <a href="https://hf.co/datasets/nyu-visionx/VSI-Bench" class="btn btn-secondary">
-                    <i class="fa-solid fa-database"></i> VSI-Bench + Debiased v1
+                    <i class="fa-solid fa-database"></i> VSI-Bench + Debiased
                 </a>
             </div>
         </div>
@@ -129,7 +129,7 @@
                 These shortcuts are reachable without test access: fine-tuning LLaVA-Video-7B on the
                 in-distribution VSI-Train-10k raises its blind VSI-Bench score by 18.8 points, about as much as its
                 vision score (+20.4). The bias scores also drive <strong>Iterative Bias Pruning (IBP)</strong>. Our
-                released VSI-Bench-Debiased v1 is a designer-in-the-loop pilot version, not the output of the full
+                released VSI-Bench-Debiased is a designer-in-the-loop pilot version, not the output of the full
                 automated IBP procedure. It lowers that fine-tuned model's blind score from 44.7 to 32.0 while
                 its vision score falls less (57.1&nbsp;&rarr;&nbsp;48.7), and its vision-blind gap is 16.7, versus
                 12.4&nbsp;&plusmn;&nbsp;0.6 when a random 54% of questions is removed. TsT is a pre-release audit of
@@ -366,7 +366,7 @@
                 </ol>
                 <p>
                     The paper runs automated IBP on VSI-Bench (with TsT-RF) and MMMU (with TsT-LLM). The released
-                    VSI-Bench-Debiased v1 predates this algorithm and was built with hand-written per-type filters
+                    VSI-Bench-Debiased predates this algorithm and was built with hand-written per-type filters
                     (below). On VSI-Bench, automated per-type IBP at the pilot's 54% removal rate widens a fine-tuned
                     model's vision-blind gap to 14.1, versus 12.2&ndash;12.4 for random removal.
                 </p>
@@ -387,10 +387,10 @@
     <section class="section narrative-section" id="mitigation-results">
         <div class="container" id="vsi-bench-debiased">
             <!-- <h3 style="text-align: center; margin-bottom: 2rem;">Proof it Works</h3> -->
-            <h3 style="text-align: center; margin-bottom: 1.5rem;">Case Study: VSI-Bench-Debiased v1</h3>
+            <h3 style="text-align: center; margin-bottom: 1.5rem;">Case Study: VSI-Bench-Debiased</h3>
             <p style="text-align: center; max-width: 700px; margin: 0 auto 3rem auto; color: var(--text-secondary);">
-                VSI-Bench-Debiased v1 is a designer-in-the-loop pilot version, not the output of the full automated
-                IBP procedure. It removes 2,768 of the 5,130 questions (54.0%) and keeps 2,362. Because the question-type mix changes, v1 is a separate evaluation
+                VSI-Bench-Debiased is a designer-in-the-loop pilot version, not the output of the full automated
+                IBP procedure. It removes 2,768 of the 5,130 questions (54.0%) and keeps 2,362. Because the question-type mix changes, it is a separate evaluation
                 set, not a drop-in replacement for VSI-Bench: report it alongside the full set.
             </p>
 
@@ -400,14 +400,14 @@
                     <div class="stat-number stat-number-sm">44.7&nbsp;&rarr;&nbsp;32.0</div>
                     <div class="stat-label">Fine-tuned blind score</div>
                     <p style="font-size: 0.9rem; margin-top: 1rem;">LLaVA-Video-7B fine-tuned on VSI-Train-10k and
-                        evaluated without the video, on VSI-Bench vs. v1. With the video, its score falls less:
+                        evaluated without the video, on VSI-Bench vs. VSI-Bench-Debiased. With the video, its score falls less:
                         57.1&nbsp;&rarr;&nbsp;48.7.</p>
                 </div>
                 <div class="stat-card">
                     <div class="stat-number stat-number-sm">16.7 vs. 12.4</div>
-                    <div class="stat-label">Vision-blind gap: v1 vs. random removal</div>
+                    <div class="stat-label">Vision-blind gap: debiased vs. random removal</div>
                     <p style="font-size: 0.9rem; margin-top: 1rem;">Removing a random 54% of questions instead leaves
-                        the same model's gap at 12.4&nbsp;&plusmn;&nbsp;0.6 (10 seeds); v1 gives 16.7. How much the
+                        the same model's gap at 12.4&nbsp;&plusmn;&nbsp;0.6 (10 seeds); VSI-Bench-Debiased gives 16.7. How much the
                         gap widens varies by model.</p>
                 </div>
             </div>
@@ -445,7 +445,7 @@
                             <tr>
                                 <td colspan="4"
                                     style="background: rgba(255,255,255,0.02); font-weight: 600; color: var(--text-secondary);">
-                                    VSI-Bench-Debiased v1</td>
+                                    VSI-Bench-Debiased</td>
                             </tr>
                             <tr>
                                 <td>LLaVA-Video 7B (Base)</td>
@@ -463,9 +463,9 @@
                     </table>
                 </div>
                 <p class="results-note">
-                    On v1, the fine-tuned model's blind score falls from 44.7 to 32.0 while its vision score falls
-                    from 57.1 to 48.7, so v1 preferentially removes questions that can be answered without the
-                    video. v1 reduces non-visual shortcuts but is not guaranteed to be free of them.
+                    On VSI-Bench-Debiased, the fine-tuned model's blind score falls from 44.7 to 32.0 while its vision score falls
+                    from 57.1 to 48.7, so the pilot preferentially removes questions that can be answered without the
+                    video. It reduces non-visual shortcuts but is not guaranteed to be free of them.
                 </p>
             </div>
 
