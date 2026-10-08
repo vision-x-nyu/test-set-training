@@ -516,6 +516,10 @@ main section.tldr {
     font-style: italic;
 }
 
+.punchline-top {
+    margin: 28px auto 4px;
+}
+
 /* Checklist */
 .checklist {
     padding-left: 1.4em;
