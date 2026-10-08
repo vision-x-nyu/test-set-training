@@ -4,489 +4,338 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TsT: Test-set Stress-Test</title>
+    <title>Benchmark Designers Should "Train on the Test Set" | TsT</title>
 
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap"
-        rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
-
-    <!-- Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-    <!-- Styles -->
-    <link rel="stylesheet" href="./static/css/style.css">
-
-    <!-- Favicon -->
-    <link rel="icon"
-        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌶️</text></svg>">
-
-
-    <!-- Scripts -->
-    <script defer src="./static/js/main.js"></script>
-    <script defer src="./static/js/medium-zoom.min.js"></script>
-    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-
-    <!-- Meta -->
     <meta name="description"
-        content="Test-set Stress-Test (TsT): cross-validate a text-only model on a benchmark's own test questions and answer options to measure and locate non-visual shortcuts before release. COLM 2026.">
+        content="Test-set Stress-Test (TsT): cross-validate a text-only model on a benchmark's own test questions to measure and locate non-visual shortcuts before release. COLM 2026.">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://vision-x-nyu.github.io/test-set-training/">
     <meta property="og:title"
         content="Benchmark Designers Should &quot;Train on the Test Set&quot; to Expose Exploitable Non-Visual Shortcuts">
     <meta property="og:description"
         content="COLM 2026. Ellis Brown, Jihan Yang, Shusheng Yang, Rob Fergus, Saining Xie (NYU). Cross-validate a text-only model on a benchmark's own test set to find non-visual shortcuts before release.">
-    <!-- og:image / twitter:image are intentionally omitted until a 1200x630 social card exists. -->
-    <meta name="twitter:card" content="summary">
+    <meta property="og:image" content="https://vision-x-nyu.github.io/test-set-training/static/img/social-card.png">
+    <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title"
         content="Benchmark Designers Should &quot;Train on the Test Set&quot; to Expose Exploitable Non-Visual Shortcuts">
     <meta name="twitter:description"
-        content="COLM 2026. Ellis Brown, Jihan Yang, Shusheng Yang, Rob Fergus, Saining Xie (NYU). Cross-validate a text-only model on a benchmark's own test set to find non-visual shortcuts before release.">
+        content="COLM 2026. Cross-validate a text-only model on a benchmark's own test set to find non-visual shortcuts before release.">
+    <meta name="twitter:image" content="https://vision-x-nyu.github.io/test-set-training/static/img/social-card.png">
+
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌶️</text></svg>">
+
+    <!-- Palatino where installed; Spectral (a close metric match) everywhere else -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,700;1,400;1,700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+    <link rel="stylesheet" href="./static/css/style.css">
+
+    <script defer src="./static/js/medium-zoom.min.js"></script>
+    <script defer src="./static/js/main.js"></script>
 </head>
 
 <body>
 
-    <!-- Hero Section -->
-    <header class="hero">
-        <div class="container hero-content fade-in-up">
-            <span class="hero-tag">🌶️&nbsp;&nbsp;Hot Take</span>
-            <h1>Benchmark Designers Should<br>"Train on the Test Set"</h1>
-            <p style="font-size: 1.5rem; margin-top: 1rem; color: var(--text-secondary);">
-                ...to expose exploitable non-visual shortcuts.
-            </p>
+    <header class="hero wide">
+        <h1>Benchmark Designers Should <span class="v nowrap">&ldquo;Train on the Test Set&rdquo;</span>
+            <span class="line2">to Expose Exploitable Non-Visual Shortcuts</span>
+        </h1>
+        <p class="authors">
+            <a href="https://ellisbrown.github.io/">Ellis Brown</a>
+            <a href="https://jihanyang.github.io/">Jihan Yang</a>
+            <a href="https://github.com/vealocia">Shusheng Yang</a>
+            <a href="https://cs.nyu.edu/~fergus/">Rob Fergus</a>
+            <a href="https://www.sainingxie.com/">Saining Xie</a>
+        </p>
+        <p class="affil">New York University &middot; COLM 2026</p>
 
-            <div class="authors-container">
-                <div class="authors-list">
-                    <div class="author-item"><a href="https://ellisbrown.github.io/">Ellis Brown</a></div>
-                    <div class="author-item"><a href="https://jihanyang.github.io/">Jihan Yang</a></div>
-                    <div class="author-item"><a href="https://github.com/vealocia">Shusheng Yang</a></div>
-                    <div class="author-item"><a href="https://cs.nyu.edu/~fergus/">Rob Fergus</a></div>
-                    <div class="author-item"><a href="https://www.sainingxie.com/">Saining Xie</a></div>
-                </div>
-                <div class="institutions">New York University</div>
-                <div class="venue">COLM 2026</div>
-            </div>
-
-
-            <div class="hero-buttons">
-                <a href="https://openreview.net/forum?id=ggtdDv1l9s" class="btn btn-primary">
-                    <i class="fa-solid fa-file-lines"></i> COLM 2026
-                </a>
-                <a href="https://arxiv.org/pdf/2511.04655" class="btn btn-secondary">
-                    <i class="fa-solid fa-file-pdf"></i>PDF
-                </a>
-                <a href="https://arxiv.org/abs/2511.04655" class="btn btn-secondary">
-                    <i class="ai ai-arxiv"></i>arXiv
-                </a>
-                <a href="https://github.com/vision-x-nyu/test-set-training" class="btn btn-secondary">
-                    <i class="fa-brands fa-github"></i> Code
-                </a>
-                <a href="https://x.com/_ellisbrown/status/1988014436645327220" class="btn btn-secondary">
-                    <i class="fa-brands fa-twitter"></i> Thread
-                </a>
-            </div>
-            <div class="hero-buttons" style="margin-top: 10px;">
-                <a href="https://hf.co/datasets/nyu-visionx/VSI-Train-10k" class="btn btn-secondary">
-                    <i class="fa-solid fa-database"></i> VSI-Train-10k
-                </a>
-                <a href="https://hf.co/datasets/nyu-visionx/VSI-Bench" class="btn btn-secondary">
-                    <i class="fa-solid fa-database"></i> VSI-Bench + Debiased
-                </a>
-            </div>
-        </div>
+        <nav class="links" aria-label="Paper resources">
+            <a class="chip chip-primary" href="https://arxiv.org/pdf/2511.04655"><i class="fa-solid fa-file-pdf"></i>Paper</a>
+            <a class="chip" href="https://arxiv.org/abs/2511.04655"><i class="ai ai-arxiv"></i>arXiv</a>
+            <a class="chip" href="https://github.com/vision-x-nyu/test-set-training"><i class="fa-brands fa-github"></i>Code</a>
+            <a class="chip" href="https://hf.co/datasets/nyu-visionx/VSI-Bench"><i class="fa-solid fa-database"></i>VSI-Bench-Debiased</a>
+            <a class="chip" href="https://hf.co/datasets/nyu-visionx/VSI-Train-10k"><i class="fa-solid fa-database"></i>VSI-Train-10k</a>
+            <a class="chip" href="https://openreview.net/forum?id=ggtdDv1l9s"><i class="fa-solid fa-comments"></i>OpenReview</a>
+        </nav>
     </header>
 
+    <main>
 
-    <!-- Abstract-->
-    <section class="section" id="abstract">
-        <div class="container fade-in-up">
-            <!-- justify text -->
-            <h2>Summary</h2>
-            <p>
-                Multimodal large language models can score well on many vision-centric benchmarks without strong
-                visual understanding, by exploiting linguistic priors, answer patterns, and skewed label
-                distributions. <strong>If a benchmark can be gamed, it will be.</strong> We argue that benchmark
-                designers should stress-test the exact artifact they release: cross-validate a text-only model on
-                the test set's own question and answer-option text, so that every question is scored by a model
-                that never trained on it. This extends established partial-input auditing to multimodal evaluation.
-            </p>
-            <p>
-                This <strong>Test-set Stress-Test (TsT)</strong> yields a benchmark-level score and a per-question
-                bias score \(s(x)\) for designer review. With the same model and the same scoring, a text-only
-                Qwen2-7B goes from 24.7 zero-shot to 42.7 on VSI-Bench (+18 points) and from 47.3 to 60.3 on
-                CV-Bench (+13), but learns little on knowledge-intensive MMMU (34.2&nbsp;&rarr;&nbsp;33.6), even
-                though GPT-4o answers 52.3% of MMMU's multiple-choice questions correctly without the image. A blind
-                score alone cannot tell pretrained knowledge apart from patterns learnable from the test set.
-            </p>
-            <p>
-                These shortcuts are reachable without test access: fine-tuning LLaVA-Video-7B on the
-                in-distribution VSI-Train-10k raises its blind VSI-Bench score by 18.8 points, about as much as its
-                vision score (+20.4). The bias scores also drive <strong>Iterative Bias Pruning (IBP)</strong>. Our
-                released VSI-Bench-Debiased is a designer-in-the-loop pilot version, not the output of the full
-                automated IBP procedure. It lowers that fine-tuned model's blind score from 44.7 to 32.0 while
-                its vision score falls less (57.1&nbsp;&rarr;&nbsp;48.7), and its vision-blind gap is 16.7, versus
-                12.4&nbsp;&plusmn;&nbsp;0.6 when a random 54% of questions is removed. TsT is a pre-release audit of
-                an evaluation instrument, not a recipe for training deployed models on test answers.
-            </p>
-        </div>
-    </section>
+        <section class="col tldr" aria-label="Summary">
+            <ul>
+                <li>Multimodal models can score well on vision benchmarks <strong>without looking at the
+                        image</strong>, by exploiting patterns in the questions and answers.</li>
+                <li>Before releasing a benchmark, designers should <strong>&ldquo;train on the test set&rdquo;</strong>:
+                    cross-validate a text-only model on the test set's own questions and answer options. The gain
+                    over the same model's zero-shot score is what can be learned without looking.</li>
+                <li>That gain <strong>varies a lot</strong>: +18 points on VSI-Bench and +13 on CV-Bench, but little
+                    learnable signal on MMMU. Per-question scores flag which questions to inspect.</li>
+            </ul>
+        </section>
 
-    <!-- The Problem -->
-    <section class="section narrative-section" id="problem">
-        <div class="container narrative-content">
-            <div class="narrative-text fade-in-up">
-                <h3>The Problem</h3>
+        <!-- Shortcuts -->
+        <section id="shortcuts">
+            <div class="col">
+                <h2>Non-visual shortcuts</h2>
                 <p>
-                    Many multimodal benchmarks hide a dirty secret: <strong>models can achieve high scores without even
-                        using the visual input.</strong> We call this "blind" evaluation—giving the model the question
-                    <em>without</em> the image.
+                    The usual safeguard is a &ldquo;blind&rdquo; test: evaluate the benchmark with vision disabled.
+                    Models still answer many questions. Some answers come from <strong>knowledge</strong>
+                    (&ldquo;How tall is the refrigerator?&rdquo; can be answered from memorized appliance sizes).
+                    Others come from <strong>statistical</strong> regularities in the benchmark's own questions and
+                    answers, which a model can learn instead of looking.
                 </p>
-                <p>
-                    This is particularly problematic for vision-centric benchmarks, which explicitly aim to require
-                    visual inputs to be solved. If a model can score well on VSI-Bench counting questions by always
-                    answering "2", the ground truth for over half of them, are we really measuring visual
-                    understanding?
-                </p>
+                <figure class="hook">
+                    <img src="static/img/tst_hook.png"
+                        alt="Video frames crossed out, the question 'How many chairs are there in this room?', and a blind model answering '3?', marked correct"
+                        loading="lazy">
+                    <figcaption>Blind (no visual input): models still answer many benchmark questions.</figcaption>
+                </figure>
             </div>
-            <div class="narrative-visual fade-in-up">
-                <!-- Carousel -->
-                <div class="carousel-container">
-                    <div class="carousel-slides-wrapper">
-                        <div class="carousel-slide active"
-                            data-caption="Severe answer skew. Always guessing '2' works well.">
-                            <img src="static/img/bias_a.jpeg" alt="Counting Bias" class="medium-zoom-image"
-                                data-zoomable>
+
+            <div class="wide">
+                <div class="pair">
+                    <figure>
+                        <p class="pair-head">VSI-Bench counting</p>
+                        <img class="filmstrip" src="static/img/filmstrip_vsibench.svg" alt="Video frames of an office" loading="lazy">
+                        <p class="qbar"><strong>Q:</strong> How many <u>object(s)</u> are in this room?</p>
+                        <img src="static/img/counting_hist.svg" data-zoomable loading="lazy"
+                            alt="Histogram of ground-truth counts: 53% of counting questions have answer 2">
+                        <figcaption>Over half of the counting answers are 2.</figcaption>
+                    </figure>
+                    <figure>
+                        <p class="pair-head">CV-Bench depth</p>
+                        <div class="photos">
+                            <img src="static/img/cvb_depth_1.jpg" alt="Room with two boxed objects" loading="lazy">
+                            <img src="static/img/cvb_depth_2.jpg" alt="Kitchen" loading="lazy">
+                            <img src="static/img/cvb_depth_4.jpg" alt="Bathroom" loading="lazy">
                         </div>
-                        <div class="carousel-slide"
-                            data-caption="CV-Bench depth: books are the closer object in 60 of 64 questions; a bookcase never is (0 of 42).">
-                            <img src="static/img/bias_b_v2.jpeg" alt="Spatial Relation Bias" class="medium-zoom-image"
-                                data-zoomable>
-                        </div>
-                        <div class="carousel-slide"
-                            data-caption="Appearance order: object categories correlate with answer position.">
-                            <img src="static/img/bias_c.jpeg" alt="Appearance Order Bias" class="medium-zoom-image"
-                                data-zoomable>
-                        </div>
-                        <div class="carousel-slide"
-                            data-caption="Room sizes follow a predictable log-normal distribution.">
-                            <img src="static/img/bias_d.jpeg" alt="Size Estimation Bias" class="medium-zoom-image"
-                                data-zoomable>
-                        </div>
+                        <p class="qbar"><strong>Q:</strong> Which is closer to the camera, <u>object 1</u> or <u>object 2</u>?</p>
+                        <img src="static/img/cvb_depth.svg" data-zoomable loading="lazy"
+                            alt="How often each object is the closer one: books in 60 of 64 questions, bookcase in 0 of 42">
+                        <figcaption>Books are the closer object in 60 of 64 questions; a bookcase in none of 42.
+                            Shown: the top and bottom 5 of the 26 objects with at least 10 questions; dashed line = 50%
+                            chance.</figcaption>
+                    </figure>
+                </div>
+            </div>
+
+            <div class="col">
+                <h3>Models pick up these shortcuts without test access</h3>
+                <p>
+                    Training data generated the same way carries the same regularities. Fine-tuning LLaVA-Video-7B on
+                    VSI-Train-10k, an in-distribution training set built with VSI-Bench's own pipeline, raises its
+                    <span class="blind">blind score by 18.8 points</span>, about as much as its
+                    <span class="vision">vision score (+20.4)</span>.
+                </p>
+                <figure class="fig-sm">
+                    <img src="static/img/ft_gains.svg" data-zoomable loading="lazy"
+                        alt="Bar chart: fine-tuning raises the blind VSI-Bench score by 18.8 points and the vision score by 20.4">
+                </figure>
+            </div>
+        </section>
+
+        <!-- Method -->
+        <section id="tst" class="col">
+            <h2>Test-set Stress-Test (TsT)</h2>
+            <p>
+                TsT applies <em>k</em>-fold cross-validation to the released test set, using only its text:
+                questions, answer options, and metadata. A text-only model trains on <em>k</em>&minus;1 folds and
+                scores the held-out fold, so every question is scored by a model that never trained on it.
+            </p>
+            <figure class="figure-box">
+                <img src="static/img/tst_kfold.png" data-zoomable loading="lazy"
+                    alt="Diagram: four training folds and one held-out fold feed a text-only (blind) model, which outputs a benchmark-level TsT score and a per-question bias score s(x)">
+            </figure>
+            <ul class="defs">
+                <li><strong>TsT score:</strong> how much of the benchmark can be solved without vision. Its
+                    <span class="v">gain over the same model's zero-shot score</span> is what can be learned from the
+                    test set itself; the zero-shot score is what the model already knows.</li>
+                <li><strong>Bias score <i>s</i>(<i>x</i>):</strong> each question's held-out score. A high score
+                    flags a question as likely answerable without looking.</li>
+            </ul>
+            <p>
+                <strong>TsT-LLM</strong> LoRA-tunes Qwen2-7B on the raw question and option text; it needs no feature
+                engineering and works on non-templated benchmarks. <strong>TsT-RF</strong>, a random forest on
+                hand-crafted features, is fast and interpretable for template-based benchmarks.
+            </p>
+            <p>
+                <strong>Why the test set?</strong> A diagnostic trained on separate in-distribution data reveals biases
+                of the process that generated the data, but it may miss artifacts of the released test set, such as
+                sampling quirks, templates, or human filtering. Most benchmarks ship only a test split anyway. The two
+                checks are complementary.
+            </p>
+            <p class="note">
+                TsT is run by the designer before release. It audits the benchmark; its scores are not model
+                performance, and it is not a recipe for training models on test answers.
+            </p>
+        </section>
+
+        <!-- Results -->
+        <section id="results">
+            <div class="col">
+                <h2>How much can be learned without looking varies a lot</h2>
+                <figure class="chart" aria-labelledby="chart-caption">
+                    <p class="chart-title">Same model (blind Qwen2-7B, TsT-LLM), same scoring</p>
+                    <div class="chart-legend" aria-hidden="true">
+                        <span><span class="key db-zs"></span>zero-shot</span>
+                        <span><span class="key db-tst"></span>after <em>k</em>-fold TsT</span>
+                        <span>TsT gain (points)</span>
                     </div>
-
-                    <div class="carousel-controls">
-                        <button class="carousel-btn prev-btn"><i class="fa-solid fa-chevron-left"></i></button>
-                        <div class="carousel-center-content">
-                            <div class="carousel-caption-text">Severe answer skew. Always guessing '2' works well.</div>
-                            <div class="carousel-nav">
-                                <span class="carousel-dot active"></span>
-                                <span class="carousel-dot"></span>
-                                <span class="carousel-dot"></span>
-                                <span class="carousel-dot"></span>
-                            </div>
-                        </div>
-                        <button class="carousel-btn next-btn"><i class="fa-solid fa-chevron-right"></i></button>
+                    <div role="list">
+                    <div class="db-row" role="listitem" aria-label="VSI-Bench: zero-shot 24.7, TsT 42.7, gain +18 points">
+                        <span class="db-label">VSI-Bench</span>
+                        <span class="db-track"><span class="db-grid" style="left:10.0%"></span><span class="db-grid" style="left:30.0%"></span><span class="db-grid" style="left:50.0%"></span><span class="db-grid" style="left:70.0%"></span><span class="db-grid" style="left:90.0%"></span><span class="db-line" style="left:19.4%;width:36.0%"></span><span class="db-dot db-zs" style="left:19.4%"></span><span class="db-dot db-tst" style="left:55.4%"></span><span class="db-val zs" style="left:19.4%">24.7</span><span class="db-val tst" style="left:55.4%">42.7</span></span>
+                        <span class="db-gain">+18<span class="db-sub">24.7 &rarr; 42.7</span></span>
                     </div>
+                    <div class="db-row" role="listitem" aria-label="CV-Bench: zero-shot 47.3, TsT 60.3, gain +13 points">
+                        <span class="db-label">CV-Bench</span>
+                        <span class="db-track"><span class="db-grid" style="left:10.0%"></span><span class="db-grid" style="left:30.0%"></span><span class="db-grid" style="left:50.0%"></span><span class="db-grid" style="left:70.0%"></span><span class="db-grid" style="left:90.0%"></span><span class="db-line" style="left:64.6%;width:26.0%"></span><span class="db-dot db-zs" style="left:64.6%"></span><span class="db-dot db-tst" style="left:90.6%"></span><span class="db-val zs" style="left:64.6%">47.3</span><span class="db-val tst" style="left:90.6%">60.3</span></span>
+                        <span class="db-gain">+13<span class="db-sub">47.3 &rarr; 60.3</span></span>
+                    </div>
+                    <div class="db-row" role="listitem" aria-label="MMStar: zero-shot 24.2, TsT 29.5, gain +5 points">
+                        <span class="db-label">MMStar<small>curated to need vision</small></span>
+                        <span class="db-track"><span class="db-grid" style="left:10.0%"></span><span class="db-grid" style="left:30.0%"></span><span class="db-grid" style="left:50.0%"></span><span class="db-grid" style="left:70.0%"></span><span class="db-grid" style="left:90.0%"></span><span class="db-line" style="left:18.4%;width:10.6%"></span><span class="db-dot db-zs" style="left:18.4%"></span><span class="db-dot db-tst" style="left:29.0%"></span><span class="db-val zs" style="left:18.4%">24.2</span><span class="db-val tst" style="left:29.0%">29.5</span></span>
+                        <span class="db-gain">+5<span class="db-sub">24.2 &rarr; 29.5</span></span>
+                    </div>
+                    <div class="db-row" role="listitem" aria-label="VideoMME: zero-shot 29.2, TsT 33.4, gain +4 points">
+                        <span class="db-label">VideoMME</span>
+                        <span class="db-track"><span class="db-grid" style="left:10.0%"></span><span class="db-grid" style="left:30.0%"></span><span class="db-grid" style="left:50.0%"></span><span class="db-grid" style="left:70.0%"></span><span class="db-grid" style="left:90.0%"></span><span class="db-line" style="left:28.4%;width:8.4%"></span><span class="db-dot db-zs" style="left:28.4%"></span><span class="db-dot db-tst" style="left:36.8%"></span><span class="db-val zs" style="left:28.4%">29.2</span><span class="db-val tst" style="left:36.8%">33.4</span></span>
+                        <span class="db-gain">+4<span class="db-sub">29.2 &rarr; 33.4</span></span>
+                    </div>
+                    <div class="db-row" role="listitem" aria-label="MMMU: zero-shot 34.2, TsT 33.6, little learnable signal">
+                        <span class="db-label">MMMU<small>val, multiple-choice</small></span>
+                        <span class="db-track"><span class="db-grid" style="left:10.0%"></span><span class="db-grid" style="left:30.0%"></span><span class="db-grid" style="left:50.0%"></span><span class="db-grid" style="left:70.0%"></span><span class="db-grid" style="left:90.0%"></span><span class="db-dot db-zs" style="left:38.4%"></span><span class="db-dot db-tst" style="left:37.2%"></span><span class="db-val tst" style="left:38.4%">34.2 &rarr; 33.6</span></span>
+                        <span class="db-gain text">little learnable signal<span class="db-sub">34.2 &rarr; 33.6</span></span>
+                    </div>
+                    </div>
+                    <div class="db-axis" aria-hidden="true">
+                        <span></span>
+                        <span class="db-ticks"><span style="left:10.0%">20</span><span style="left:30.0%">30</span><span style="left:50.0%">40</span><span style="left:70.0%">50</span><span style="left:90.0%">60</span></span>
+                        <span></span>
+                    </div>
+                    <p class="axis-label" aria-hidden="true">Text-only score (%)</p>
+                    <figcaption id="chart-caption">
+                        Multiple-choice scores are the mean probability of the correct option, not accuracy; VSI-Bench
+                        also includes numerical questions, scored by mean relative accuracy.
+                    </figcaption>
+                </figure>
+                <p>
+                    On the template-based VSI-Bench and CV-Bench, much of the benchmark can be answered by learning
+                    patterns in its text alone. The result holds with folds grouped by scene: keeping all questions
+                    about one scene in the same fold, VSI-Bench still gains +17. On MMStar, which was curated to require
+                    vision, TsT finds only a small gain: it does not report large shortcuts where few are expected.
+                </p>
+                <p>
+                    MMMU is the opposite case. TsT finds little learnable signal there, yet GPT-4o answers
+                    <strong>52.3%</strong> of MMMU's multiple-choice questions correctly without the image. That
+                    points mostly to pretrained knowledge, and the blind scores of LLaVA-OneVision tell the same
+                    story: on MMMU they rise with model size, on VSI-Bench they stay flat. A blind score alone cannot
+                    tell knowledge from learnable test-set patterns.
+                </p>
+                <figure class="fig-md">
+                    <img src="static/img/blind_scaling.svg" data-zoomable loading="lazy"
+                        alt="LLaVA-OneVision blind and vision scores at 0.5B, 7B and 72B: blind MMMU rises from 31.0 to 49.0; blind VSI-Bench stays flat">
+                    <figcaption>Blind (no visual input) and vision scores of LLaVA-OneVision at three LLM sizes.
+                    </figcaption>
+                </figure>
+                <p class="note">
+                    The TsT gain is what this probe learns: a lower bound on what a stronger diagnostic could exploit.
+                </p>
+            </div>
+        </section>
+
+        <!-- Pruning -->
+        <section id="pruning">
+            <div class="col">
+                <h2>Pruning makes VSI-Bench lean more on vision</h2>
+                <p>
+                    <strong>Iterative Bias Pruning (IBP)</strong> turns bias scores into a revised benchmark: remove
+                    the questions with the highest <i>s</i>(<i>x</i>), re-diagnose the rest, and repeat until a budget
+                    or threshold is reached. It follows AFLite-style adversarial filtering, and we compare it with
+                    removing the same number of questions at random.
+                </p>
+                <p id="vsi-bench-debiased">
+                    Our released <strong>VSI-Bench-Debiased</strong> is a designer-in-the-loop pilot built with
+                    hand-written per-type filters, not the output of the full automated IBP procedure. It removes
+                    2,768 of 5,130 questions (54%). On it, the fine-tuned LLaVA-Video-7B's
+                    <span class="blind">blind score drops 12.7 points</span> while its
+                    <span class="vision">vision score drops only 8.4</span>.
+                </p>
+            </div>
+            <div class="wide">
+                <div class="pair">
+                    <figure>
+                        <img src="static/img/pilot_scores.svg" data-zoomable loading="lazy"
+                            alt="Slope chart: vision score 57.1 to 48.7 and blind score 44.7 to 32.0 from the full set to the pilot">
+                    </figure>
+                    <figure>
+                        <img src="static/img/pilot_gap.svg" data-zoomable loading="lazy"
+                            alt="Bar chart of vision-blind gap at 54% removal: random removal 12.4, automated IBP 14.1, pilot 16.7">
+                    </figure>
                 </div>
             </div>
-        </div>
-    </section>
+            <div class="col">
+                <p>
+                    The vision&ndash;blind gap widens to 16.7, against 12.4 when a random 54% is removed. Automated
+                    per-type IBP, guided by TsT-RF scores at the same 54%, reaches 14.1. How much the gap widens varies
+                    by model. The debiased set changes the question-type mix, so report it alongside the full
+                    VSI-Bench rather than in place of it.
+                </p>
+            </div>
+        </section>
 
-    <!-- The Principle -->
-    <section class="section" style="background: var(--surface-color);" id="principle">
-        <div class="container" style="text-align: center;">
-            <div class="fade-in-up">
-                <h2 style="margin-bottom: 2rem;">Key Principle</h2>
-                <blockquote
-                    style="font-size: 2rem; font-weight: 700; color: var(--text-primary); max-width: 800px; margin: 0 auto;">
-                    "If a benchmark <em>CAN</em> be gamed, it <em>WILL</em> be."
-                </blockquote>
-                <p style="margin-top: 2rem;">
-                    Therefore, multimodal benchmark designers should proactively try to "game" their own benchmarks
-                    first as a key step in the development lifecycle.
-                </p>
-            </div>
+        <div class="col">
+            <aside class="punchline" aria-label="Key message">
+                <p>If your benchmark <em>can</em> be gamed, it <em>will</em> be!</p>
+                <p class="second">So you better game it first.</p>
+            </aside>
         </div>
-    </section>
 
-    <!-- The Solution: TsT -->
-    <section class="section narrative-section" id="tst">
-        <div class="container narrative-content">
-            <div class="narrative-text fade-in-up">
-                <span class="hero-tag">⓵&nbsp;&nbsp;Diagnose</span>
-                <h2>Introducing TsT</h2>
-                <p>
-                    <strong>Test-set Stress-Test (TsT)</strong> is a diagnostic framework that quantifies non-visual
-                    exploitability.
-                </p>
-                <p>
-                    We use <strong>k-fold cross-validation DIRECTLY on the test set</strong> (using only non-visual text
-                    inputs). This allows us to train diagnostic models that:
-                </p>
-                <ul style="list-style: none; margin-bottom: 1.5rem;">
-                    <li style="margin-bottom: 0.5rem;"><i class="fa-solid fa-check"
-                            style="color: var(--accent-primary); margin-right: 10px;"></i> Quantify global non-visual
-                        solvability</li>
-                    <li style="margin-bottom: 0.5rem;"><i class="fa-solid fa-check"
-                            style="color: var(--accent-primary); margin-right: 10px;"></i> Compute per-sample bias
-                        scores s(x)</li>
-                </ul>
-                <p>
-                    This effectively "trains on the test set" not to overfit, but to adversarially probe for intrinsic
-                    vulnerabilities.
-                </p>
-                <p>
-                    We propose two complementary diagnostic approaches, trained on <em>non-visual</em> features of the
-                    test set:
-                </p>
-                <ul style="list-style: none; margin-bottom: 1.5rem;">
-                    <li style="margin-bottom: 0.5rem;"><i class="fa-solid fa-robot"
-                            style="color: var(--accent-primary); margin-right: 10px;"></i> <strong>TsT-LLM</strong>:
-                        Uses LoRA-tuned LLMs for detection power and wide applicability.</li>
-                    <li style="margin-bottom: 0.5rem;"><i class="fa-solid fa-tree"
-                            style="color: var(--accent-primary); margin-right: 10px;"></i> <strong>TsT-RF</strong>: Uses
-                        Random Forests for interpretability and speed.</li>
-                </ul>
-            </div>
-            <div class="narrative-visual fade-in-up">
-                <img src="static/img/TsT_overview.png" alt="TsT Framework Overview"
-                    style="background: white; padding: 1rem; border-radius: 8px;" class="medium-zoom-image"
-                    data-zoomable>
-            </div>
-        </div>
-    </section>
+        <!-- Checklist -->
+        <section id="checklist" class="col">
+            <h2>A checklist for benchmark designers</h2>
+            <ol class="checklist">
+                <li>Run blind zero-shot and <em>k</em>-fold TsT, and report both.</li>
+                <li>Report random- and grouped-fold scores (by scene, video, or image).</li>
+                <li>Inspect the highest-<i>s</i>(<i>x</i>) questions; rewrite, rebalance, or remove them.</li>
+                <li>Re-diagnose after pruning, since pruning can create new answer priors.</li>
+                <li>Report on both the full and debiased sets: Hugging Face <code>nyu-visionx/VSI-Bench</code>, config
+                    <code>debiased</code>; lmms-eval task <code>vsibench_debiased</code>.</li>
+            </ol>
+        </section>
 
-    <!-- Why the Test Set? -->
-    <section class="section narrative-section" style="background: var(--surface-color);" id="why-test-set">
-        <div class="container narrative-content split-50-50">
-            <div class="narrative-visual fade-in-up">
-                <img src="static/img/TsT_overview_bias_space.png" alt="Bias Space Diagram"
-                    style="background: white; padding: 1rem; border-radius: 8px;">
-            </div>
-            <div class="narrative-text fade-in-up">
-                <!-- <h3>It's Not Just Overfitting</h3> -->
-                <h3>Why the <em>test set specifically?</em></h3>
-                <p>
-                    You might ask: <em>"Why train on the test set specifically? Why not use a held-out training
-                        set?"</em>
-                </p>
-                <p>
-                    Most multimodal benchmarks are released with only an evaluation split, so there is often no
-                    training split to use. And once a benchmark is released, models can exploit patterns specific to that test set,
-                    such as those introduced by sampling, templates, or curation.
-                </p>
-                <p>
-                    Where a training split exists, training on it reveals biases shared across the domain (<span
-                        style="color: #2A2AFF;">blue region</span>), but it may miss patterns specific to the released
-                    test set (<span style="color: #FF0066;">pink region</span>). TsT probes the released test set
-                    directly. On VSI-Bench, fine-tuning a video model on the in-distribution VSI-Train-10k also raises
-                    its blind score, from 25.9 to 44.7, so the two checks complement each other.
-                </p>
-            </div>
-        </div>
-    </section>
-
-    <!-- Diagnosis Results -->
-    <section class="section" id="diagnostic-results">
-        <div class="container">
-            <h3 style="text-align: center; margin-bottom: 2rem;">Diagnosis: Vulnerability Varies by Benchmark</h3>
-            <p style="text-align: center; max-width: 700px; margin: 0 auto 3rem auto; color: var(--text-secondary);">
-                Each card compares a text-only Qwen2-7B's blind zero-shot score with its held-out TsT score on the
-                same benchmark, using the same model and the same scoring rule.
+        <!-- Code -->
+        <section id="code" class="col">
+            <h2>Stress-test your own benchmark</h2>
+            <p>
+                The <a href="https://github.com/vision-x-nyu/test-set-training">code</a> includes TsT-LLM, TsT-RF,
+                IBP, and scripts that reproduce the paper. TsT-RF runs on a CPU in under a minute:
             </p>
-
-            <!-- High Level Stats -->
-            <div class="grid fade-in-up" style="margin-top: 4rem; margin-bottom: 2.5rem;">
-                <div class="stat-card">
-                    <div class="stat-number">+18 pts</div>
-                    <div class="stat-label">VSI-Bench</div>
-                    <p style="font-size: 0.9rem; margin-top: 1rem;">Zero-shot 24.7&nbsp;&rarr;&nbsp;TsT 42.7.
-                        Multiple-choice questions only: 25.5&nbsp;&rarr;&nbsp;39.1. With folds grouped by scene, the
-                        gain is +17.</p>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number">+13 pts</div>
-                    <div class="stat-label">CV-Bench</div>
-                    <p style="font-size: 0.9rem; margin-top: 1rem;">Zero-shot 47.3&nbsp;&rarr;&nbsp;TsT 60.3.</p>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number">+4 pts</div>
-                    <div class="stat-label">VideoMME</div>
-                    <p style="font-size: 0.9rem; margin-top: 1rem;">Zero-shot 29.2&nbsp;&rarr;&nbsp;TsT 33.4.</p>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number">+5 pts</div>
-                    <div class="stat-label">MMStar (curated to need vision)</div>
-                    <p style="font-size: 0.9rem; margin-top: 1rem;">Zero-shot 24.2&nbsp;&rarr;&nbsp;TsT 29.5. A
-                        control: TsT finds only a small gain on a benchmark built to require the image.</p>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number stat-number-text">Little learnable signal</div>
-                    <div class="stat-label">MMMU (knowledge-intensive)</div>
-                    <p style="font-size: 0.9rem; margin-top: 1rem;">Zero-shot 34.2&nbsp;&rarr;&nbsp;TsT 33.6. GPT-4o
-                        answers 52.3% of MMMU's multiple-choice questions correctly without the image, which points to
-                        pretrained knowledge rather than patterns learnable from the test set.</p>
-                </div>
-            </div>
-
-            <p class="results-note">
-                A TsT score is a stress test of the benchmark, not model performance. These scores are not
-                accuracy: for multiple-choice questions they are the mean probability the model assigns to the
-                correct option, and for VSI-Bench numerical questions they are mean relative accuracy (VSI-Bench
-                combines the two by question count). Gains are in points.
+<pre><code>git clone https://github.com/vision-x-nyu/test-set-training.git
+cd test-set-training
+uv sync --frozen
+uv run python -m TsT --benchmark vsi --group_col scene_name --output_dir outputs/vsi</code></pre>
+            <p>
+                TsT-LLM needs one GPU (<code>uv sync --frozen --extra llm</code>, then add <code>--mode llm</code>). For
+                a new benchmark, start from <code>examples/custom_benchmark.py</code> and the
+                <a href="https://github.com/vision-x-nyu/test-set-training/blob/main/docs/your-benchmark.md">guide</a>.
             </p>
-        </div>
-    </section>
+        </section>
 
-    <!-- Mitigation -->
-    <!-- <section class="section narrative-section" style="background: var(--surface-color);"> -->
-    <section class="section narrative-section" id="ibp">
-        <div class="container narrative-content">
-            <div class="narrative-text fade-in-up">
-                <span class="hero-tag">⓶&nbsp;&nbsp;Debias</span>
-                <h2>Iterative Bias Pruning (IBP)</h2>
-                <p>
-                    IBP uses TsT's per-sample bias scores to remove the most exploitable samples, re-scoring the
-                    remaining samples after each batch.
-                </p>
-                <p>
-                    <strong>Iterative Bias Pruning (IBP)</strong> alternates between:
-                </p>
-                <ol style="margin-left: 1.5rem; color: var(--text-secondary); margin-bottom: 1.5rem;">
-                    <li style="margin-bottom: 0.5rem;">Re-scoring every remaining sample with TsT</li>
-                    <li style="margin-bottom: 0.5rem;">Removing the highest-scoring batch, until the removal budget
-                        is spent or no score exceeds a threshold</li>
-                </ol>
-                <p>
-                    The paper runs automated IBP on VSI-Bench (with TsT-RF) and MMMU (with TsT-LLM). The released
-                    VSI-Bench-Debiased predates this algorithm and was built with hand-written per-type filters
-                    (below). On VSI-Bench, automated per-type IBP at the pilot's 54% removal rate widens a fine-tuned
-                    model's vision-blind gap to 14.1, versus 12.2&ndash;12.4 for random removal.
-                </p>
-            </div>
-            <div class="narrative-visual fade-in-up">
-                <div style="background: #111; padding: 1rem; border-radius: 12px; text-align: center;">
-                    <span style="color: var(--text-primary);"><strong>IBP Algorithm</strong>: Systematic
-                        Debiasing</span>
-                </div>
-                <img src="./static/img/IBP.png" alt="IBP Algorithm"
-                    style="background: white; padding: 1rem; border-radius: 8px;" class="medium-zoom-image"
-                    data-zoomable>
-            </div>
-        </div>
-    </section>
+    </main>
 
-    <!-- Mitigation Results -->
-    <section class="section narrative-section" id="mitigation-results">
-        <div class="container" id="vsi-bench-debiased">
-            <!-- <h3 style="text-align: center; margin-bottom: 2rem;">Proof it Works</h3> -->
-            <h3 style="text-align: center; margin-bottom: 1.5rem;">Case Study: VSI-Bench-Debiased</h3>
-            <p style="text-align: center; max-width: 700px; margin: 0 auto 3rem auto; color: var(--text-secondary);">
-                VSI-Bench-Debiased is a designer-in-the-loop pilot version, not the output of the full automated
-                IBP procedure. It removes 2,768 of the 5,130 questions (54.0%) and keeps 2,362. Because the question-type mix changes, it is a separate evaluation
-                set, not a drop-in replacement for VSI-Bench: report it alongside the full set.
-            </p>
-
-            <!-- High Level Stats -->
-            <div class="grid fade-in-up" style="margin-bottom: 4rem; justify-content: center;">
-                <div class="stat-card">
-                    <div class="stat-number stat-number-sm">44.7&nbsp;&rarr;&nbsp;32.0</div>
-                    <div class="stat-label">Fine-tuned blind score</div>
-                    <p style="font-size: 0.9rem; margin-top: 1rem;">LLaVA-Video-7B fine-tuned on VSI-Train-10k and
-                        evaluated without the video, on VSI-Bench vs. VSI-Bench-Debiased. With the video, its score falls less:
-                        57.1&nbsp;&rarr;&nbsp;48.7.</p>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number stat-number-sm">16.7 vs. 12.4</div>
-                    <div class="stat-label">Vision-blind gap: debiased vs. random removal</div>
-                    <p style="font-size: 0.9rem; margin-top: 1rem;">Removing a random 54% of questions instead leaves
-                        the same model's gap at 12.4&nbsp;&plusmn;&nbsp;0.6 (10 seeds); VSI-Bench-Debiased gives 16.7. How much the
-                        gap widens varies by model.</p>
-                </div>
-            </div>
-
-            <!-- Detailed Table -->
-            <div class="fade-in-up" style="max-width: 900px; margin: 0 auto;">
-                <div class="data-table-container">
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>Model Configuration</th>
-                                <th>Vision</th>
-                                <th>Blind</th>
-                                <th style="white-space: nowrap;">Gap (V-B)</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td colspan="4"
-                                    style="background: rgba(255,255,255,0.02); font-weight: 600; color: var(--text-secondary);">
-                                    Original VSI-Bench</td>
-                            </tr>
-                            <tr>
-                                <td>LLaVA-Video 7B (Base)</td>
-                                <td>36.7</td>
-                                <td>25.9</td>
-                                <td>10.8</td>
-                            </tr>
-                            <tr>
-                                <td>+ VSI-Train-10k FT</td>
-                                <td>57.1</td>
-                                <td>44.7</td>
-                                <td>12.4</td>
-                            </tr>
-                            <tr>
-                                <td colspan="4"
-                                    style="background: rgba(255,255,255,0.02); font-weight: 600; color: var(--text-secondary);">
-                                    VSI-Bench-Debiased</td>
-                            </tr>
-                            <tr>
-                                <td>LLaVA-Video 7B (Base)</td>
-                                <td>31.3</td>
-                                <td>20.3</td>
-                                <td>11.0</td>
-                            </tr>
-                            <tr>
-                                <td>+ VSI-Train-10k FT</td>
-                                <td>48.7</td>
-                                <td>32.0</td>
-                                <td class="highlight-positive">16.7</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-                <p class="results-note">
-                    On VSI-Bench-Debiased, the fine-tuned model's blind score falls from 44.7 to 32.0 while its vision score falls
-                    from 57.1 to 48.7, so the pilot preferentially removes questions that can be answered without the
-                    video. It reduces non-visual shortcuts but is not guaranteed to be free of them.
-                </p>
-            </div>
-
-        </div>
-    </section>
-
-    <!-- Footer -->
-    <footer>
-        <div class="container" id="citation">
-            <div class="fade-in-up">
-                <h3 style="margin-bottom: 1rem;">Citation</h3>
-                <p>
-                    If you find this work useful, please cite:
-                </p>
-            </div>
-
-            <div style="max-width: 800px; margin: 0 auto; text-align: left;">
-                <pre><code>@inproceedings{brown2026benchmark,
+    <footer class="col" id="citation">
+        <h2>Citation</h2>
+<pre><code>@inproceedings{brown2026benchmark,
   title     = {{Benchmark Designers Should ``Train on the Test Set'' to Expose Exploitable Non-Visual Shortcuts}},
   author    = {Brown, Ellis and Yang, Jihan and Yang, Shusheng and Fergus, Rob and Xie, Saining},
   booktitle = {COLM},
   year      = {2026}
 }</code></pre>
-            </div>
-        </div>
     </footer>
 
 </body>
