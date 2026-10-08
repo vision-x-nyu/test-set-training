@@ -129,7 +129,8 @@ figcaption,
 /* Header */
 .hero {
     text-align: center;
-    padding: 56px 0 8px;
+    padding-top: 56px;
+    padding-bottom: 8px;
 }
 
 h1 {
@@ -166,11 +167,18 @@ h1 .line2 {
 }
 
 .links {
+    margin: 22px auto 0;
+}
+
+.links-row {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
     gap: 10px;
-    margin: 22px auto 0;
+}
+
+.links-row+.links-row {
+    margin-top: 10px;
 }
 
 .chip {
@@ -543,10 +551,20 @@ footer {
         padding-top: 32px;
     }
 
-    .links {
+    .links-row {
         display: grid;
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
         gap: 8px;
+    }
+
+    .links-row+.links-row {
+        margin-top: 8px;
+    }
+
+    /* the longest label gets its own full-width row, last */
+    .chip-long {
+        grid-column: 1 / -1;
+        order: 1;
     }
 
     .chip {
