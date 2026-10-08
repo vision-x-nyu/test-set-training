@@ -31,6 +31,16 @@ html {
     -webkit-text-size-adjust: 100%;
 }
 
+@media (prefers-reduced-motion: no-preference) {
+    html {
+        scroll-behavior: smooth;
+    }
+}
+
+[id] {
+    scroll-margin-top: 24px;
+}
+
 body {
     margin: 0;
     background: var(--bg);
@@ -243,7 +253,7 @@ main section.tldr {
     grid-template-columns: 1fr 1fr;
     gap: 28px 40px;
     align-items: start;
-    max-width: 940px;
+    max-width: 880px;
     margin: 0 auto 1.4em;
 }
 
@@ -539,6 +549,43 @@ pre {
 
 footer {
     padding: 40px 22px 56px;
+}
+
+/* Contents: left margin, wide screens only */
+.toc {
+    display: none;
+}
+
+@media (min-width: 1300px) {
+    .toc {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        position: fixed;
+        top: 50%;
+        transform: translateY(-50%);
+        left: max(20px, calc(50vw - 440px - 170px));
+        width: 140px;
+        font-size: 0.86em;
+        border-left: 1px solid var(--rule);
+    }
+
+    .toc a {
+        color: var(--muted);
+        text-decoration: none;
+        padding: 3px 0 3px 12px;
+        margin-left: -1px;
+        border-left: 2px solid transparent;
+    }
+
+    .toc a:hover {
+        color: var(--ink);
+    }
+
+    .toc a.active {
+        color: var(--violet-text);
+        border-left-color: var(--violet);
+    }
 }
 
 /* Phones and narrow tablets */
