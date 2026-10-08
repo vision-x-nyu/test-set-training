@@ -45,25 +45,25 @@
             <span class="line2">to Expose Exploitable Non-Visual Shortcuts</span>
         </h1>
         <p class="authors">
-            <a href="https://ellisbrown.github.io/">Ellis Brown</a>
-            <a href="https://jihanyang.github.io/">Jihan Yang</a>
-            <a href="https://github.com/vealocia">Shusheng Yang</a>
-            <a href="https://cs.nyu.edu/~fergus/">Rob Fergus</a>
-            <a href="https://www.sainingxie.com/">Saining Xie</a>
+            <a href="https://ellisbrown.github.io/" target="_blank" rel="noopener">Ellis Brown</a>
+            <a href="https://jihanyang.github.io/" target="_blank" rel="noopener">Jihan Yang</a>
+            <a href="https://github.com/vealocia" target="_blank" rel="noopener">Shusheng Yang</a>
+            <a href="https://cs.nyu.edu/~fergus/" target="_blank" rel="noopener">Rob Fergus</a>
+            <a href="https://www.sainingxie.com/" target="_blank" rel="noopener">Saining Xie</a>
         </p>
         <p class="affil">New York University &middot; COLM 2026</p>
 
         <nav class="links" aria-label="Paper resources">
             <div class="links-row">
-                <a class="chip chip-primary" href="./static/pdf/TsT.pdf"><i class="fa-solid fa-file-pdf"></i>Paper</a>
-                <a class="chip" href="https://arxiv.org/abs/2511.04655"><i class="ai ai-arxiv"></i>arXiv</a>
-                <a class="chip" href="https://openreview.net/forum?id=ggtdDv1l9s"><i class="fa-solid fa-comments"></i>OpenReview</a>
-                <a class="chip" href="https://x.com/_ellisbrown/status/1988014436645327220"><i class="fa-brands fa-x-twitter"></i>Thread</a>
+                <a class="chip chip-primary" href="./static/pdf/TsT.pdf" target="_blank" rel="noopener"><i class="fa-solid fa-file-pdf"></i>Paper</a>
+                <!-- <a class="chip" href="https://arxiv.org/abs/2511.04655" target="_blank" rel="noopener"><i class="ai ai-arxiv"></i>arXiv</a> -->
+                <!-- <a class="chip" href="https://openreview.net/forum?id=ggtdDv1l9s" target="_blank" rel="noopener"><i class="fa-solid fa-comments"></i>OpenReview</a> -->
+                <a class="chip" href="https://github.com/vision-x-nyu/test-set-training" target="_blank" rel="noopener"><i class="fa-brands fa-github"></i>Code</a>
+                <a class="chip" href="https://x.com/_ellisbrown/status/1988014436645327220" target="_blank" rel="noopener"><i class="fa-brands fa-x-twitter"></i>Thread</a>
             </div>
             <div class="links-row">
-                <a class="chip" href="https://github.com/vision-x-nyu/test-set-training"><i class="fa-brands fa-github"></i>Code</a>
-                <a class="chip chip-long" href="https://hf.co/datasets/nyu-visionx/VSI-Bench"><i class="fa-solid fa-database"></i>VSI-Bench-Debiased</a>
-                <a class="chip" href="https://hf.co/datasets/nyu-visionx/VSI-Train-10k"><i class="fa-solid fa-database"></i>VSI-Train-10k</a>
+                <a class="chip" href="https://hf.co/datasets/nyu-visionx/VSI-Bench" target="_blank" rel="noopener"><i class="fa-solid fa-database"></i>VSI-Bench-Debiased</a>
+                <a class="chip" href="https://hf.co/datasets/nyu-visionx/VSI-Train-10k" target="_blank" rel="noopener"><i class="fa-solid fa-database"></i>VSI-Train-10k</a>
             </div>
         </nav>
     </header>
@@ -329,7 +329,7 @@
         <section id="code" class="col">
             <h2>Stress-test your own benchmark</h2>
             <p>
-                The <a href="https://github.com/vision-x-nyu/test-set-training">code</a> includes TsT-LLM, TsT-RF,
+                The <a href="https://github.com/vision-x-nyu/test-set-training" target="_blank" rel="noopener">code</a> includes TsT-LLM, TsT-RF,
                 IBP, and scripts that reproduce the paper. TsT-RF runs on a CPU in under a minute:
             </p>
 <pre><code>git clone https://github.com/vision-x-nyu/test-set-training.git
@@ -339,7 +339,7 @@ uv run python -m TsT --benchmark vsi --group_col scene_name --output_dir outputs
             <p>
                 TsT-LLM needs one GPU (<code>uv sync --frozen --extra llm</code>, then add <code>--mode llm</code>). For
                 a new benchmark, start from <code>examples/custom_benchmark.py</code> and the
-                <a href="https://github.com/vision-x-nyu/test-set-training/blob/main/docs/your-benchmark.md">guide</a>.
+                <a href="https://github.com/vision-x-nyu/test-set-training/blob/main/docs/your-benchmark.md" target="_blank" rel="noopener">guide</a>.
             </p>
         </section>
 

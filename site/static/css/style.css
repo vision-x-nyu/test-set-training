@@ -617,22 +617,16 @@ footer {
     }
 
     .links-row {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
         gap: 8px;
+        flex-wrap: nowrap;
     }
 
     .links-row+.links-row {
         margin-top: 8px;
     }
 
-    /* the longest label gets its own full-width row, last */
-    .chip-long {
-        grid-column: 1 / -1;
-        order: 1;
-    }
-
     .chip {
+        flex: 1 1 auto;
         font-size: 0.8em;
         padding: 6px 8px;
         white-space: nowrap;
