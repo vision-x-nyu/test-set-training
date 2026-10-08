@@ -84,12 +84,12 @@
         <section class="col tldr" aria-label="Summary">
             <ul>
                 <li>Multimodal models can score well on vision benchmarks <strong>without looking at the
-                        image</strong>, by exploiting patterns in the questions and answers.</li>
+                        image</strong>, by exploiting patterns in the questions and answers. <a class="jump" href="#shortcuts">Examples&nbsp;&darr;</a></li>
                 <li>Before releasing a benchmark, designers should <strong>&ldquo;train on the test set&rdquo;</strong>:
                     cross-validate a text-only model on the test set's own questions and answer options. The gain
-                    over the same model's zero-shot score is what can be learned without looking.</li>
+                    over the same model's zero-shot score is what can be learned without looking. <a class="jump" href="#tst">Method&nbsp;&darr;</a></li>
                 <li>That gain <strong>varies a lot</strong>: +18 points on VSI-Bench and +13 on CV-Bench, but little
-                    learnable signal on MMMU. Per-question scores flag which questions to inspect.</li>
+                    learnable signal on MMMU. Per-question scores flag which questions to inspect. <a class="jump" href="#results">Results&nbsp;&darr;</a></li>
             </ul>
         </section>
 
