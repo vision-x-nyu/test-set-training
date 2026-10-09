@@ -618,7 +618,6 @@ footer {
 
     .links-row {
         gap: 8px;
-        flex-wrap: nowrap;
     }
 
     .links-row+.links-row {
