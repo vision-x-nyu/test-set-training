@@ -176,6 +176,15 @@ h1 .line2 {
     margin: 0;
 }
 
+.venue-link {
+    color: inherit;
+    text-decoration: none;
+}
+
+.venue-link:hover {
+    color: var(--violet-text);
+}
+
 .links {
     margin: 22px auto 0;
 }
